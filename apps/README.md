@@ -203,6 +203,7 @@ app/src/main/
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Core theme system, component library, feature folder patterns |
 | [docs/NAVIGATION_GUIDE.md](docs/NAVIGATION_GUIDE.md) | Type-safe navigation, nested graphs, UI chrome policy |
 | [docs/ONBOARDING_FLOW_DETAILED.md](docs/ONBOARDING_FLOW_DETAILED.md) | Complete onboarding runtime flow reference |
+| [docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md](docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md) | Step-by-step Supabase tables, RLS, seed, and app integration plan |
 | [docs/WEAR_OS_PLAN.md](docs/WEAR_OS_PLAN.md) | Wear OS feature plan — Workout + Nutrition watch app (post-production) |
 | [docs/WEAR_OS_PROGRESS.md](docs/WEAR_OS_PROGRESS.md) | **Live Tracking** — Implementation status of the Wear OS app |
 

@@ -27,6 +27,7 @@ Complete technical documentation is available in the `apps/docs/` directory:
 | [NAVIGATION_GUIDE.md](apps/docs/NAVIGATION_GUIDE.md) | Type-safe navigation, nested graphs, UI chrome policy |
 | [ONBOARDING_FLOW_DETAILED.md](apps/docs/ONBOARDING_FLOW_DETAILED.md) | Complete onboarding runtime flow reference |
 | [TNYX_MODULAR_ONBOARDING.md](apps/docs/TNYX_MODULAR_ONBOARDING.md) | Modular onboarding implementation guide |
+| [SUPABASE_INCREMENTAL_SETUP_PLAN.md](apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md) | Step-by-step Supabase tables, RLS, seed, and app integration plan |
 | [TESTING_GUIDE.md](apps/docs/TESTING_GUIDE.md) | Testing strategy and guidelines |
 | [WEAR_OS_PLAN.md](apps/docs/WEAR_OS_PLAN.md) | Wear OS feature plan — Workout + Nutrition watch app |
 | [WEAR_OS_PROGRESS.md](apps/docs/WEAR_OS_PROGRESS.md) | Wear OS development progress tracking |

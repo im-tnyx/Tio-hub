@@ -76,7 +76,8 @@ fun TnyxThemeProvider(
                 scrimColor = palette.background.copy(alpha = 0.72f),
                 dividerColor = palette.textPrimary.copy(alpha = 0.08f)
             ),
-            navigation = NavigationTokens()
+            navigation = NavigationTokens(),
+            calendar = CalendarTokens()
         )
     ) {
         MaterialTheme(

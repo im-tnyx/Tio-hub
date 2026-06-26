@@ -9,6 +9,7 @@ val LocalTnyxComponentTokens = staticCompositionLocalOf {
         input = DefaultInputTokens,
         card = DefaultCardTokens,
         sheet = DefaultSheetTokens,
-        navigation = NavigationTokens()
+        navigation = NavigationTokens(),
+        calendar = CalendarTokens()
     )
 }

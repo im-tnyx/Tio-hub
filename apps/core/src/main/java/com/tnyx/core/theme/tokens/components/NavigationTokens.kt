@@ -8,14 +8,14 @@ import androidx.compose.ui.unit.dp
  */
 data class NavigationTokens(
     // Main Bottom Navigation
-    val bottomNavHeight: Dp = 50.dp,
+    val bottomNavHeight: Dp = 52.dp,
     val bottomNavIconSize: Dp = 24.dp,
     val bottomNavRippleSize: Dp = 32.dp,
-    val bottomNavAiIconSize: Dp = 48.dp,
+    val bottomNavAiIconSize: Dp = 42.dp,
     val bottomNavDividerAlpha: Float = 0.08f,
     
     // Workout Secondary Navigation
-    val workoutSecondaryNavHeight: Dp = 46.dp,
+    val workoutSecondaryNavHeight: Dp = 44.dp,
     val workoutSecondaryNavIconSize: Dp = 18.dp,
     val workoutSecondaryNavCornerRadius: Dp = 24.dp,
     val workoutSecondaryNavBackgroundAlpha: Float = 0.65f,

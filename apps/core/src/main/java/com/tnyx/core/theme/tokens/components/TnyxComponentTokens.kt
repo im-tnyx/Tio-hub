@@ -8,6 +8,7 @@ data class TnyxComponentTokens(
     val input: InputTokens,
     val card: CardTokens,
     val sheet: SheetTokens,
-    val navigation: NavigationTokens
+    val navigation: NavigationTokens,
+    val calendar: CalendarTokens
     // To be expanded as system grows
 )

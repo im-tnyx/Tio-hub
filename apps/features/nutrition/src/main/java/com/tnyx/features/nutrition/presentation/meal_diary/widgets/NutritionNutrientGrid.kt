@@ -5,7 +5,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
+import com.tnyx.core.R
+import com.tnyx.core.theme.TnyxTheme
 import com.tnyx.features.nutrition.presentation.meal_diary.MealDiaryUiState
 
 @Composable
@@ -14,6 +18,8 @@ fun NutritionNutrientGrid(
     onOverviewRequested: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val spacing = TnyxTheme.dimens.SpaceS
+
     Column(modifier = modifier) {
         // Row 1: 3 Items
         Row(modifier = Modifier.fillMaxWidth()) {
@@ -22,33 +28,37 @@ fun NutritionNutrientGrid(
                 value = "${state.caloriesConsumed}",
                 goal = "${state.caloriesGoal}",
                 unit = "",
-                icon = Icons.Outlined.LocalFireDepartment,
+                icon = ImageVector.vectorResource(id = R.drawable.ic_nav_nutrition_outlined),
                 onTap = { onOverviewRequested("calories") },
                 modifier = Modifier.weight(1f)
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(spacing))
             NutritionNutrientCard(
                 label = "Protein",
                 value = "${state.proteinConsumed.toInt()}g",
                 goal = "${state.proteinGoal.toInt()}g",
                 unit = "",
-                icon = Icons.Outlined.Egg,
+                // FIX: Use painterResource for PNG
+                // FIX: Use painterResource for PNG
+                icon = painterResource(id = R.drawable.ic_protein_outlined),
                 onTap = { onOverviewRequested("protein") },
                 modifier = Modifier.weight(1f)
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(spacing))
             NutritionNutrientCard(
                 label = "Fiber",
                 value = "${state.fiberConsumed.toInt()}g",
                 goal = "${state.fiberGoal.toInt()}g",
                 unit = "",
-                icon = Icons.Outlined.Grass,
+                // FIX: Use painterResource for PNG
+                // FIX: Use painterResource for PNG
+                icon = painterResource(id = R.drawable.ic_fiber_outlined),
                 onTap = { onOverviewRequested("fiber") },
                 modifier = Modifier.weight(1f)
             )
         }
         
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(spacing))
         
         // Row 2: 4 Items
         Row(modifier = Modifier.fillMaxWidth()) {
@@ -61,7 +71,7 @@ fun NutritionNutrientGrid(
                 onTap = { onOverviewRequested("carbs") },
                 modifier = Modifier.weight(1f)
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(spacing))
             NutritionNutrientCard(
                 label = "Sugar",
                 value = if (state.sugarConsumed == 0.0) "- g" else "${state.sugarConsumed.toInt()} g",
@@ -71,7 +81,7 @@ fun NutritionNutrientGrid(
                 onTap = { onOverviewRequested("sugar") },
                 modifier = Modifier.weight(1f)
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(spacing))
             NutritionNutrientCard(
                 label = "Fats",
                 value = if (state.fatsConsumed == 0.0) "- g" else "${state.fatsConsumed.toInt()} g",
@@ -81,7 +91,7 @@ fun NutritionNutrientGrid(
                 onTap = { onOverviewRequested("fats") },
                 modifier = Modifier.weight(1f)
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(spacing))
             NutritionNutrientCard(
                 label = "Water",
                 value = if (state.waterConsumed == 0.0) "- L" else "${state.waterConsumed} L",

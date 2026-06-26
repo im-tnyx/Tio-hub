@@ -1,0 +1,64 @@
+# =============================================
+# Android .gitignore — Tio-app
+# =============================================
+
+mcps/
+
+# -------- Build outputs --------
+/build/
+app/build/
+**/build/
+
+# -------- Gradle --------
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+.gradletasknamecache
+
+# -------- Local / secret files --------
+local.properties
+*.keystore
+*.jks
+google-services.json
+keystore.properties
+
+# -------- IntelliJ IDEA / Android Studio --------
+*.iml
+.idea/
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/.gitignore
+*.ipr
+*.iws
+
+# -------- Kotlin --------
+.kotlin/
+
+# -------- macOS --------
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# -------- Windows --------
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# -------- External native build --------
+.externalNativeBuild/
+.cxx/
+
+# -------- Captures / profiling --------
+/captures/
+
+# -------- Logs --------
+*.log
+
+# -------- Artifacts (local only) --------
+.artifacts/

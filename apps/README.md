@@ -173,6 +173,7 @@ app/src/main/
 ---
 
 # Unit tests run करें
+```bash
 ./gradlew test
 
 # Lint check
@@ -233,5 +234,7 @@ App production-ready और feature-complete होने के बाद **KMP
 - Repository interfaces define करो (implementations बाद में swap होंगी)
 
 ---
+
+> देखें: [Supabase Incremental Setup Plan](docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md)
 
 *Maintained by Android Engineering — Tnyx*

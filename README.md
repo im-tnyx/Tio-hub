@@ -24,6 +24,7 @@ Complete technical documentation is available in the `apps/docs/` directory:
 | Document | Description |
 |----------|-------------|
 | [ARCHITECTURE.md](apps/docs/ARCHITECTURE.md) | Core theme system, component library, feature folder patterns |
+| [NUTRITION.md](apps/docs/NUTRITION.md) | Nutrition Meal Diary runtime, UI components, data boundary, and persistence roadmap |
 | [NAVIGATION_GUIDE.md](apps/docs/NAVIGATION_GUIDE.md) | Type-safe navigation, nested graphs, UI chrome policy |
 | [ONBOARDING_FLOW_DETAILED.md](apps/docs/ONBOARDING_FLOW_DETAILED.md) | Complete onboarding runtime flow reference |
 | [TNYX_MODULAR_ONBOARDING.md](apps/docs/TNYX_MODULAR_ONBOARDING.md) | Modular onboarding implementation guide |
@@ -59,4 +60,4 @@ For detailed architecture, navigation patterns, and implementation guides, refer
 
 ---
 
-**Last Updated:** 2026-06-26
+**Last Updated:** 2026-06-27

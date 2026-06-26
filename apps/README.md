@@ -2,7 +2,7 @@
 
 > एक premium Android fitness & nutrition app — Jetpack Compose, Clean Architecture, और Type-Safe Navigation के साथ built।
 
-**Last updated: 2026-06-26**
+**Last updated: 2026-06-27**
 
 ---
 
@@ -202,6 +202,7 @@ app/src/main/
 | File | Description |
 |---|---|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Core theme system, component library, feature folder patterns |
+| [docs/NUTRITION.md](docs/NUTRITION.md) | Nutrition Meal Diary runtime, UI components, data boundary, and persistence roadmap |
 | [docs/NAVIGATION_GUIDE.md](docs/NAVIGATION_GUIDE.md) | Type-safe navigation, nested graphs, UI chrome policy |
 | [docs/ONBOARDING_FLOW_DETAILED.md](docs/ONBOARDING_FLOW_DETAILED.md) | Complete onboarding runtime flow reference |
 | [docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md](docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md) | Step-by-step Supabase tables, RLS, seed, and app integration plan |

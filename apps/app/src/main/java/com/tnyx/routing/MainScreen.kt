@@ -14,6 +14,7 @@ import com.tnyx.core.ui.shell.presentation.shell.TnyxShell
 import com.tnyx.core.ui.shell.presentation.state.ShellTab
 import com.tnyx.core.ui.shell.presentation.state.ShellUiState
 import com.tnyx.core.ui.shell.presentation.state.WorkoutSubTab
+import com.tnyx.features.nutrition.navigation.NutritionScreen
 import com.tnyx.features.workout.navigation.WorkoutScreen
 import com.tnyx.routing.graphs.mainGraph
 import com.tnyx.routing.routes.MainRoute
@@ -61,10 +62,16 @@ fun MainScreen(
         else -> WorkoutSubTab.History
     }
 
+    val isBottomNavVisible = when {
+        currentDestination?.hasRoute<NutritionScreen.MealEditor>() == true -> false
+        currentDestination?.hasRoute<NutritionScreen.MealItemEditor>() == true -> false
+        else -> true
+    }
+
     TnyxShell(
         state = ShellUiState(
             selectedTab = selectedTab,
-            isBottomNavVisible = true,
+            isBottomNavVisible = isBottomNavVisible,
             selectedWorkoutTab = selectedWorkoutTab
         ),
         onAction = { action ->

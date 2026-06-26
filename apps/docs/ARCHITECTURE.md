@@ -13,7 +13,7 @@ Last audited against:
 - `:wear` (Wear OS watch app module)
 - `:app` (Main entry point, DI graph, AppNavHost)
 
-Last updated: 2026-06-26
+Last updated: 2026-06-27
 
 ---
 
@@ -271,11 +271,13 @@ Component tokens reusable components की design specs define करते ह
 
 Current files:
 
-- `ButtonTokens.kt`: button height, padding, colors और text style defaults.
-- `InputTokens.kt`: text field colors, shape, padding और indicator specs.
-- `CardTokens.kt`: card container, content, border और elevation specs.
-- `SheetTokens.kt`: bottom sheet container, scrim, shape, padding और divider specs.
-- `TnyxComponentTokens.kt`: consolidated component token container.
+- `ButtonTokens.kt`: button height, padding, colors aur text style defaults.
+- `InputTokens.kt`: text field colors, shape, padding aur indicator specs.
+- `CardTokens.kt`: card container, content, border aur elevation specs.
+- `SheetTokens.kt`: bottom sheet container, scrim, shape, padding aur divider specs.
+- `NavigationTokens.kt`: bottom navigation aur workout secondary navigation dimensions/animation specs.
+- `CalendarTokens.kt`: weekly calendar height, day cell width, indicator size, icon size, divider alpha, label alpha aur future-date alpha specs.
+- `TnyxComponentTokens.kt`: consolidated component token container for button, input, card, sheet, navigation aur calendar tokens.
 
 Rule: `core/ui/components/*` components को अपने token specs `TnyxTheme.components.*` से लेना चाहिए। Feature screens को component internals duplicate नहीं करने चाहिए।
 
@@ -379,25 +381,36 @@ Current public component:
 
 Expected behavior:
 
-- Weekly date selection UI provide करता है।
-- `selectedDate`, `onDateSelected`, और `allowFutureDates` caller-controlled हैं।
-- Future date disabling UI-level behavior है; domain validation फिर भी feature/ViewModel layer में enforce होना चाहिए।
+- Weekly date selection UI provide karta hai aur selected date caller-owned rahta hai.
+- `selectedDate`, `onDateSelected`, `allowFutureDates`, `today`, aur `locale` caller-controlled hain.
+- Calendar ab `TnyxTheme.components.calendar` se visual dimensions consume karta hai. Height, side section width, day width, indicator size, icon size aur alpha values tokenized hain.
+- Week rows horizontally swipeable hain through `HorizontalPager`; implementation pseudo-infinite page range use karta hai taaki user past/future weeks browse kar sake.
+- Left side month label visible week ke basis par render hota hai. Same side par calendar icon tap karne se `today` select hota hai.
+- Current week detect hota hai; current week dekhte samay side affordance muted rahta hai, current week se door hone par accent color se "jump to today" affordance stronger dikhta hai.
+- Sunday dates semantic error color family se highlighted hain taaki week scan karte samay rest/off-day context visually clear rahe.
+- Future date disabling UI-level behavior hai; disabled future dates alpha-reduced hain aur click disabled hai. Domain validation fir bhi feature/ViewModel layer mein enforce hona chahiye.
+- `CalendarDayItem` private implementation detail hai; feature code ko direct day cell compose nahi karna chahiye.
 
 ### E. Layouts (`components/layouts`)
 
-Current file:
+Current files:
 
 - `TnyxDynamicHeader.kt`
+- `TnyxScreenHeader.kt`
 
-Current public component:
+Current public components:
 
 - `TnyxDynamicHeader`
+- `TnyxScreenHeader`
 
 Expected behavior:
 
-- Gradient header/background overlay provide करता है।
-- Color/height caller override कर सकता है।
-- Feature-specific screen state इस component में नहीं आना चाहिए।
+- Gradient header/background overlay provide karta hai.
+- Color/height caller override kar sakta hai.
+- Feature-specific screen state is component mein nahi aana chahiye.
+- `TnyxScreenHeader` compact screen title row provide karta hai. It supports uppercase title rendering, optional action icon, fixed height override aur alpha fade for scroll-synchronized headers.
+- `TnyxScreenHeader` action behavior callback-owned hai. Component keval visual shell hai; notification/search/edit jaise actions feature Route/ViewModel layer se wire hone chahiye.
+- `TnyxScreenHeader` currently direct spacing values use karta hai; future cleanup mein inhein layout/header tokens mein move kiya ja sakta hai agar multiple screens adopt karein.
 
 ### F. Navigation (`components/navigation`)
 
@@ -449,24 +462,58 @@ Current files:
 
 Expected behavior:
 
+- Legal module app-wide dialog/card shell hai. Yeh Terms/Privacy jaise legal surfaces ko route/screen/view-model/state/action/widgets boundaries mein rakhta hai.
+- Legal content WebView ya final legal document rendering abhi source truth nahi hai; placeholder/card shell behavior hi current boundary hai.
+- Legal widgets visual-only rahein. Navigation, dismissal aur content source decisions route/view-model layer mein rahein.
+
 ---
 
-- केवल Workout tab active होने पर visible रहता है।
-- Tab switch (Workout tab select): `AnimatedVisibility` से slide-up enter (400ms), slide-down exit (280ms)।
-- Scroll behavior `TnyxShell` में `NestedScrollConnection` से control होता है।
-- Secondary nav selection `WorkoutNavGraph` में navigation drive करता है — shell state नहीं बदलता।
-- `selectedWorkoutTab` `NavBackStack` से derive होता है (`MainScreen` में)।
+## 5A. App Shell (`core/ui/shell`)
+
+`core/ui/shell` app chrome ka shared runtime layer hai. Yeh bottom navigation, top bar, workout secondary navigation aur shell-level state/actions ko own karta hai. Feature screens shell ko mutate nahi karte; woh route/action callbacks ke through navigation request karte hain.
+
+### A. `MainBottomNav.kt`
+
+Current behavior:
+
+- `MainBottomNav` 5 primary tabs render karta hai: `Home`, `Nutrition`, `Ai`, `Workout`, aur `Progress`.
+- Non-AI tabs private `BottomNavTab` model se driven hain jismein `selectedIconRes` aur `unselectedIconRes` dono resource ids rahte hain.
+- Selected/unselected icons `Crossfade` se swap hote hain taaki active state jumpy na lage.
+- Regular tab color `animateColorAsState` se transition karta hai: selected state `textPrimary`, unselected state `textSecondary`.
+- Regular tab icon container `animateFloatAsState` spring scale use karta hai; selected tab halka scale-up hota hai.
+- Label selected state mein medium weight use karta hai, unselected state normal weight rakhta hai.
+- `Ai` tab special circular visual path use karta hai aur normal selected/unselected drawable pair par depend nahi karta.
+- Bottom nav dimensions `TnyxTheme.components.navigation` se aate hain, including nav height, icon size, ripple size, AI icon size aur divider alpha.
+- Bottom nav only tab-selection callback emit karta hai. Actual graph navigation shell owner (`MainScreen`) mein hona chahiye, component mein nahi.
+
+Resource contract:
+
+- Har regular tab ke liye filled aur outlined drawable pair chahiye. Current non-AI pairs:
+  - `ic_nav_home_filled` / `ic_nav_home_outlined`
+  - `ic_nav_nutrition_filled` / `ic_nav_nutrition_outlined`
+  - `ic_nav_workout_filled` / `ic_nav_workout_outlined`
+  - `ic_nav_progress_filled` / `ic_nav_progress_outlined`
+- Filled/outlined icon names stable rakhein taaki shell refactor ke bina resource replacement possible rahe.
+- Icon assets common nav resources hain, isliye inhein feature-specific folder mein na rakhein.
+
+### B. `WorkoutSecondaryNav.kt`
+
+- Keval Workout tab active hone par visible rahta hai.
+- Tab switch (Workout tab select): `AnimatedVisibility` se slide-up enter (400ms), slide-down exit (280ms).
+- Scroll behavior `TnyxShell` mein `NestedScrollConnection` se control hota hai.
+- Secondary nav selection `WorkoutNavGraph` mein navigation drive karta hai; shell state nahi badalta.
+- `selectedWorkoutTab` `NavBackStack` se derive hota hai (`MainScreen` mein).
 
 ### C. Scroll Behavior Contract
 
 ```text
-User scrolls UP > 200dp  →  WorkoutSecondaryNav slides DOWN (hide, 320ms)
-Scroll stops (1.5s)      →  WorkoutSecondaryNav slides UP  (restore, 320ms)
-User scrolls DOWN        →  WorkoutSecondaryNav slides UP  (immediate)
-Workout tab deselected   →  WorkoutSecondaryNav slides DOWN (exit, 280ms)
+User scrolls UP > 200dp  ->  WorkoutSecondaryNav slides DOWN (hide, 320ms)
+Scroll stops (1.5s)      ->  WorkoutSecondaryNav slides UP  (restore, 320ms)
+User scrolls DOWN        ->  WorkoutSecondaryNav slides UP  (immediate)
+Workout tab deselected   ->  WorkoutSecondaryNav slides DOWN (exit, 280ms)
 ```
 
-Implementation: `animateFloatAsState` + `graphicsLayer { translationY }` for scroll, `AnimatedVisibility(slideInVertically/slideOutVertically)` for tab switch।
+Implementation: `animateFloatAsState` + `graphicsLayer { translationY }` for scroll, `AnimatedVisibility(slideInVertically/slideOutVertically)` for tab switch.
 
 Implementation rules (scroll state management):
 - `isWorkoutTab` को `remember { derivedStateOf { ... } }` से wrap करें — plain `val` नहीं। `derivedStateOf` scroll thread पर safe snapshot read देता है और unnecessary recompositions avoid करता है।
@@ -792,7 +839,7 @@ features/workout
 
 *Maintained as Android architecture source guide for Tnyx.*
 
-**Last updated: 2026-06-26**
+**Last updated: 2026-06-27**
 
 
 

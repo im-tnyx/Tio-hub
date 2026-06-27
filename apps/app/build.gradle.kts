@@ -78,6 +78,9 @@ dependencies {
     implementation(project(":features:nutrition"))
     implementation(project(":features:onboarding"))
     implementation(project(":features:auth"))
+    implementation(project(":features:profile"))
+    implementation(project(":features:settings"))
+    implementation(project(":features:progress"))
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

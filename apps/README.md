@@ -1,6 +1,6 @@
 # Tio-app (Tnyx Android)
 
-> एक premium Android fitness & nutrition app — Jetpack Compose, Clean Architecture, और Type-Safe Navigation के साथ built।
+> एक premium Android health, fitness, nutrition, recovery, workout, coaching, और Wear-ready app — Jetpack Compose, Clean Architecture, और Type-Safe Navigation के साथ built।
 
 **Last updated: 2026-06-27**
 
@@ -8,7 +8,11 @@
 
 ## 📱 App Overview
 
-**Tnyx** एक AI-powered health & wellness Android app है जो users को उनकी nutrition, workout, recovery और health targets track करने में help करता है। App एक personalized onboarding flow के साथ शुरू होता है जो user का profile, fitness goals, workout preference और health data collect करता है।
+**Tnyx** एक AI-powered health & wellness Android app है जो users को nutrition, workout, recovery, health targets, progress, और coaching workflows track करने में help करता है। App एक personalized onboarding flow के साथ शुरू होता है जो user का profile, fitness goals, workout preference, health inputs, और target data collect करता है।
+
+Architecture को 100+ screens, Wear OS, future iOS/KMP readiness, AI Coach, Health integrations, Subscription, और Offline Mode को ध्यान में रखकर रखा गया है।
+
+Canonical ownership source: [docs/PROFILE_SETTINGS_GUIDE.md](docs/PROFILE_SETTINGS_GUIDE.md)
 
 ---
 
@@ -33,38 +37,59 @@
 
 ## 🏗️ Architecture Overview
 
-प्रोजेक्ट **Multi-module Clean Architecture** + **MVI (Model-View-Intent)** पैटर्न फॉलो करता है।
+प्रोजेक्ट **Multi-module Clean Architecture** + **MVI (Model-View-Intent)** pattern follow करता है। Runtime source actual behavior की final truth है; product/ownership decisions के लिए canonical docs follow करें।
+
+Current checked-in module structure:
 
 ```text
 Tnyx/
-├── app/                              # Phone App (Main entry & Glue)
+├── app/                              # Phone app entry, DI composition, RootNavHost
 │   └── routing/                      # Navigation wiring
-│       ├── AppNavHost.kt             # Root NavHost (Splash -> Main)
-│       └── graphs/                   # Feature NavGraphs integration
+│       ├── AppNavHost.kt             # Root graph orchestration
+│       └── graphs/                   # Main graph and feature graph wiring
 │
-├── wear/                             # Watch App (Wear OS module)
-│   └── src/main/java/com/tnyx/wear/  # Wear Entry & Screens
+├── wear/                             # Wear OS companion app
+│   └── src/main/java/com/tnyx/wear/  # Wear entry and screens
 │
-├── core/                             # Shared Design System & UI Layer
-│   ├── theme/                        # TnyxTheme — tokens & locals
+├── core/                             # Shared design system, UI components, shell
+│   ├── theme/                        # TnyxTheme — tokens and locals
 │   │   └── tokens/                   # Foundation, Semantic, Component tokens
-│   ├── ui/                           # Reusable UI & App Shell
+│   ├── ui/                           # Reusable UI and App Shell
 │   │   ├── components/               # Buttons, Cards, Inputs, Sheets
 │   │   └── shell/                    # App Chrome (BottomNav, TopBar, SecondaryNav)
-│   └── routing/routes/               # ⭐ Global @Serializable Route definitions
+│   └── routing/routes/               # Global @Serializable route definitions
 │
-├── shared/                           # ⭐ Pure Kotlin Domain (Phone + Watch)
-│   └── workout/domain/               # Workout Models & Repo Interfaces
-│       ├── model/                    # WorkoutSet, Session, Routine
-│       └── repository/               # Repository interfaces
+├── shared/                           # Pure Kotlin domain contracts (Phone + Watch)
+│   └── workout/domain/               # Current shared Workout models/repositories
+│       ├── model/
+│       └── repository/
 │
-└── features/                         # Independent Feature Modules
+└── features/                         # Independent feature modules
     ├── onboarding/                   # Splash + Welcome entry flow
-    ├── workout/                      # Workout tracking & navigation
-    ├── auth/                         # Authentication & Profile management
-    └── nutrition/                    # Nutrition diary, macro tracking
-        ├── navigation/               # Feature-owned NavGraph
-        └── presentation/             # MVI Screens (Route -> Screen -> ViewModel)
+    ├── auth/                         # Authentication/session entry
+    ├── workout/                      # Workout tracking and navigation
+    ├── nutrition/                    # Nutrition diary and macro tracking
+    ├── profile/                      # Fitness Hub + Account Launcher skeleton
+    ├── settings/                     # App Config skeleton
+    └── progress/                     # Progress tab skeleton
+```
+
+Canonical target ownership for future work:
+
+```text
+features/
+├── home/          # Main dashboard, no cross-domain business ownership
+├── workout/       # Workout settings, rest timer, plate calculator, graph settings, RPE
+├── nutrition/     # Nutrition targets, calories, macros, water goal, glass size
+├── coach/         # AI Coach surfaces
+├── progress/      # Journey, progress photos, measurements, weight, achievements
+├── profile/       # Fitness Hub + Account Launcher, personal information source
+├── settings/      # App config, notifications, units, theme, language, account controls
+├── health/        # Future: Health Connect, Samsung Health, Garmin, Fitbit, Apple Health
+├── recovery/      # Future: Sleep, HRV, readiness, recovery score
+├── billing/       # Future: subscription UI and entitlement/business logic
+├── rewards/       # Future: rewards, badges, gamification
+└── learn/         # Future: resources, education, guides
 ```
 
 > 📄 विस्तृत architecture के लिए देखें: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
@@ -73,24 +98,44 @@ Tnyx/
 
 ## 🎨 Design System — TnyxTheme
 
-App **Type-Safe Navigation** use करता है — string routes नहीं, `@Serializable` objects।
+App **Type-Safe Navigation** use करता है — string routes नहीं, `@Serializable` route models।
 
 ```kotlin
-@Serializable sealed interface WorkoutScreen {
-    @Serializable data object History  : WorkoutScreen
-    @Serializable data object Explore  : WorkoutScreen
-    @Serializable data object Routines : WorkoutScreen
+@Serializable sealed interface WorkoutRoute {
+    @Serializable data object History  : WorkoutRoute
+    @Serializable data object Explore  : WorkoutRoute
+    @Serializable data object Routines : WorkoutRoute
 }
 ```
 
-### Navigation Layers
+---
 
-| Layer | File | Role |
+## 🧭 Navigation Freeze
+
+TNYX navigation 100+ screens के लिए graph-owned और feature-owned रहेगी।
+
+| Layer | File/Graph | Role |
 |---|---|---|
-| Root | `AppNavHost.kt` | Splash → Auth → Onboarding → Main routing |
-| Main Shell | `MainScreen.kt` | BottomNav shell, sub-tab derivation from back-stack |
-| Workout | `WorkoutNavGraph.kt` | History / Explore / Routines destinations |
-| Feature | `<Feature>NavGraph.kt` | Feature-owned screen routing |
+| Root | `AppNavHost.kt` / `RootGraph` | Splash → Auth → Onboarding → Main/Profile/Settings/Modal routing |
+| Auth | `AuthGraph` | Sign in, sign up, OTP, password reset |
+| Onboarding | `OnboardingGraph` | Initial data collection and resume flow |
+| Main Shell | `MainScreen.kt` / `MainGraph` | Bottom nav shell, tab state from back-stack |
+| Feature | `<Feature>NavGraph.kt` | Feature-owned internal screen routing |
+| Profile | `ProfileGraph` | Avatar-launched Fitness Hub + Account Launcher |
+| Settings | `SettingsGraph` | Gear-launched App Config surfaces |
+| Modal | `ModalGraph` | App-wide dialogs, sheets, permission prompts, media flows |
+
+Main Graph contains only primary tabs:
+
+```text
+Home
+Workout
+Nutrition
+Coach
+Progress
+```
+
+Profile is launched from avatar. Settings is launched from gear icon. Cross-feature navigation must use public route contracts.
 
 > 📄 विस्तृत navigation के लिए देखें: [docs/NAVIGATION_GUIDE.md](docs/NAVIGATION_GUIDE.md)
 
@@ -108,9 +153,16 @@ App launch होने पर `SplashActivity` → `MainActivity` → `RootNavH
 | 2 | `DATA` | 9 | Name, Gender, Goal, Age, Height, Weight, Activity, Health |
 | 3 | `MOBILE` | 1 | Phone verification (dynamic insertion) |
 | 4 | `WORKOUT_INTRO` | 1 | Workout plan opt-in (Yes/No) |
-| 5 | `WORKOUT` | 8–9 | Gym access, Equipment, Experience, Training days… |
-| 6 | `TARGETS` | 6 | Steps, Sleep, Water, Goal pace, Nutrition targets |
+| 5 | `WORKOUT` | 8-9 | Gym access, Equipment, Experience, Training days… |
+| 6 | `TARGETS` | 6 | Step target, sleep target, water target, goal pace, and nutrition targets collected by onboarding and saved through owning domains |
 | 7 | `SOURCE` | 2 | Discovery/referral source |
+
+Ownership note:
+- Personal Information -> Profile repository.
+- Nutrition Targets / Calories / Macros / Water / Glass Size -> Nutrition repository.
+- Workout preferences/settings -> Workout repository.
+- Steps/Health connections -> Health ownership when implemented.
+- Sleep/HRV/Readiness -> Recovery ownership when implemented.
 
 ### Entry Paths
 
@@ -124,17 +176,29 @@ App launch होने पर `SplashActivity` → `MainActivity` → `RootNavH
 
 ## 🏠 App Shell — TnyxShell
 
-`TnyxShell` सभी screens को wrap करता है और app chrome provide करता है।
+`TnyxShell` app chrome provide करता है। Shell feature business logic own नहीं करता।
 
 | Widget | Visibility | Description |
 |---|---|---|
-| `MainTopBar` | Home tab only | Dynamic top bar with user info |
-| `MainBottomNav` | Always | 5-tab bottom navigation |
+| `MainTopBar` | MainChrome destinations where needed | Dynamic top bar with user/account entry points |
+| `MainBottomNav` | `MainChrome` destinations | 5-tab bottom navigation: Home, Workout, Nutrition, Coach, Progress |
 | `WorkoutSecondaryNav` | Workout tab only | Secondary sub-tab bar (History \| Explore \| Routines) |
+
+### Chrome Policy
+
+Every destination declares one chrome policy:
+
+| Policy | Usage |
+|---|---|
+| `MainChrome` | Main tab screens with bottom nav and normal shell |
+| `NoBottomBar` | Detail/edit screens where bottom nav hidden रहे |
+| `FullScreen` | Auth, onboarding, camera, media viewer, active workout session |
+| `BottomSheet` | Sheet-style transient destination |
+| `Dialog` | Confirmation, warning, legal, permission explanation |
 
 ### Workout Secondary Nav — Scroll Behavior
 
-```
+```text
 Workout tab press    → bar slides UP from bottom (enter, 400ms)
 Scroll UP > 200dp   → bar slides DOWN (hide, 320ms)
 Scroll stops 1.5s   → bar slides UP (auto-restore, 320ms)
@@ -142,7 +206,7 @@ Scroll DOWN         → bar slides UP immediately
 Tab switch (exit)   → bar slides DOWN (exit, 280ms)
 ```
 
-**Architecture Rule:** Shell सिर्फ bar show/hide करता है। Workout sub-sections (History, Explore, Routines) `WorkoutNavGraph` own करता है। Selected sub-tab `NavBackStack` से derive होता है — कोई अलग state नहीं।
+**Architecture Rule:** Shell सिर्फ chrome show/hide करता है। Workout sub-sections (History, Explore, Routines) `WorkoutNavGraph` own करता है। Selected sub-tab `NavBackStack` से derive होता है — कोई अलग source of truth नहीं।
 
 ---
 
@@ -162,7 +226,7 @@ Tab switch (exit)   → bar slides DOWN (exit, 280ms)
 
 ## 🗂️ Resource Structure
 
-```
+```text
 app/src/main/
 ├── res/             # Strings, values, common resources
 ├── res-icons/       # App icons
@@ -173,6 +237,7 @@ app/src/main/
 ---
 
 # Unit tests run करें
+
 ```bash
 ./gradlew test
 
@@ -192,8 +257,11 @@ app/src/main/
 6. **Type-safe navigation** — Serializable route models prefer करें
 7. **No secrets in client** — Keys, private keys, keystores repository में नहीं
 8. **Generated output commit न करें** — `build/`, `.gradle/`, APK/AAB, `.env` ignore करें
-9. **Domain models `:shared` में लिखो** — Workout/Nutrition के models `shared/` में बनाओ ताकि Watch App भी use कर सके। `androidx.*` imports मत डालो `:shared` में
-10. **Repository interfaces `:shared` में** — Implementation `:app` में होगी, interface `:shared` में — Watch App same interface use करेगा
+9. **Domain models `:shared` में लिखो** — Phone/Watch reuse वाले models `shared/` में बनाओ। `androidx.*` imports मत डालो `:shared` में
+10. **Repository interfaces `:shared` में** — Shared contracts `:shared` में रखें; implementation platform/data layer में होगी
+11. **Feature launchers thin रखें** — Profile, Settings, Home, और Coach दूसरे feature की business logic या repositories own नहीं करेंगे
+12. **Ownership matrix wins** — ambiguity हो तो [docs/PROFILE_SETTINGS_GUIDE.md](docs/PROFILE_SETTINGS_GUIDE.md) follow करें
+13. **Hardcoded data temporary रखें** — Supabase Incremental Setup Plan is the source for replacing sample data with repositories, seed data, RLS, and future TypeScript/Turborepo contracts
 
 ---
 
@@ -201,13 +269,17 @@ app/src/main/
 
 | File | Description |
 |---|---|
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Core theme system, component library, feature folder patterns |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Core theme system, component library, shell, feature folder patterns, ownership freeze summary |
 | [docs/NUTRITION.md](docs/NUTRITION.md) | Nutrition Meal Diary runtime, UI components, data boundary, and persistence roadmap |
-| [docs/NAVIGATION_GUIDE.md](docs/NAVIGATION_GUIDE.md) | Type-safe navigation, nested graphs, UI chrome policy |
+| [docs/NAVIGATION_GUIDE.md](docs/NAVIGATION_GUIDE.md) | 100+ screen type-safe navigation, nested graphs, route contracts, chrome policy |
+| [docs/PROFILE_SETTINGS_GUIDE.md](docs/PROFILE_SETTINGS_GUIDE.md) | Canonical Profile, Settings, Progress, Billing, Health, Recovery ownership reference |
 | [docs/ONBOARDING_FLOW_DETAILED.md](docs/ONBOARDING_FLOW_DETAILED.md) | Complete onboarding runtime flow reference |
-| [docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md](docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md) | Step-by-step Supabase tables, RLS, seed, and app integration plan |
-| [docs/WEAR_OS_PLAN.md](docs/WEAR_OS_PLAN.md) | Wear OS feature plan — Workout + Nutrition watch app (post-production) |
-| [docs/WEAR_OS_PROGRESS.md](docs/WEAR_OS_PROGRESS.md) | **Live Tracking** — Implementation status of the Wear OS app |
+| [docs/TNYX_MODULAR_ONBOARDING.md](docs/TNYX_MODULAR_ONBOARDING.md) | Modular onboarding implementation guide |
+| [docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md](docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md) | Plan for replacing hardcoded data with Supabase-backed slices, RLS, seed data, and future TypeScript/Turborepo boundaries |
+| [docs/TESTING_GUIDE.md](docs/TESTING_GUIDE.md) | Testing strategy and guidelines |
+| [docs/ANDROID_APP_PROGRESS.md](docs/ANDROID_APP_PROGRESS.md) | Android mobile app implementation progress tracking |
+| [docs/WEAR_OS_PLAN.md](docs/WEAR_OS_PLAN.md) | Wear OS feature plan — Workout + Nutrition watch app |
+| [docs/WEAR_OS_PROGRESS.md](docs/WEAR_OS_PROGRESS.md) | Live tracking — Implementation status of the Wear OS app |
 
 ---
 
@@ -217,22 +289,23 @@ app/src/main/
 
 > **⏳ यह production के बाद होगा — अभी जरूरत नहीं।**
 
-App production-ready और feature-complete होने के बाद **KMP + Compose Multiplatform (CMP)** adopt किया जाएगा ताकि Android + iOS दोनों को एक codebase से serve किया जा सके।
+App production-ready और feature-complete होने के बाद **KMP + Compose Multiplatform (CMP)** adopt किया जा सकता है ताकि Android + iOS दोनों को एक codebase से serve किया जा सके।
 
 **तब क्या होगा:**
-- `:shared` module बनेगा — domain models, ViewModels, business logic share होगी
-- Hilt → **Koin** (KMP-compatible DI)
-- UI layer → **Compose Multiplatform** (अभी का Compose code iOS पर भी चलेगा)
+- `:shared` में stable domain models, repository interfaces, और pure use cases रहेंगे
+- Hilt → KMP-compatible DI strategy evaluate होगी
+- UI layer future CMP path के लिए clean boundaries रखेगी
 
 **अभी इसलिए नहीं:**
-- iOS development अभी scope में नहीं है
-- Android features पहले complete और stable होने चाहिए
-- CMP ecosystem अभी mature हो रहा है
+- iOS development अभी immediate scope में नहीं है
+- Android features पहले stable होने चाहिए
+- CMP ecosystem और product scope दोनों को पहले validate करना होगा
 
 **अभी KMP-ready habits follow करें:**
 - Domain layer में `androidx.*` imports मत डालो
 - Business logic UseCases में रखो (pure Kotlin)
 - Repository interfaces define करो (implementations बाद में swap होंगी)
+- Phone/Watch/future-iOS reuse वाले contracts `:shared` में रखें
 
 ---
 

@@ -20,5 +20,5 @@ sealed interface MainRoute {
     data object WorkoutGraph : MainRoute
 
     @Serializable
-    data object Profile : MainRoute
+    data object ProgressGraph : MainRoute
 }

@@ -50,7 +50,7 @@ fun MainScreen(
         currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.Home::class) } == true -> ShellTab.Home
         currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.NutritionGraph::class) } == true -> ShellTab.Nutrition
         currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.AiCoach::class) } == true -> ShellTab.Ai
-        currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.Profile::class) } == true -> ShellTab.Progress
+        currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.ProgressGraph::class) } == true -> ShellTab.Progress
         else -> ShellTab.Home
     }
 
@@ -82,7 +82,7 @@ fun MainScreen(
                         ShellTab.Nutrition -> MainRoute.NutritionGraph
                         ShellTab.Ai -> MainRoute.AiCoach
                         ShellTab.Workout -> MainRoute.WorkoutGraph
-                        ShellTab.Progress -> MainRoute.Profile
+                        ShellTab.Progress -> MainRoute.ProgressGraph
                     }
                     navActions.navigateToTopLevelDestination(route)
                 }

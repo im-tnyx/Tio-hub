@@ -1,9 +1,23 @@
 # Supabase Incremental Setup Plan
 
-Last updated: 2026-06-26
+Last updated: 2026-06-27
 
-This document is the memory anchor for moving TNYX away from hardcoded demo data and toward a Supabase-backed app, one feature slice at a time.
+This document is the memory anchor for moving TNYX away from hardcoded demo data and toward a Supabase-backed app, one feature slice at a time. It also defines how this Android/Wear checkout should evolve toward a future TypeScript/Turborepo backend without leaking database assumptions into clients.
 
+
+## Why This Document Exists
+
+This plan exists to stop hardcoded data from becoming product architecture.
+
+Hardcoded/demo values are allowed only as temporary UI scaffolding while a slice is not wired yet. They are not the source of truth. Each feature should graduate to:
+
+- a repository contract
+- a Supabase or backend-backed implementation
+- local/dev seed data
+- RLS validation
+- app integration tests or manual read/write validation
+
+If a value affects user-owned behavior, persistence, entitlement, onboarding resume, nutrition targets, workout history, health data, or progress history, it must eventually come from a repository rather than a permanent ViewModel/sample object.
 This is a planning document only.
 
 - No executable SQL lives here.
@@ -22,7 +36,53 @@ Current checkout is Android/Wear focused:
 - `apps/docs`: current checked-in documentation location.
 
 The root `.env` exists locally, but env values must never be documented or committed.
+## Future Turborepo / TypeScript Boundary
 
+This checkout is Android/Wear focused today, but TNYX is expected to move toward a larger TypeScript/Turborepo monorepo later.
+
+Future target ownership should be:
+
+```text
+apps/
+├── android/ or mobile Android app       # Kotlin client
+├── flutter/                             # Cross-platform client if retained
+├── web/                                 # Next.js user-facing app/dashboard
+└── admin-panel/                         # Operational admin UI
+
+backend/                                 # Express/TypeScript APIs, services, jobs
+shared/                                  # TypeScript contracts, constants, Zod schemas
+    └── packages/contracts/              # API DTOs, route contracts, generated DB types when approved
+
+database/                                # Supabase/Postgres migrations, RLS, RPCs, seed policy
+infra/                                   # Docker, env templates, CI/deploy config
+```
+
+Rules for the future TypeScript repo:
+
+- Database truth lives in `database/`, not in mobile, web, or admin UI code.
+- Backend service-role operations live in `backend/` only.
+- Public clients never receive service keys, admin keys, or direct privileged SQL access.
+- Shared API DTOs and validation schemas live in `shared` / contracts, not copied per client.
+- Android, Flutter, web, and admin consume repository/API contracts instead of hardcoding table shapes.
+- Demo data remains local/dev seed data, not production default data.
+- A feature table is created only when a runtime slice needs it.
+- Supabase RLS and grants are part of the slice, not a later cleanup task.
+
+This means the Android repository contract built today should be easy to swap from direct Supabase access to backend API access later, without rewriting Screens.
+
+
+## Source Of Truth Rules
+
+Use these rules when replacing hardcoded values:
+
+- `Screen` renders `UiState`; it never owns sample data as business truth.
+- `ViewModel` may expose temporary mock state only before a repository exists.
+- Once a slice has a repository, ViewModel data must come from that repository.
+- Demo data lives in local/dev seed files or dev-only scripts.
+- Runtime feature ownership follows `PROFILE_SETTINGS_GUIDE.md`.
+- Schema/table ownership follows the same feature owner that owns the business logic.
+- If Android and Wear both need the model, put the pure Kotlin contract in `apps/shared` now.
+- If future TypeScript clients need the model, mirror/derive the API contract in future `shared` TypeScript contracts instead of copying ad hoc shapes.
 ## Core Decision
 
 Do not create the entire database upfront.
@@ -34,7 +94,7 @@ Create tables only when a feature needs them, and ship each slice with:
 - grants
 - indexes
 - seed/demo data
-- repository contract
+- repository/API contract
 - app integration
 - validation steps
 
@@ -70,6 +130,25 @@ Use this workflow for each feature.
 9. Keep Screens dumb: render `UiState`, emit `Action`.
 10. Validate with compile checks and at least one manual Supabase read/write test.
 
+
+## Contract Boundary
+
+Each slice must define the contract before wiring UI to persistence.
+
+Android/Wear now:
+
+- `apps/shared`: pure Kotlin domain models and repository interfaces for phone/watch reuse.
+- `apps/features/<feature>`: Route, Screen, ViewModel, UiState, Action, Effect.
+- `apps/app`: DI and platform repository wiring.
+
+Future TypeScript/Turborepo:
+
+- `shared` or `packages/contracts`: TypeScript DTOs, Zod validators, API route contracts, generated DB types when approved.
+- `backend`: API services, repositories, jobs, and server-only Supabase clients.
+- `database`: migrations, RLS, grants, RPCs, seed policy.
+- `web` / `admin-panel`: UI clients that consume API/contracts, not service-role database access.
+
+Do not duplicate contract definitions manually across Android, Flutter, web, and backend. Pick a canonical contract per slice and generate or map carefully from it.
 ## Feature Order
 
 Recommended sequence:
@@ -242,12 +321,14 @@ Run only checks that apply to the slice:
 
 Use these ownership boundaries:
 
-- SQL migrations and seed data: future `supabase/` or `database/` folder.
-- Shared domain contracts: `apps/shared`.
+- SQL migrations, RLS, grants, RPCs, and seed data: future `database/` folder, or `supabase/` until the larger repo layout is created.
+- Android/Wear shared domain contracts: `apps/shared`.
 - Android app wiring and repository implementations: `apps/app`.
 - Feature ViewModels, Routes, Screens: `apps/features/<feature>`.
 - Wear-specific behavior: `apps/wear`.
 - Documentation: `apps/docs` in this checkout.
+- Future TypeScript contracts: `shared` / `packages/contracts` after Turborepo migration.
+- Future backend Supabase service-role code: `backend`, never client apps.
 
 ## Open Decisions
 
@@ -258,6 +339,8 @@ Before first implementation, decide:
 - Which auth method ships first: email/password, phone OTP, or magic link?
 - Where will migration files live: `supabase/migrations` or `database/migrations`?
 - What is the canonical repo name for this checkout: `Tio-hub` or `tnyx-hub`?
+- Which package owns shared TypeScript contracts after Turborepo migration?
+- Will backend APIs become the only write path for mobile/web/admin clients?
 
 ## First Practical Task
 

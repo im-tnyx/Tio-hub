@@ -10,6 +10,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.tnyx.features.nutrition.navigation.nutritionGraph
+import com.tnyx.features.progress.navigation.progressGraph
 import com.tnyx.features.workout.navigation.workoutGraph
 import com.tnyx.routing.routes.MainRoute
 
@@ -34,9 +35,7 @@ fun NavGraphBuilder.mainGraph(
 
     workoutGraph(navController = navController)
 
-    composable<MainRoute.Profile> {
-        PlaceholderScreen("Profile Screen")
-    }
+    progressGraph(navController = navController)
 }
 
 @androidx.compose.runtime.Composable

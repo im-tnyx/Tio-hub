@@ -10,7 +10,8 @@ import com.tnyx.routing.routes.ProfileRoute
 fun NavGraphBuilder.profileGraph(
     navController: NavHostController,
     onOpenSettings: () -> Unit,
-    onOpenProgress: () -> Unit
+    onOpenProgress: () -> Unit,
+    onNavigateBack: () -> Unit
 ) {
     navigation<ProfileRoute.Graph>(
         startDestination = ProfileRoute.Home
@@ -18,14 +19,16 @@ fun NavGraphBuilder.profileGraph(
         composable<ProfileRoute.Home> {
             ProfileHomeRoute(
                 onOpenSettings = onOpenSettings,
-                onOpenProgress = onOpenProgress
+                onOpenProgress = onOpenProgress,
+                onNavigateBack = onNavigateBack
             )
         }
 
         composable<ProfileRoute.PersonalInfo> {
             ProfileHomeRoute(
                 onOpenSettings = onOpenSettings,
-                onOpenProgress = onOpenProgress
+                onOpenProgress = onOpenProgress,
+                onNavigateBack = onNavigateBack
             )
         }
     }

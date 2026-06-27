@@ -17,6 +17,9 @@ fun SettingsHomeRoute(
         onAction = { action ->
             when (action) {
                 SettingsHomeAction.BackClicked -> onNavigateBack()
+                else -> {
+                    // TODO: Handle other settings actions
+                }
             }
         }
     )

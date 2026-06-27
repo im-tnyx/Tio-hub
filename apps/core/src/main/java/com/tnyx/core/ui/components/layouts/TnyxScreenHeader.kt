@@ -25,8 +25,9 @@ fun TnyxScreenHeader(
     modifier: Modifier = Modifier,
     alpha: Float = 1f,
     height: Dp = 44.dp,
-    actionIcon: ImageVector? = null,
-    onActionClick: (() -> Unit)? = null
+    navigationIcon: ImageVector? = null,
+    onNavigationClick: (() -> Unit)? = null,
+    actions: @Composable (RowScope.() -> Unit)? = null
 ) {
     Row(
         modifier = modifier
@@ -34,31 +35,41 @@ fun TnyxScreenHeader(
             .height(height)
             .graphicsLayer { this.alpha = alpha }
             .background(TnyxTheme.colors.background)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 8.dp), // Reduced padding for better alignment with icons
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = title.uppercase(),
-            style = TnyxTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = TnyxTheme.colors.textPrimary
-        )
-
-        if (actionIcon != null && onActionClick != null) {
-            IconButton(
-                onClick = onActionClick,
-                modifier = Modifier.size(24.dp)
-            ) {
-                Icon(
-                    imageVector = actionIcon,
-                    contentDescription = null,
-                    tint = TnyxTheme.colors.textPrimary
-                )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
+            if (navigationIcon != null && onNavigationClick != null) {
+                IconButton(onClick = onNavigationClick) {
+                    Icon(
+                        imageVector = navigationIcon,
+                        contentDescription = "Back",
+                        tint = TnyxTheme.colors.textPrimary
+                    )
+                }
+            } else {
+                Spacer(modifier = Modifier.width(8.dp))
             }
+
+            Text(
+                text = title.uppercase(),
+                style = TnyxTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = TnyxTheme.colors.textPrimary
+            )
+        }
+
+        if (actions != null) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                content = actions
+            )
         } else {
-            // Spacer to maintain layout if no icon
-            Spacer(modifier = Modifier.size(24.dp))
+            Spacer(modifier = Modifier.size(48.dp))
         }
     }
 }

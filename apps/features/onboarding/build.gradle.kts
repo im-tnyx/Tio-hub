@@ -27,6 +27,17 @@ android {
     buildFeatures {
         compose = true
     }
+    sourceSets {
+        getByName("main") {
+            res.srcDirs(
+                "src/main/res",
+                "src/main/res-icons",
+                "src/main/res-images",
+                "src/main/res-features",
+                "src/main/res-svg"
+            )
+        }
+    }
 }
 
 dependencies {

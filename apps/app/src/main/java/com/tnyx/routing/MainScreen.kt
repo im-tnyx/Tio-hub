@@ -18,6 +18,7 @@ import com.tnyx.features.nutrition.navigation.NutritionScreen
 import com.tnyx.features.workout.navigation.WorkoutScreen
 import com.tnyx.routing.graphs.mainGraph
 import com.tnyx.routing.routes.MainRoute
+import com.tnyx.routing.routes.ProfileRoute
 
 /**
  * Main Shell with Bottom Navigation Bar.
@@ -98,6 +99,9 @@ fun MainScreen(
                         launchSingleTop = true
                         restoreState = true
                     }
+                }
+                is ShellAction.ProfileClicked -> {
+                    rootNavController.navigate(ProfileRoute.Graph)
                 }
                 else -> { /* Other shell actions handled upstream */ }
             }

@@ -131,8 +131,15 @@ fun MealDiaryScreen(
                 title = "Meal Diary",
                 alpha = headerState.second,
                 height = headerHeight,
-                actionIcon = Icons.Rounded.NotificationsNone,
-                onActionClick = { /* Handle notification click */ }
+                actions = {
+                    IconButton(onClick = { /* Handle notification click */ }) {
+                        Icon(
+                            imageVector = Icons.Rounded.NotificationsNone,
+                            contentDescription = "Notifications",
+                            tint = TnyxTheme.colors.textPrimary
+                        )
+                    }
+                }
             )
             Spacer(modifier = Modifier.height(4.dp))
             // Calendar (Stays visible as the Column offset stops at -headerHeightPx)

@@ -10,8 +10,11 @@ import androidx.navigation.toRoute
 import com.tnyx.core.legal.presentation.route.LegalRoute
 import com.tnyx.features.splash.presentation.route.SplashRoute
 import com.tnyx.features.auth.navigation.authGraph
+import com.tnyx.features.profile.navigation.profileGraph
+import com.tnyx.features.settings.navigation.settingsGraph
 import com.tnyx.features.welcome.navigation.welcomeScreen
 import com.tnyx.routing.routes.RootRoute
+import com.tnyx.routing.routes.SettingsRoute
 
 @Composable
 fun AppNavHost(
@@ -57,6 +60,28 @@ fun AppNavHost(
                 navController.navigate(RootRoute.MainGraph) {
                     popUpTo(RootRoute.AuthGraph) { inclusive = true }
                 }
+            }
+        )
+
+        profileGraph(
+            navController = navController,
+            onOpenSettings = {
+                navController.navigate(SettingsRoute.Graph)
+            },
+            onOpenProgress = {
+                navController.navigate(RootRoute.MainGraph) {
+                    popUpTo(RootRoute.MainGraph) { inclusive = false }
+                }
+            },
+            onNavigateBack = {
+                navController.popBackStack()
+            }
+        )
+
+        settingsGraph(
+            navController = navController,
+            onNavigateBack = {
+                navController.popBackStack()
             }
         )
 

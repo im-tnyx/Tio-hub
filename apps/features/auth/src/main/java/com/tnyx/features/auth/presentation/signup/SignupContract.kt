@@ -24,4 +24,5 @@ sealed interface SignupAction {
 sealed interface SignupEffect {
     data class NavigateToOtp(val email: String) : SignupEffect
     data object NavigateToLogin : SignupEffect
+    data object Authenticated : SignupEffect
 }

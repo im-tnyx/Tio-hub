@@ -2,6 +2,8 @@ package com.tnyx.features.auth.presentation.signup
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tnyx.features.auth.domain.model.AuthResult
+import com.tnyx.features.auth.domain.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -12,7 +14,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class SignupViewModel @Inject constructor() : ViewModel() {
+class SignupViewModel @Inject constructor(
+    private val authRepository: AuthRepository
+) : ViewModel() {
     private val _uiState = MutableStateFlow(SignupUiState())
     val uiState = _uiState.asStateFlow()
 
@@ -65,9 +69,17 @@ class SignupViewModel @Inject constructor() : ViewModel() {
             return
         }
 
-        _uiState.update { it.copy(name = name, email = email, isLoading = true) }
-        emitEffect(SignupEffect.NavigateToOtp(email))
-        _uiState.update { it.copy(isLoading = false) }
+        viewModelScope.launch {
+            _uiState.update { it.copy(name = name, email = email, isLoading = true) }
+            when (val result = authRepository.signUp(name = name, email = email, password = password)) {
+                is AuthResult.Authenticated -> _effect.emit(SignupEffect.Authenticated)
+                is AuthResult.VerificationRequired -> _effect.emit(SignupEffect.NavigateToOtp(result.email))
+                is AuthResult.Failure -> _uiState.update {
+                    it.copy(passwordError = result.message)
+                }
+            }
+            _uiState.update { it.copy(isLoading = false) }
+        }
     }
 
     private fun emitEffect(effect: SignupEffect) {

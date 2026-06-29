@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.collectLatest
 fun SignupRoute(
     onNavigateToLogin: () -> Unit,
     onNavigateToOtp: (String) -> Unit,
+    onAuthSuccess: () -> Unit,
     viewModel: SignupViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -20,6 +21,7 @@ fun SignupRoute(
             when (effect) {
                 SignupEffect.NavigateToLogin -> onNavigateToLogin()
                 is SignupEffect.NavigateToOtp -> onNavigateToOtp(effect.email)
+                SignupEffect.Authenticated -> onAuthSuccess()
             }
         }
     }

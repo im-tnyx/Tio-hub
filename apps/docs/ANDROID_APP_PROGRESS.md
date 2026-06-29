@@ -71,6 +71,8 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
 - [x] Signup destination has minimum real UI.
 - [x] OTP destination has minimum real UI.
 - [x] Auth success flow is reachable from Login demo/sign-in and OTP verify actions.
+- [x] AuthRepository contract exists.
+- [x] FakeAuthRepository backs the minimum auth flow for app testing.
 - [ ] Supabase/Firebase auth source of truth is finalized.
 
 ### Onboarding
@@ -146,9 +148,9 @@ Recommended next order:
    - Add local/dev fake repository first if Supabase is not ready.
    - Then add Supabase tables/seed/RLS when implementation begins.
 
-3. **Auth repository/session vertical slice**
-   - Replace temporary Auth success with repository-backed session handling.
-   - Finalize Supabase/Firebase source of truth before storing real user sessions.
+3. **Auth real session source slice**
+   - Replace `FakeAuthRepository` with Supabase/Firebase or backend-backed implementation.
+   - Keep ViewModels behind the stable `AuthRepository` contract.
 
 4. **Progress real screens**
    - Implement Journey screen first.
@@ -197,7 +199,7 @@ Rule: Future module folders should be created only when runtime code needs them.
 
 - [x] `./gradlew.bat :app:compileDebugKotlin`
 - [x] Result: BUILD SUCCESSFUL
-- [x] Scope: Auth minimum screens and AuthGraph wiring compile with app.
+- [x] Scope: AuthRepository boundary, FakeAuthRepository, Auth minimum screens, and AuthGraph wiring compile with app.
 
 Known warning:
 
@@ -206,4 +208,4 @@ Known warning:
 ---
 
 **Last Updated:** 2026-06-29
-**Current Focus:** Replace temporary Auth success with real auth repository/session source, then wire `ProfileGraph` from avatar and `SettingsGraph` from gear icon.
+**Current Focus:** Replace `FakeAuthRepository` with real auth session source when Supabase/Firebase/backend direction is finalized, then wire `ProfileGraph` from avatar and `SettingsGraph` from gear icon.

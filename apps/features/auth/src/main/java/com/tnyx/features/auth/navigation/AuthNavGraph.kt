@@ -40,7 +40,8 @@ fun NavGraphBuilder.authGraph(
                 },
                 onNavigateToOtp = { email ->
                     navController.navigate(AuthRoute.OtpVerification(email))
-                }
+                },
+                onAuthSuccess = onAuthSuccess
             )
         }
 

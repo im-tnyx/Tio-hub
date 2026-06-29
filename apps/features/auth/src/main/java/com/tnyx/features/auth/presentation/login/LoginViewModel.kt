@@ -2,6 +2,8 @@ package com.tnyx.features.auth.presentation.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tnyx.features.auth.domain.model.AuthResult
+import com.tnyx.features.auth.domain.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -12,7 +14,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class LoginViewModel @Inject constructor() : ViewModel() {
+class LoginViewModel @Inject constructor(
+    private val authRepository: AuthRepository
+) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState = _uiState.asStateFlow()
 
@@ -28,7 +32,7 @@ class LoginViewModel @Inject constructor() : ViewModel() {
                 it.copy(password = action.value, passwordError = null)
             }
             LoginAction.SignInClicked -> submit()
-            LoginAction.DemoAccountClicked -> emitEffect(LoginEffect.Authenticated)
+            LoginAction.DemoAccountClicked -> signInWithDemoAccount()
             LoginAction.CreateAccountClicked -> emitEffect(LoginEffect.NavigateToSignup)
         }
     }
@@ -59,9 +63,35 @@ class LoginViewModel @Inject constructor() : ViewModel() {
             return
         }
 
-        _uiState.update { it.copy(email = email, isLoading = true) }
-        emitEffect(LoginEffect.Authenticated)
-        _uiState.update { it.copy(isLoading = false) }
+        viewModelScope.launch {
+            _uiState.update { it.copy(email = email, isLoading = true) }
+            when (val result = authRepository.signIn(email = email, password = password)) {
+                is AuthResult.Authenticated -> _effect.emit(LoginEffect.Authenticated)
+                is AuthResult.Failure -> _uiState.update {
+                    it.copy(passwordError = result.message)
+                }
+                is AuthResult.VerificationRequired -> _uiState.update {
+                    it.copy(emailError = "Verify your email before signing in")
+                }
+            }
+            _uiState.update { it.copy(isLoading = false) }
+        }
+    }
+
+    private fun signInWithDemoAccount() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, emailError = null, passwordError = null) }
+            when (val result = authRepository.signInWithDemoAccount()) {
+                is AuthResult.Authenticated -> _effect.emit(LoginEffect.Authenticated)
+                is AuthResult.Failure -> _uiState.update {
+                    it.copy(passwordError = result.message)
+                }
+                is AuthResult.VerificationRequired -> _uiState.update {
+                    it.copy(emailError = "Demo account requires verification")
+                }
+            }
+            _uiState.update { it.copy(isLoading = false) }
+        }
     }
 
     private fun emitEffect(effect: LoginEffect) {

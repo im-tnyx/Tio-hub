@@ -1,79 +1,76 @@
-# Code of Conduct
+# Contributor Covenant Code of Conduct (TNYX / Tio-hub)
 
 ## Our Pledge
 
-We want Tio-hub to be a welcoming, professional, and useful space for everyone contributing to TNYX/Tio.
+We want **Tio-hub** to be a welcoming, professional, and useful space for everyone contributing to **TNYX/Tio**. 
 
-As contributors and maintainers, we pledge to make participation respectful and harassment-free, regardless of age, body size, disability, ethnicity, gender identity or expression, level of experience, education, nationality, personal appearance, race, religion, caste, sexual identity or orientation, or technology preference.
+As contributors and maintainers, we pledge to make participation in our community a harassment-free experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, religion, caste, sexual identity and orientation, or technology preference.
 
-Simple rule: strong opinions are welcome; disrespect is not.
+We pledge to act and interact in ways that contribute to an open, welcoming, diverse, inclusive, and healthy community.
+
+*Simple rule: strong opinions are welcome; disrespect is not.*
 
 ---
 
 ## Our Standards
 
-Examples of behavior that helps the project:
+### Behavior that helps the project:
+*   Use welcoming and inclusive language.
+*   Be patient with new contributors.
+*   Give specific, actionable feedback.
+*   Assume good intent, but clarify impact when something causes harm.
+*   Respect architectural boundaries and explain tradeoffs calmly.
+*   Credit ideas and prior work.
+*   Keep discussion focused on the work, not the person.
+*   Accept responsibility when you make a mistake and learn from the experience.
 
-- Use welcoming and inclusive language.
-- Be patient with new contributors.
-- Give specific, actionable feedback.
-- Assume good intent, but clarify impact when something causes harm.
-- Respect architectural boundaries and explain tradeoffs calmly.
-- Credit ideas and prior work.
-- Keep discussion focused on the work, not the person.
-- Accept responsibility when you make a mistake.
+### Behavior that is not acceptable:
+*   Harassment, intimidation, threats, or personal attacks.
+*   Insults, slurs, or demeaning comments.
+*   Public or private sexualized language or imagery, and unwelcome sexual attention or advances.
+*   Trolling, repeated off-topic disruption, or insulting/derogatory comments.
+*   Publishing private information, such as physical or email addresses, without explicit permission.
+*   Mocking someone's language, accent, background, or experience level.
+*   Dismissing review feedback with hostility.
+*   Any conduct that would reasonably make another contributor feel unsafe or unwelcome.
 
-Examples of behavior that is not acceptable:
-
-- Harassment, intimidation, threats, or personal attacks.
-- Insults, slurs, or demeaning comments.
-- Public or private sexualized language or imagery.
-- Trolling or repeated off-topic disruption.
-- Publishing private information without explicit permission.
-- Mocking someone's language, accent, background, or experience level.
-- Dismissing review feedback with hostility.
-- Any conduct that would reasonably make another contributor feel unsafe or unwelcome.
-
-Hindi/English mix is fine in this project. Bas tone professional aur respectful rakho.
+*Hindi/English mix is fine in this project. Bas tone professional aur respectful rakho.*
 
 ---
 
-## Engineering Disagreement
+## 🛠️ Engineering Disagreement
 
-Technical disagreement is normal and healthy.
+Technical disagreement is normal and healthy. 
 
 When you disagree:
+1.  **Explain the tradeoff:** Detail the pros and cons of both approaches.
+2.  **Reference docs or source code:** Ground discussions in facts and codebase realities.
+3.  **Offer a concrete alternative:** Do not just criticize; suggest a path forward.
+4.  **Separate personal preference from requirement:** Distinguish between "I prefer this style" and "this is an architectural requirement."
+5.  **Keep conversations focused:** Ground architecture discussions in overall project goals.
 
-- Explain the tradeoff.
-- Reference docs or source code.
-- Offer a concrete alternative.
-- Separate "I prefer" from "this is required."
-- Keep architecture discussions grounded in project goals.
+For Tio-hub, architecture-sensitive discussions should refer directly to:
+*   [ARCHITECTURE.md](apps/docs/ARCHITECTURE.md)
+*   [NAVIGATION_GUIDE.md](apps/docs/NAVIGATION_GUIDE.md)
+*   [PROFILE_SETTINGS_GUIDE.md](apps/docs/PROFILE_SETTINGS_GUIDE.md)
+*   [SUPABASE_INCREMENTAL_SETUP_PLAN.md](apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md)
+*   [CONTRIBUTING.md](CONTRIBUTING.md)
 
-For Tio-hub, architecture-sensitive discussions should refer to:
-
-- `apps/docs/ARCHITECTURE.md`
-- `apps/docs/NAVIGATION_GUIDE.md`
-- `apps/docs/PROFILE_SETTINGS_GUIDE.md`
-- `apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md`
-- `CONTRIBUTING.md`
-
-Review comments should help the code get better, not make the contributor feel small.
+*Review comments should help the code get better, not make the contributor feel small.*
 
 ---
 
-## Maintainer Responsibilities
+## Enforcement Responsibilities
 
-Maintainers are responsible for clarifying standards and applying this Code of Conduct fairly.
+Maintainers are responsible for clarifying and enforcing our standards of acceptable behavior and will take appropriate and fair corrective action in response to any behavior they deem inappropriate, threatening, offensive, or harmful.
 
-Maintainers may:
+Maintainers have the right and responsibility to remove, edit, or reject comments, commits, code, wiki edits, questions, and other contributions that are not aligned to this Code of Conduct, and will communicate reasons for moderation decisions when appropriate.
 
-- edit or remove comments, commits, issues, PRs, or other contributions that violate this Code of Conduct
-- ask contributors to change behavior
-- temporarily restrict participation
-- permanently ban contributors for repeated or severe violations
+---
 
-Maintainers should explain moderation decisions when doing so does not create additional harm or expose private information.
+## Scope
+
+This Code of Conduct applies within all project spaces, and also applies when an individual is officially representing the project in public spaces. Examples of representing our project include using an official email address, posting via an official social media account, or acting as an appointed representative at an online or offline event.
 
 ---
 
@@ -109,31 +106,23 @@ This Code of Conduct applies in:
 
 ## Enforcement Guidelines
 
-Maintainers may use these enforcement levels depending on severity.
+Maintainers will follow these Community Impact Guidelines in determining the consequences for any action they deem in violation of this Code of Conduct:
 
 ### 1. Correction
-
-For minor behavior that may be unintentional.
-
-Outcome: maintainer explains why the behavior is inappropriate and asks for correction.
+*   **Impact:** Use of unprofessional language or unwelcome behavior deemed inappropriate.
+*   **Outcome:** A private warning explaining why the behavior was inappropriate and asking for correction. A public apology may be requested.
 
 ### 2. Warning
-
-For behavior that is disruptive, repeated, or clearly against the standards.
-
-Outcome: formal warning and expectation for change.
+*   **Impact:** A violation through a single incident or series of actions.
+*   **Outcome:** A formal warning with consequences for continued behavior. No interaction with the people involved is permitted for a specified period.
 
 ### 3. Temporary Restriction
-
-For serious or repeated violations.
-
-Outcome: temporary restriction from issues, PRs, discussions, or other project spaces.
+*   **Impact:** A serious violation of community standards, including sustained harassment.
+*   **Outcome:** A temporary ban from project spaces (issues, PRs, discussions) and community interaction for a specified period.
 
 ### 4. Permanent Restriction
-
-For harassment, threats, doxxing, hate speech, severe misconduct, or repeated refusal to follow standards.
-
-Outcome: permanent restriction from project participation.
+*   **Impact:** Demonstrating a pattern of violation of community standards, including sustained harassment, abuse, or aggression toward individuals.
+*   **Outcome:** A permanent ban from project participation.
 
 ---
 
@@ -141,8 +130,12 @@ Outcome: permanent restriction from project participation.
 
 Tio-hub is a health and wellness product. The code should be reliable, and the community around it should feel steady too.
 
-Be direct. Be kind. Be precise. Help the next person understand the system better than you found it.
+*Be direct. Be kind. Be precise. Help the next person understand the system better than you found it.*
 
 ---
 
-This Code of Conduct is adapted from the Contributor Covenant spirit and written for the Tio-hub project.
+## Attribution
+
+This Code of Conduct is adapted from the [Contributor Covenant][homepage], version 2.1, available at <https://www.contributor-covenant.org/version/2/1/code_of_conduct.html>.
+
+[homepage]: https://www.contributor-covenant.org

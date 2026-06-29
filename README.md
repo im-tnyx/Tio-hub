@@ -1,117 +1,122 @@
-# Tio-hub
+# Tio Hub
 
-Tio-hub is the Android and Wear OS engineering home for **TNYX / Tio**, an AI-powered health, fitness, workout, nutrition, progress, and coaching companion.
+Tio Hub is the Android and Wear OS engineering home for **TNYX / Tio** — an AI-powered health, fitness, workout, nutrition, progress, and coaching companion.
 
-This repository is built with a simple architectural promise: product features can grow fast, but boundaries stay clean. UI remains dumb, business rules stay in ViewModel/domain layers, navigation stays type-safe, and backend/persistence details are introduced through repository abstractions instead of leaking into screens.
+This repository is built with a simple architectural promise: **Product features can grow fast, but boundaries stay clean.** UI remains dumb, business rules stay in ViewModel/domain layers, navigation stays type-safe, and backend/persistence details are introduced through repository abstractions instead of leaking into screens.
 
-Documentation baseline: root docs plus `apps/docs/` are the source of truth for future implementation work.
-
----
-
-## Project Overview
-
-Tio is designed as a premium health and wellness app that helps users manage:
-
-- personalized onboarding
-- nutrition diary, macro tracking, meal editing, and target setup
-- workout planning and workout history
-- progress, measurements, profile, and settings
-- Wear OS companion workflows
-- future AI Coach, recovery, Health Connect, subscription, and backend-backed sync
-
-Tone of the project: practical, clean, aur contributor-friendly. Agar aap naye contributor ho, welcome. Pehle docs padho, module boundary samjho, phir chhote focused PR se start karo.
+> [!NOTE]
+> **Documentation Baseline:** Root documentation plus `apps/docs/` serve as the absolute source of truth for all future implementation work.
 
 ---
 
-## Current Repository Shape
+## 🎯 Project Overview
+
+Tio is designed as a premium health and wellness application that helps users manage:
+
+*   **📱 Personalized Onboarding:** Splash & welcome pathways to capture targets.
+*   **🥗 Nutrition Diary:** Macro tracking, calorie count, water tracking, and meal editing.
+*   **🏋️ Workout Management:** Training plans, routines, and historical logs.
+*   **📈 Progress Tracker:** Weights, measurements, profile avatar launch, and configurations.
+*   **⌚ Wear OS Companion:** Fast watch workflows and telemetry integration.
+*   **🤖 AI Coach Integration:** Recovery, sleep insights, HRV sync, and Health Connect.
+
+> [!IMPORTANT]
+> **Tone of the project:** Practical, clean, aur contributor-friendly. *Agar aap naye contributor ho, welcome. Pehle docs padho, module boundary samjho, phir chhote focused PR se start karo.*
+
+---
+
+## 🏗️ Current Repository Shape
 
 ```text
 Tio-hub/
-|-- README.md
-|-- CONTRIBUTING.md
-|-- CODE_OF_CONDUCT.md
-|-- LICENSE
-|-- .env            # Environment configuration (not committed)
-|-- .ai/            # Short AI/contributor orientation layer
-`-- apps/
-    |-- app/        # Android phone app entry point, routing glue, DI composition
-    |-- core/       # Design system, TnyxTheme, reusable UI, app shell, global routes
-    |-- features/   # Feature modules: auth, onboarding, nutrition, workout, profile, settings, progress
-    |-- shared/     # Pure Kotlin domain models and repository contracts for phone/watch reuse
-    |-- wear/       # Wear OS companion app
-    |-- docs/       # Architecture, navigation, onboarding, Supabase, testing, Wear OS plans
-    |-- build.gradle.kts
-    |-- settings.gradle.kts
-    `-- gradle/
+├── README.md
+├── CONTRIBUTING.md
+├── CODE_OF_CONDUCT.md
+├── LICENSE
+├── .env            # Environment configuration (not committed)
+├── .ai/            # Short AI/contributor orientation layer
+└── apps/
+    ├── app/        # Android phone app entry point, routing glue, DI composition
+    ├── core/       # Design system, TnyxTheme, reusable UI, app shell, global routes
+    ├── features/   # Feature modules: auth, onboarding, nutrition, workout, profile, settings, progress
+    ├── shared/     # Pure Kotlin domain models and repository contracts for phone/watch reuse
+    ├── wear/       # Wear OS companion app
+    ├── docs/       # Architecture, navigation, onboarding, Supabase, testing, Wear OS plans
+    ├── build.gradle.kts
+    ├── settings.gradle.kts
+    └── gradle/
 ```
 
-The Gradle root for the Android project is currently `apps/`, not the repository root.
+> [!WARNING]
+> The Gradle root for the Android project is currently `apps/`, not the repository root.
 
 ---
 
-## Architecture Overview
+## 🧩 Architecture Overview
 
-Tio-hub follows **multi-module Clean Architecture** with an MVI-style presentation contract.
+Tio-hub follows a **multi-module Clean Architecture** with an MVI-style presentation contract.
 
-### Core Principles
+### 📐 Core Principles
 
-- **Clean Architecture**: domain contracts stay separate from UI and platform wiring.
-- **MVI**: `Route -> ViewModel -> Contract -> Screen` is the preferred flow.
-- **Type-safe Navigation**: route models use `@Serializable`; avoid stringly-typed routes.
-- **Feature ownership**: each feature owns its own navigation, presentation, and business behavior.
-- **Thin shell**: app shell shows chrome and tab structure; it does not own feature logic.
-- **Token-first UI**: screens and components consume `TnyxTheme`, not random hardcoded values.
-- **Supabase temporary abstraction**: hardcoded data may exist as scaffolding only until a repository/Supabase-backed slice replaces it.
+*   **Clean Architecture:** Domain contracts stay separate from UI and platform wiring.
+*   **MVI:** `Route -> ViewModel -> Contract -> Screen` is the preferred flow.
+*   **Type-safe Navigation:** Route models use `@Serializable`; avoid stringly-typed routes.
+*   **Feature Ownership:** Each feature owns its own navigation, presentation, and business behavior.
+*   **Thin Shell:** App shell shows chrome and tab structure; it does not own feature logic.
+*   **Token-first UI:** Screens and components consume `TnyxTheme`, not random hardcoded values.
+*   **Supabase Temporary Abstraction:** Hardcoded data may exist as scaffolding only until a repository/Supabase-backed slice replaces it.
 
-### Module Responsibilities
+### 🗂️ Module Responsibilities
 
-| Module | Responsibility |
-|---|---|
-| `apps/app` | Phone app entry, `MainActivity`, app-level navigation host, DI and platform wiring |
-| `apps/core` | Tnyx design system, reusable Compose components, shell, global route definitions, legal UI |
-| `apps/features/*` | Feature-owned Route/Screen/ViewModel/Contract/navigation code |
-| `apps/shared` | Pure Kotlin models, repository interfaces, and use cases shared by phone and watch |
-| `apps/wear` | Wear OS app entry, Wear routes, watch-specific UI and future sync UX |
+| Module | Responsibility / Scope |
+| :--- | :--- |
+| `apps/app` | Phone app entry, `MainActivity`, app-level navigation host, DI and platform wiring. |
+| `apps/core` | Tnyx design system, reusable Compose components, shell, global route definitions, legal UI. |
+| `apps/features/*` | Feature-owned Route/Screen/ViewModel/Contract/navigation code. |
+| `apps/shared` | Pure Kotlin models, repository interfaces, and use cases shared by phone and watch. |
+| `apps/wear` | Wear OS app entry, Wear routes, watch-specific UI and future sync UX. |
 
-Important rule: `core` can be used by features, but `core` must not import feature modules. `shared` must stay pure Kotlin and should not depend on Android UI APIs.
+> [!IMPORTANT]
+> **Dependency Rule:** `core` can be used by features, but `core` must not import feature modules. `shared` must stay pure Kotlin and should not depend on Android UI APIs.
 
 ---
 
-## MVI Presentation Pattern
+## 📋 MVI Presentation Pattern
 
 Most feature screens should follow this shape:
 
 ```text
 features/<feature>/src/main/java/com/tnyx/features/<feature>/
-|-- navigation/
-|   `-- <Feature>NavGraph.kt
-`-- presentation/<workflow>/
-    |-- <Workflow>Route.kt
-    |-- <Workflow>Screen.kt
-    |-- <Workflow>ViewModel.kt
-    |-- <Workflow>Contract.kt
-    `-- widgets/
+├── navigation/
+│   └── <Feature>NavGraph.kt
+└── presentation/<workflow>/
+    ├── <Workflow>Route.kt
+    ├── <Workflow>Screen.kt
+    ├── <Workflow>ViewModel.kt
+    ├── <Workflow>Contract.kt
+    └── widgets/
 ```
 
-Role clarity:
+### Role Clarity
 
 | Role | Responsibility |
-|---|---|
-| `Route` | Collect state, collect one-off effects, wire navigation, provide ViewModel |
-| `Screen` | Render immutable `UiState`, emit `Action`; no repository/API/database/NavController access |
-| `ViewModel` | Handle `Action`, update `UiState`, emit `Effect`, call domain/repository layers |
-| `Contract` | Keep `UiState`, `Action`, and `Effect` for that screen/workflow together |
-| `widgets/` | Small composables with explicit callbacks; no business logic |
+| :--- | :--- |
+| **`Route`** | Collect state, collect one-off effects, wire navigation, provide ViewModel. |
+| **`Screen`** | Render immutable `UiState`, emit `Action`; no repository/API/database/NavController access. |
+| **`ViewModel`** | Handle `Action`, update `UiState`, emit `Effect`, call domain/repository layers. |
+| **`Contract`** | Keep `UiState`, `Action`, and `Effect` for that screen/workflow together. |
+| **`widgets/`** | Small composables with explicit callbacks; no business logic. |
 
-Hard rule: `Screen` dumb UI rahega. Business decision ViewModel/domain layer mein rahegi.
+> [!IMPORTANT]
+> **Hard Rule:** *Screen dumb UI rahega. Business decision ViewModel/domain layer mein rahegi.*
 
 ---
 
-## Navigation Policy
+## 🧭 Navigation Policy
 
 Tio-hub uses **Compose Navigation 2.8.x type-safe navigation**.
 
-Expected route style:
+### Expected Route Style
 
 ```kotlin
 @Serializable
@@ -124,67 +129,66 @@ sealed interface NutritionRoute {
 }
 ```
 
-Navigation guidelines:
+### Navigation Guidelines
 
-- Prefer serializable route models/classes.
-- Do not introduce raw string routes for new flows.
-- Feature modules own their internal graph.
-- Cross-feature navigation should happen through public route contracts.
-- Bottom navigation remains focused on primary app tabs.
-- Profile is avatar-launched; Settings is gear-launched.
+*   Prefer serializable route models/classes.
+*   Do not introduce raw string routes for new flows.
+*   Feature modules own their internal graph.
+*   Cross-feature navigation should happen through public route contracts.
+*   Bottom navigation remains focused on primary app tabs.
+*   Profile is avatar-launched; Settings is gear-launched.
 
-Canonical navigation details live in [`apps/docs/NAVIGATION_GUIDE.md`](apps/docs/NAVIGATION_GUIDE.md).
+*Canonical navigation details live in [`apps/docs/NAVIGATION_GUIDE.md`](apps/docs/NAVIGATION_GUIDE.md).*
 
 ---
 
-## Supabase And Data Strategy
+## ⚡ Supabase and Data Strategy
 
 Current app slices may still contain temporary sample or hardcoded data. That is acceptable only as UI scaffolding.
 
-The target direction is:
+### The target direction is:
 
-1. Define domain/repository contract.
-2. Keep shared phone/watch models in `apps/shared` where reuse is real.
-3. Add Supabase/backend-backed implementation in the platform/data layer.
-4. Keep screens rendering `UiState`; never let screens depend on table shape.
-5. Add RLS, seed data, and validation when a slice becomes persistent.
+1.  Define domain/repository contract.
+2.  Keep shared phone/watch models in `apps/shared` where reuse is real.
+3.  Add Supabase/backend-backed implementation in the platform/data layer.
+4.  Keep screens rendering `UiState`; never let screens depend on table shape.
+5.  Add RLS, seed data, and validation when a slice becomes persistent.
 
-No service-role key, admin key, private key, or production secret belongs in Android, Wear, web public code, screenshots, or committed docs.
+> [!CAUTION]
+> No service-role key, admin key, private key, or production secret belongs in Android, Wear, web public code, screenshots, or committed docs.
 
-See [`apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md`](apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md).
+*See [`apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md`](apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md).*
 
 ---
 
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Android Studio with recent Kotlin/Compose support
-- JDK 21
-- Android SDK for compile/target SDK used by the project
-- Git
-- A local `.env` only if a feature explicitly requires runtime environment values
+*   Android Studio with recent Kotlin/Compose support (Jellyfish or newer recommended).
+*   **JDK 21** configured for Gradle builds.
+*   Android SDK for compile/target SDK used by the project (API 35).
+*   Git command line.
+*   A local `.env` only if a feature explicitly requires runtime environment values.
 
-### Clone And Open
+### Clone and Open
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/im-tnyx/Tio-hub.git
 cd Tio-hub
 ```
 
-Open the `apps/` directory in Android Studio, then sync Gradle.
+Open the **`apps/`** directory (not the root directory) in Android Studio, then sync Gradle.
 
 ### Build From Terminal
 
 From the repository root:
-
 ```bash
 cd apps
 ./gradlew :app:assembleDebug
 ```
 
 On Windows PowerShell:
-
 ```powershell
 cd apps
 .\gradlew.bat :app:assembleDebug
@@ -197,15 +201,13 @@ cd apps
 ./gradlew test
 ```
 
-On Windows:
-
+On Windows PowerShell:
 ```powershell
 cd apps
 .\gradlew.bat test
 ```
 
 For focused checks, prefer module-level commands:
-
 ```bash
 ./gradlew :app:testDebugUnitTest
 ./gradlew :features:nutrition:testDebugUnitTest
@@ -214,55 +216,55 @@ For focused checks, prefer module-level commands:
 
 ### Run The App
 
-1. Open `apps/` in Android Studio.
-2. Select the `app` configuration for Android phone.
-3. Select the `wear` module/configuration for Wear OS work.
-4. Build and run on emulator or physical device.
+1.  Open `apps/` in Android Studio.
+2.  Select the `app` configuration for Android phone.
+3.  Select the `wear` module/configuration for Wear OS work.
+4.  Build and run on emulator or physical device.
 
 ---
 
-## Documentation Index
+## 📚 Documentation Index
 
-| Document | Purpose |
-|---|---|
-| [`.ai/README.md`](.ai/README.md) | Short AI/contributor orientation layer; canonical docs still live in `apps/docs/` |
-| [`apps/docs/ENGINEERING_GUIDELINES.md`](apps/docs/ENGINEERING_GUIDELINES.md) | Production engineering rules and review expectations |
-| [`apps/docs/DEFINITION_OF_DONE.md`](apps/docs/DEFINITION_OF_DONE.md) | Merge-readiness checklist for feature, UI, data, and docs work |
-| [`apps/docs/ARCHITECTURE_CHANGELOG.md`](apps/docs/ARCHITECTURE_CHANGELOG.md) | Durable architecture change log |
-| [`apps/docs/adr/README.md`](apps/docs/adr/README.md) | Architecture Decision Records index |
-| [`apps/README.md`](apps/README.md) | Android app-focused technical overview |
-| [`apps/docs/README.md`](apps/docs/README.md) | Canonical Android/Wear documentation map and reading paths |
-| [`apps/docs/ARCHITECTURE.md`](apps/docs/ARCHITECTURE.md) | Module ownership, design system, shell, feature patterns |
-| [`apps/docs/NAVIGATION_GUIDE.md`](apps/docs/NAVIGATION_GUIDE.md) | Type-safe navigation and graph policy |
-| [`apps/docs/PROFILE_SETTINGS_GUIDE.md`](apps/docs/PROFILE_SETTINGS_GUIDE.md) | Profile, Settings, Progress, ownership rules |
-| [`apps/docs/ONBOARDING_FLOW_DETAILED.md`](apps/docs/ONBOARDING_FLOW_DETAILED.md) | Complete onboarding flow reference |
-| [`apps/docs/TNYX_MODULAR_ONBOARDING.md`](apps/docs/TNYX_MODULAR_ONBOARDING.md) | Modular onboarding implementation guide |
-| [`apps/docs/NUTRITION.md`](apps/docs/NUTRITION.md) | Nutrition runtime, UI, and persistence roadmap |
-| [`apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md`](apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md) | Supabase migration plan and security boundaries |
-| [`apps/docs/TESTING_GUIDE.md`](apps/docs/TESTING_GUIDE.md) | Testing strategy and expectations |
-| [`apps/docs/ANDROID_APP_PROGRESS.md`](apps/docs/ANDROID_APP_PROGRESS.md) | Android implementation progress |
-| [`apps/docs/WEAR_OS_PLAN.md`](apps/docs/WEAR_OS_PLAN.md) | Wear OS planning |
-| [`apps/docs/WEAR_OS_PROGRESS.md`](apps/docs/WEAR_OS_PROGRESS.md) | Wear OS progress tracking |
+| Document | Purpose / Summary |
+| :--- | :--- |
+| [`.ai/README.md`](.ai/README.md) | Short AI/contributor orientation layer; canonical docs live in `apps/docs/`. |
+| [`apps/docs/ENGINEERING_GUIDELINES.md`](apps/docs/ENGINEERING_GUIDELINES.md) | Production engineering rules and review expectations. |
+| [`apps/docs/DEFINITION_OF_DONE.md`](apps/docs/DEFINITION_OF_DONE.md) | Merge-readiness checklist for feature, UI, data, and docs work. |
+| [`apps/docs/ARCHITECTURE_CHANGELOG.md`](apps/docs/ARCHITECTURE_CHANGELOG.md) | Durable architecture change log. |
+| [`apps/docs/adr/README.md`](apps/docs/adr/README.md) | Architecture Decision Records index. |
+| [`apps/README.md`](apps/README.md) | Android app-focused technical overview. |
+| [`apps/docs/README.md`](apps/docs/README.md) | Canonical Android/Wear documentation map and reading paths. |
+| [`apps/docs/ARCHITECTURE.md`](apps/docs/ARCHITECTURE.md) | Module ownership, design system, shell, feature patterns. |
+| [`apps/docs/NAVIGATION_GUIDE.md`](apps/docs/NAVIGATION_GUIDE.md) | Type-safe navigation and graph policy. |
+| [`apps/docs/PROFILE_SETTINGS_GUIDE.md`](apps/docs/PROFILE_SETTINGS_GUIDE.md) | Profile, Settings, Progress, ownership rules. |
+| [`apps/docs/ONBOARDING_FLOW_DETAILED.md`](apps/docs/ONBOARDING_FLOW_DETAILED.md) | Complete onboarding flow reference. |
+| [`apps/docs/TNYX_MODULAR_ONBOARDING.md`](apps/docs/TNYX_MODULAR_ONBOARDING.md) | Modular onboarding implementation guide. |
+| [`apps/docs/NUTRITION.md`](apps/docs/NUTRITION.md) | Nutrition runtime, UI, and persistence roadmap. |
+| [`apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md`](apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md) | Supabase migration plan and security boundaries. |
+| [`apps/docs/TESTING_GUIDE.md`](apps/docs/TESTING_GUIDE.md) | Testing strategy and expectations. |
+| [`apps/docs/ANDROID_APP_PROGRESS.md`](apps/docs/ANDROID_APP_PROGRESS.md) | Android implementation progress. |
+| [`apps/docs/WEAR_OS_PLAN.md`](apps/docs/WEAR_OS_PLAN.md) | Wear OS planning. |
+| [`apps/docs/WEAR_OS_PROGRESS.md`](apps/docs/WEAR_OS_PROGRESS.md) | Wear OS progress tracking. |
 
 ---
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome. Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) before opening a PR.
 
-Quick expectations:
+### Quick expectations:
 
-- Work from a focused branch.
-- Keep changes small and reviewable.
-- Follow Clean Architecture and MVI boundaries.
-- Use `TnyxTheme` tokens for UI.
-- Keep navigation type-safe.
-- Do not commit secrets, generated outputs, APKs/AABs, `.env`, or local caches.
-- Update docs when architecture, navigation, persistence, or ownership changes.
+*   Work from a focused branch.
+*   Keep changes small and reviewable.
+*   Follow Clean Architecture and MVI boundaries.
+*   Use `TnyxTheme` tokens for UI.
+*   Keep navigation type-safe.
+*   Do not commit secrets, generated outputs, APKs/AABs, `.env`, or local caches.
+*   Update docs when architecture, navigation, persistence, or ownership changes.
 
 ---
 
-## Code Of Conduct
+## 🛡️ Code of Conduct
 
 This project follows a contributor-friendly Code of Conduct. Be respectful, specific, and constructive. Disagreement is fine; personal attacks are not.
 
@@ -270,10 +272,9 @@ See [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
 
 ---
 
-## License
+## 📜 License
 
 Tio-hub is licensed under the MIT License. See [`LICENSE`](LICENSE).
 
 ---
-**Last Updated:** 2026-06-29
-Maintained by TNYX Engineering.
+*Last Updated: 2026-06-29 — Maintained by TNYX Engineering.*

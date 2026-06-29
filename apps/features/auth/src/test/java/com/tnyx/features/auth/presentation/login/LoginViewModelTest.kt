@@ -8,6 +8,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -74,6 +75,7 @@ class LoginViewModelTest {
         authRepository.signInResult = AuthResult.Authenticated(
             AuthSession("uid", "test@example.com", "User", false)
         )
+        authRepository.delayMs = 1000
 
         val effects = mutableListOf<LoginEffect>()
         val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
@@ -83,6 +85,8 @@ class LoginViewModelTest {
         viewModel.handleAction(LoginAction.EmailChanged("test@example.com"))
         viewModel.handleAction(LoginAction.PasswordChanged("password123"))
         viewModel.handleAction(LoginAction.SignInClicked)
+
+        runCurrent()
 
         // Loading is set to true immediately
         assertTrue(viewModel.uiState.value.isLoading)
@@ -108,8 +112,6 @@ class LoginViewModelTest {
         viewModel.handleAction(LoginAction.PasswordChanged("password123"))
         viewModel.handleAction(LoginAction.SignInClicked)
 
-        assertTrue(viewModel.uiState.value.isLoading)
-
         advanceUntilIdle()
 
         assertFalse(viewModel.uiState.value.isLoading)
@@ -124,8 +126,6 @@ class LoginViewModelTest {
         viewModel.handleAction(LoginAction.PasswordChanged("password123"))
         viewModel.handleAction(LoginAction.SignInClicked)
 
-        assertTrue(viewModel.uiState.value.isLoading)
-
         advanceUntilIdle()
 
         assertFalse(viewModel.uiState.value.isLoading)
@@ -137,6 +137,7 @@ class LoginViewModelTest {
         authRepository.signInWithDemoResult = AuthResult.Authenticated(
             AuthSession("demo-uid", "demo@tnyx.app", "Demo User", true)
         )
+        authRepository.delayMs = 1000
 
         val effects = mutableListOf<LoginEffect>()
         val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
@@ -144,6 +145,8 @@ class LoginViewModelTest {
         }
 
         viewModel.handleAction(LoginAction.DemoAccountClicked)
+
+        runCurrent()
 
         assertTrue(viewModel.uiState.value.isLoading)
 

@@ -9,6 +9,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -65,8 +66,11 @@ class OtpVerificationViewModelTest {
             viewModel.effect.collect { effects.add(it) }
         }
 
+        authRepository.delayMs = 1000
         viewModel.handleAction(OtpVerificationAction.CodeChanged("123456"))
         viewModel.handleAction(OtpVerificationAction.VerifyClicked)
+
+        runCurrent()
 
         assertTrue(viewModel.uiState.value.isLoading)
 
@@ -89,8 +93,6 @@ class OtpVerificationViewModelTest {
         viewModel.handleAction(OtpVerificationAction.CodeChanged("123456"))
         viewModel.handleAction(OtpVerificationAction.VerifyClicked)
 
-        assertTrue(viewModel.uiState.value.isLoading)
-
         advanceUntilIdle()
 
         assertFalse(viewModel.uiState.value.isLoading)
@@ -105,8 +107,6 @@ class OtpVerificationViewModelTest {
         viewModel.handleAction(OtpVerificationAction.CodeChanged("123456"))
         viewModel.handleAction(OtpVerificationAction.VerifyClicked)
 
-        assertTrue(viewModel.uiState.value.isLoading)
-
         advanceUntilIdle()
 
         assertFalse(viewModel.uiState.value.isLoading)
@@ -118,7 +118,10 @@ class OtpVerificationViewModelTest {
         val viewModel = createViewModel("test@example.com")
         authRepository.resendOtpResult = AuthResult.VerificationRequired("test@example.com")
 
+        authRepository.delayMs = 1000
         viewModel.handleAction(OtpVerificationAction.ResendClicked)
+
+        runCurrent()
 
         assertTrue(viewModel.uiState.value.isLoading)
 
@@ -135,8 +138,6 @@ class OtpVerificationViewModelTest {
         authRepository.resendOtpResult = AuthResult.Failure("Too many requests")
 
         viewModel.handleAction(OtpVerificationAction.ResendClicked)
-
-        assertTrue(viewModel.uiState.value.isLoading)
 
         advanceUntilIdle()
 

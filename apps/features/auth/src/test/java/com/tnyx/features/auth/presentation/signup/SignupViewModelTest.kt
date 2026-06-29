@@ -8,6 +8,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -102,7 +103,10 @@ class SignupViewModelTest {
         viewModel.handleAction(SignupAction.NameChanged("John Doe"))
         viewModel.handleAction(SignupAction.EmailChanged("test@example.com"))
         viewModel.handleAction(SignupAction.PasswordChanged("secure123"))
+        authRepository.delayMs = 1000
         viewModel.handleAction(SignupAction.SignupClicked)
+
+        runCurrent()
 
         assertTrue(viewModel.uiState.value.isLoading)
 
@@ -133,8 +137,6 @@ class SignupViewModelTest {
         viewModel.handleAction(SignupAction.PasswordChanged("secure123"))
         viewModel.handleAction(SignupAction.SignupClicked)
 
-        assertTrue(viewModel.uiState.value.isLoading)
-
         advanceUntilIdle()
 
         assertFalse(viewModel.uiState.value.isLoading)
@@ -153,8 +155,6 @@ class SignupViewModelTest {
         viewModel.handleAction(SignupAction.EmailChanged("test@example.com"))
         viewModel.handleAction(SignupAction.PasswordChanged("secure123"))
         viewModel.handleAction(SignupAction.SignupClicked)
-
-        assertTrue(viewModel.uiState.value.isLoading)
 
         advanceUntilIdle()
 

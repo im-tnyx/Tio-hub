@@ -33,9 +33,6 @@ class ShellViewModel @Inject constructor() : ViewModel() {
             ShellAction.ProfileClicked -> {
                 // Navigate to profile.
             }
-            ShellAction.SettingsClicked -> {
-                // Navigate to settings.
-            }
         }
     }
 }

@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.Flow
  *
  * यह interface :shared module में define होगा।
  * Implementation अलग-अलग होगी:
- *   - Phone App  → Room DB implementation
- *   - Watch App  → Room DB (watch-side cache) implementation
+ *   - Phone App  → local database implementation
+ *   - Watch App  → local watch-side cache implementation
  *
  * KMP के बाद: commonMain में यही interface रहेगा।
  */

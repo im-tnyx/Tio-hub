@@ -17,6 +17,7 @@ import com.tnyx.features.nutrition.navigation.NutritionScreen
 import com.tnyx.routing.graphs.mainGraph
 import com.tnyx.routing.routes.MainRoute
 import com.tnyx.routing.routes.ProfileRoute
+import com.tnyx.routing.routes.SettingsRoute
 
 /**
  * Main shell with bottom navigation.
@@ -67,6 +68,9 @@ fun MainScreen(
                 }
                 is ShellAction.ProfileClicked -> {
                     rootNavController.navigate(ProfileRoute.Graph)
+                }
+                is ShellAction.SettingsClicked -> {
+                    rootNavController.navigate(SettingsRoute.Graph)
                 }
                 else -> {
                     // Other shell actions are handled by their owning surfaces.

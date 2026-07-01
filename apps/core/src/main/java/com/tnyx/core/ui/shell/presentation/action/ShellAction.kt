@@ -8,4 +8,5 @@ sealed class ShellAction {
     data object PremiumClicked : ShellAction()
     data object StreakClicked : ShellAction()
     data object ProfileClicked : ShellAction()
+    data object SettingsClicked : ShellAction()
 }

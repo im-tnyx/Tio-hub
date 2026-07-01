@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.PersonOutline
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.HorizontalDivider
@@ -68,7 +69,7 @@ fun MainTopBar(
                 modifier = Modifier.align(Alignment.Center)
             )
 
-            // --- Right: Icons (Streak & Profile) ---
+            // --- Right: Icons (Streak, Settings & Profile) ---
             Row(
                 modifier = Modifier.align(Alignment.CenterEnd),
                 verticalAlignment = Alignment.CenterVertically,
@@ -78,6 +79,11 @@ fun MainTopBar(
                     icon = Icons.Default.LocalFireDepartment,
                     tint = TnyxTheme.colors.warning,
                     onClick = { onAction(ShellAction.StreakClicked) }
+                )
+                TopBarCircularItem(
+                    icon = Icons.Default.Settings,
+                    tint = TnyxTheme.colors.textSecondary,
+                    onClick = { onAction(ShellAction.SettingsClicked) }
                 )
                 TopBarCircularItem(
                     icon = Icons.Default.PersonOutline,

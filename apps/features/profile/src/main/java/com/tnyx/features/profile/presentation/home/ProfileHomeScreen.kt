@@ -465,7 +465,7 @@ private fun ProgressPhotosPopulatedState(
                     color = TnyxTheme.colors.textSecondary
                 )
                 Text(
-                    text = "${state.lastPhotoUpdateWeight} • ${state.lastPhotoUpdateDate}",
+                    text = "-- kg • --",
                     style = TnyxTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = TnyxTheme.colors.primary
@@ -591,7 +591,7 @@ private fun UserProfileCard(
                             color = TnyxTheme.colors.textPrimary
                         )
                         Text(
-                            text = state.status,
+                            text = "Active",
                             style = TnyxTheme.typography.bodyMedium,
                             color = TnyxTheme.colors.textSecondary
                         )

@@ -1,4 +1,4 @@
-package com.tnyx.features.profile.presentation.home
+﻿package com.tnyx.features.profile.presentation.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
@@ -256,7 +257,7 @@ private fun UserProfileCardNew(
             }
             
             Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider(color = TnyxTheme.colors.outline.copy(alpha = 0.3f))
+            HorizontalDivider(color = TnyxTheme.colors.textSecondary.copy(alpha = 0.12f).copy(alpha = 0.3f))
             Spacer(modifier = Modifier.height(16.dp))
             
             // Bottom Row: Weight, Height, BMR
@@ -493,7 +494,7 @@ private fun CurrentJourneyCard(
                 progress = { journey.progress },
                 modifier = Modifier.fillMaxWidth(),
                 color = TnyxTheme.colors.primary,
-                trackColor = TnyxTheme.colors.outline.copy(alpha = 0.3f)
+                trackColor = TnyxTheme.colors.textSecondary.copy(alpha = 0.12f).copy(alpha = 0.3f)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Row(

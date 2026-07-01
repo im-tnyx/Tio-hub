@@ -23,7 +23,11 @@ data class WorkoutSession(
     val notes: String = ""
 ) {
     val isActive: Boolean get() = endTimeMs == null
-    val durationMs: Long get() = (endTimeMs ?: System.currentTimeMillis()) - startTimeMs
+
+    /**
+     * Caller supplies the current time so shared domain models stay free from platform clock APIs.
+     */
+    fun durationMs(currentTimeMs: Long): Long = ((endTimeMs ?: currentTimeMs) - startTimeMs).coerceAtLeast(0L)
 
     /** Total volume across all non-warmup sets */
     val totalVolumeKg: Double get() = sets.sumOf { it.volume }

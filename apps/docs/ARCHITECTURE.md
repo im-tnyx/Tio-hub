@@ -76,6 +76,13 @@ Rule: Profile and Settings can launch other features through public route contra
 
 `:shared` एक **pure Kotlin JVM module** है जो Phone App (`:app`) और Watch App (`:wear`) दोनों में समान रहता है। यहां का code किसी भी platform पर चल सकता है।
 
+Current runtime boundary:
+
+- `:shared` is **KMP-ready**, not KMP-enabled.
+- Keep `apps/shared/build.gradle.kts` on `kotlin("jvm")` until an approved KMP migration PR changes it.
+- Do not add `commonMain`, `androidMain`, `iosMain`, or Compose Multiplatform source sets in normal feature work.
+- Future KMP migration must be ADR-backed and validated separately from Android feature implementation.
+
 
 ### Structure
 
@@ -138,10 +145,15 @@ Do not create these folders just to satisfy a tree. Add them when the first real
 ### Coding Rules for `:shared`
 
 1. **`androidx.*` import कभी नहीं** — कोई भी Android-specific import `:shared` को break कर देगा
-2. **`@Immutable` नहीं** — यह Compose annotation है, pure `data class` काफी है
-3. **Pure Kotlin only** — `kotlinx.coroutines`, `kotlinx.serialization` allowed हैं
-4. **Repository interface यहां, implementation `:app` में** — Hilt `@Provides` `:app` module में होगा
-5. **Phone + Watch दोनों सोचकर design करो** — अगर Watch पर जाना है तो model simple rakhna होगा
+2. **Compose imports या annotations नहीं** — `@Immutable`, `@Stable`, Compose UI, Material, preview, icons, या resources `:shared` में नहीं आएंगे
+3. **Hilt, Room, Context, NavController नहीं** — DI annotations, database entities/DAOs, Android `Context`, navigation controller, resources, और platform UI APIs बाहर रहेंगे
+4. **Direct time/system/platform calls नहीं** — domain model `System.currentTimeMillis()`, locale/resource lookup, device APIs, या platform clock directly call नहीं करेगा
+5. **`java.*` या `javax.*` imports नहीं (जब तक ADR-approved expect/actual न हो)** — `java.util.Date`, `java.time.*`, `javax.inject.*`, या JVM-specific stdlib imports से बचो; KMP migration में ये platform-specific abstractions require करेंगे
+6. **Repository interfaces pure Kotlin रहेंगी** — interface `:shared` में, implementation platform/data layer में रहेगी
+7. **Platform implementation outside `:shared`** — Android implementation `:app`/feature data layer में, Wear implementation `:wear` में, future iOS implementation `iosMain`/iOS app layer में होगी
+8. **UseCases constructor-injected pure Kotlin होंगे** — framework-specific service locator pattern domain/usecase में नहीं आएगा
+9. **Caller-provided inputs prefer करो** — timestamps, current date/time, locale, user/device state caller provide करेगा ताकि common code deterministic रहे
+10. **Phone + Watch + future iOS सोचकर design करो** — shared models simple, serializable, testable, और platform-neutral रहने चाहिए
 
 ### `:app` में इसे kaise use karen
 

@@ -287,11 +287,16 @@ app/src/main/
 
 > **⏳ यह production के बाद होगा — अभी जरूरत नहीं।**
 
+**Current runtime status:**
+- `:shared` अभी pure Kotlin JVM module है, Kotlin Multiplatform module नहीं।
+- `apps/shared/build.gradle.kts` को अभी `kotlin("multiplatform")` में convert नहीं करना है।
+- KMP-ready discipline अभी follow होगी ताकि future migration cheap रहे, लेकिन Android runtime stable रहेगा.
+
 App production-ready और feature-complete होने के बाद **KMP + Compose Multiplatform (CMP)** adopt किया जा सकता है ताकि Android + iOS दोनों को एक codebase से serve किया जा सके।
 
 **तब क्या होगा:**
 - `:shared` में stable domain models, repository interfaces, और pure use cases रहेंगे
-- Hilt → KMP-compatible DI strategy evaluate होगी
+- Android runtime में Hilt अभी रहेगा; KMP migration के समय common code constructor injection रखेगा और platform composition roots KMP-compatible DI strategy evaluate करेंगे
 - UI layer future CMP path के लिए clean boundaries रखेगी
 
 **अभी इसलिए नहीं:**
@@ -304,6 +309,11 @@ App production-ready और feature-complete होने के बाद **KMP
 - Business logic UseCases में रखो (pure Kotlin)
 - Repository interfaces define करो (implementations बाद में swap होंगी)
 - Phone/Watch/future-iOS reuse वाले contracts `:shared` में रखें
+- Compose imports या annotations `:shared` में मत डालो
+- Hilt, Room, `Context`, `NavController`, resources, और platform UI APIs `:shared` से बाहर रखो
+- Domain models में direct time/system/platform calls मत करो; current time/date caller provide करे
+- `java.*` या `javax.*` imports से बचो (जैसे `java.time.*`, `javax.inject.*`) — KMP migration में expect/actual abstraction require होगा
+- Repository interfaces pure Kotlin रहें; implementations Android/Wear/future iOS platform layer में रहें
 
 ---
 

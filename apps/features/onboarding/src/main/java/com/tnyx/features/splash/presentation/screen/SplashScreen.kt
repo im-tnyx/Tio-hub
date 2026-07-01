@@ -7,6 +7,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -24,7 +25,7 @@ fun SplashScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(TnyxPalette.Black),
+            .background(Color(0xFF1B1C1E)),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -32,7 +33,7 @@ fun SplashScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Image(
-                painter = painterResource(id = R.drawable.tnyx_logo_dark_bg),
+                painter = painterResource(id = R.drawable.dark_logo),
                 contentDescription = "TNYX Logo",
                 modifier = Modifier.size(180.dp),
                 contentScale = ContentScale.Fit
@@ -42,7 +43,7 @@ fun SplashScreen(
                 Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceXXL))
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
-                    color = TnyxTheme.colors.primary,
+                    color = Color.White,
                     strokeWidth = 2.dp
                 )
             }

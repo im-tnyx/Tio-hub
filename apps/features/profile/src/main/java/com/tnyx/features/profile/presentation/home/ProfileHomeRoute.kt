@@ -14,18 +14,17 @@ fun ProfileHomeRoute(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    ProfileHomeScreen(
+    ProfileHomeScreenNew(
         uiState = uiState,
         onAction = { action ->
             when (action) {
-                ProfileHomeAction.JourneyHistoryClicked -> { /* TODO: Navigate to history */ }
-                ProfileHomeAction.ProgressPhotosClicked -> onOpenProgress()
-                ProfileHomeAction.AddProgressPhotosClicked -> { /* TODO: Navigate to add photos */ }
-                ProfileHomeAction.SettingsClicked -> onOpenSettings()
                 ProfileHomeAction.BackClicked -> onNavigateBack()
                 ProfileHomeAction.SupportClicked -> { /* TODO: Navigate to support */ }
+                ProfileHomeAction.SettingsClicked -> onOpenSettings()
+                ProfileHomeAction.JourneyHistoryClicked -> { /* TODO: Navigate to history */ }
+                ProfileHomeAction.AddProgressPhotosClicked -> { /* TODO: Navigate to add photos */ }
                 else -> {
-                    // TODO: Handle other launcher actions like Nutrition, Workout, etc.
+                    // TODO: Handle other actions (show toast "Coming soon")
                 }
             }
         }

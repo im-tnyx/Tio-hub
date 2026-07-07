@@ -1,19 +1,19 @@
 package com.tnyx.features.profile.presentation.home
 
 data class ProfileHomeUiState(
-    val displayName: String = "Arjun Verma",
-    val status: String = "Keep going! You're doing great 💪",
-    val planLabel: String = "Pro Plan",
-    val streak: Int = 28,
-    val weight: Double = 78.4,
-    val bodyFat: Double = 12.5,
-    val height: Int = 182,
-    val bmi: Double = 23.6,
-    val bmr: Int = 1840,
+    val displayName: String = "",
+    val status: String = "",
+    val planLabel: String = "",
+    val streak: Int = 0,
+    val weight: Double = 0.0,
+    val bodyFat: Double = 0.0,
+    val height: Int = 0,
+    val bmi: Double = 0.0,
+    val bmr: Int = 0,
     val currentJourney: CurrentJourneyState = CurrentJourneyState(),
     val progressPhotos: List<String> = listOf(), // Image URLs or resource names
-    val lastPhotoUpdateWeight: String = "78.4 kg",
-    val lastPhotoUpdateDate: String = "24 Dec"
+    val lastPhotoUpdateWeight: String = "",
+    val lastPhotoUpdateDate: String = ""
 )
 
 data class CurrentJourneyState(

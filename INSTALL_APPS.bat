@@ -76,42 +76,46 @@ if /I "%CHOICE%"=="clean-mobile" set "CHOICE=5"
 
 if "%CHOICE%"=="1" (
     call :install_mobile
-    exit /b !ERRORLEVEL!
+    call :exit_with_msg !ERRORLEVEL!
 )
 
 if "%CHOICE%"=="2" (
     call :install_watch
-    exit /b !ERRORLEVEL!
+    call :exit_with_msg !ERRORLEVEL!
 )
 
 if "%CHOICE%"=="3" (
     call :install_mobile
-    if errorlevel 1 exit /b 1
+    if errorlevel 1 call :exit_with_msg 1
     call :install_watch
-    exit /b !ERRORLEVEL!
+    call :exit_with_msg !ERRORLEVEL!
 )
 
 if "%CHOICE%"=="4" (
     call :gradle :app:assembleDebug :wear:assembleDebug
-    exit /b !ERRORLEVEL!
+    call :exit_with_msg !ERRORLEVEL!
 )
 
 if "%CHOICE%"=="5" (
     call :clean_install_mobile
-    exit /b !ERRORLEVEL!
+    call :exit_with_msg !ERRORLEVEL!
 )
 
 if "%CHOICE%"=="0" exit /b 0
 
 echo.
 echo Invalid choice: %CHOICE%
-exit /b 1
+call :exit_with_msg 1
 
 :install_mobile
 echo.
 echo === Installing mobile app ===
 call :ask_serial "Phone/mobile device serial (blank = Gradle default)"
 call :gradle :app:installDebug
+if !ERRORLEVEL! EQU 0 (
+    echo Launching app...
+    call :adb shell am start -n com.tnyx/com.tnyx.MainActivity
+)
 exit /b !ERRORLEVEL!
 
 :clean_install_mobile
@@ -127,6 +131,10 @@ if not "%CONFIRM%"=="UNINSTALL" (
 )
 call :adb uninstall com.tnyx
 call :gradle :app:installDebug
+if !ERRORLEVEL! EQU 0 (
+    echo Launching app...
+    call :adb shell am start -n com.tnyx/com.tnyx.MainActivity
+)
 exit /b !ERRORLEVEL!
 
 :install_watch
@@ -134,13 +142,15 @@ echo.
 echo === Installing Wear OS app ===
 call :ask_serial "Watch device serial (blank = Gradle default)"
 call :gradle :wear:installDebug
+if !ERRORLEVEL! EQU 0 (
+    echo Launching app on watch...
+    call :adb shell am start -n com.tnyx.wear/com.tnyx.wear.MainActivity
+)
 exit /b !ERRORLEVEL!
 
 :ask_serial
 echo.
-if defined ANDROID_SERIAL (
-    echo Current ANDROID_SERIAL=!ANDROID_SERIAL!
-)
+set "ANDROID_SERIAL="
 set /p "ANDROID_SERIAL=%~1: "
 if defined ANDROID_SERIAL (
     echo Using ANDROID_SERIAL=!ANDROID_SERIAL!
@@ -200,3 +210,25 @@ if errorlevel 1 (
 )
 adb devices
 exit /b 0
+
+:exit_with_msg
+set "EXIT_CODE=%~1"
+echo.
+echo ==============================================
+if "%EXIT_CODE%"=="0" (
+    echo  STATUS: SUCCESS ^(Operation completed successfully!^)
+) else (
+    echo  STATUS: FAILED ^(Error code: %EXIT_CODE%^)
+)
+echo ==============================================
+echo.
+echo Options:
+echo   [R] Run another operation / Re-install
+echo   [Any other key] Exit installer
+echo.
+set "RETRY_CHOICE="
+set /p "RETRY_CHOICE=Enter option: "
+if /I "!RETRY_CHOICE!"=="R" (
+    goto menu
+)
+exit /b %EXIT_CODE%

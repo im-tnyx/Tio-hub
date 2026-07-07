@@ -1,9 +1,9 @@
 package com.tnyx.features.settings.presentation.home
 
 data class SettingsHomeUiState(
-    val displayName: String = "Arjun Verma",
-    val email: String = "arjun.verma@gmail.com",
-    val planLabel: String = "Pro Plan"
+    val displayName: String = "",
+    val email: String = "",
+    val planLabel: String = ""
 )
 
 sealed interface SettingsHomeAction {

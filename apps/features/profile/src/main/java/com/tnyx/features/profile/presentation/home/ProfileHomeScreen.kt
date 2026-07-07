@@ -43,6 +43,12 @@ fun ProfileHomeScreen(
 ) {
     val scrollState = rememberLazyListState()
     val headerHeight = 56.dp
+    val showUsernameInHeader by remember {
+        derivedStateOf {
+            scrollState.firstVisibleItemIndex > 1 ||
+            (scrollState.firstVisibleItemIndex == 1 && scrollState.firstVisibleItemScrollOffset > 100)
+        }
+    }
 
     Box(
         modifier = modifier
@@ -66,37 +72,37 @@ fun ProfileHomeScreen(
 
             // 1. User Profile Card
             item {
-                Box(modifier = Modifier.padding(horizontal = TnyxTheme.dimens.SpaceM)) {
+                Box(modifier = Modifier.padding(horizontal = TnyxTheme.dimens.SpaceS)) {
                     UserProfileCard(
                         state = uiState,
                         onEditPhoto = { /* TODO: Action for edit photo */ },
                         onClick = { /* TODO: Action for card click */ }
                     )
                 }
-                Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceL))
+                Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
             }
 
             // 2. Progress Photos Section (Redesigned visual)
             item {
-                Box(modifier = Modifier.padding(horizontal = TnyxTheme.dimens.SpaceM)) {
+                Box(modifier = Modifier.padding(horizontal = TnyxTheme.dimens.SpaceS)) {
                     ProgressPhotosBannerRedesign(
                         onAddPictures = { onAction(ProfileHomeAction.AddProgressPhotosClicked) }
                     )
                 }
-                Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceL))
+                Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceSM))
             }
 
             // 3. Weekly Workout Duration Chart
             item {
-                Box(modifier = Modifier.padding(horizontal = TnyxTheme.dimens.SpaceM)) {
+                Box(modifier = Modifier.padding(horizontal = TnyxTheme.dimens.SpaceS)) {
                     WorkoutWeeklyDurationChart()
                 }
-                Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceL))
+                Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
             }
 
             // 4. 2x2 Action Items Grid
             item {
-                Box(modifier = Modifier.padding(horizontal = TnyxTheme.dimens.SpaceM)) {
+                Box(modifier = Modifier.padding(horizontal = TnyxTheme.dimens.SpaceS)) {
                     ActionsGrid2x2(onAction = onAction)
                 }
                 Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceL))
@@ -104,10 +110,10 @@ fun ProfileHomeScreen(
 
             // 5. Workout History Section
             item {
-                Box(modifier = Modifier.padding(horizontal = TnyxTheme.dimens.SpaceM)) {
+                Box(modifier = Modifier.padding(horizontal = TnyxTheme.dimens.SpaceS)) {
                     WorkoutHistorySection()
                 }
-                Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceL))
+                Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
             }
         }
 
@@ -122,15 +128,11 @@ fun ProfileHomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(headerHeight)
-                    .padding(horizontal = TnyxTheme.dimens.SpaceM),
+                    .padding(horizontal = TnyxTheme.dimens.SpaceS),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(
-                    onClick = { onAction(ProfileHomeAction.BackClicked) },
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.08f))
+                    onClick = { onAction(ProfileHomeAction.BackClicked) }
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
@@ -139,7 +141,7 @@ fun ProfileHomeScreen(
                     )
                 }
                 Text(
-                    text = "Profile",
+                    text = if (showUsernameInHeader) uiState.displayName else "Profile",
                     style = TnyxTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp
@@ -150,11 +152,7 @@ fun ProfileHomeScreen(
                         .weight(1f)
                 )
                 IconButton(
-                    onClick = { onAction(ProfileHomeAction.SupportClicked) },
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.08f))
+                    onClick = { onAction(ProfileHomeAction.SupportClicked) }
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.HeadsetMic,
@@ -164,11 +162,7 @@ fun ProfileHomeScreen(
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 IconButton(
-                    onClick = { onAction(ProfileHomeAction.SettingsClicked) },
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.08f))
+                    onClick = { onAction(ProfileHomeAction.SettingsClicked) }
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Settings,
@@ -201,9 +195,9 @@ private fun UserProfileCard(
                 Box(contentAlignment = Alignment.BottomEnd) {
                     Box(
                         modifier = Modifier
-                            .size(80.dp)
+                            .size(72.dp)
                             .clip(CircleShape)
-                            .background(TnyxTheme.colors.surfaceVariant)
+                            .background(TnyxTheme.colors.surface)
                             .border(1.dp, TnyxTheme.colors.primary.copy(alpha = 0.2f), CircleShape)
                             .clickable { onEditPhoto() },
                         contentAlignment = Alignment.Center
@@ -217,7 +211,7 @@ private fun UserProfileCard(
                     }
                     Box(
                         modifier = Modifier
-                            .size(24.dp)
+                            .size(28.dp)
                             .background(Color.Black, CircleShape)
                             .border(2.dp, TnyxTheme.colors.surfaceVariant.copy(alpha = 0.8f), CircleShape)
                             .padding(4.dp),
@@ -239,7 +233,7 @@ private fun UserProfileCard(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = state.displayName,
-                            style = TnyxTheme.typography.titleLarge,
+                            style = TnyxTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = TnyxTheme.colors.textPrimary
                         )
@@ -248,7 +242,7 @@ private fun UserProfileCard(
                             Icon(
                                 imageVector = Icons.Rounded.CheckCircle,
                                 contentDescription = "Verified Premium",
-                                tint = Color(0xFF1DA1F2), // Twitter Blue color
+                                tint = Color(0xFF1DA1F2),
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -259,14 +253,14 @@ private fun UserProfileCard(
                         style = TnyxTheme.typography.bodyMedium,
                         color = TnyxTheme.colors.textSecondary
                     )
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     // Premium Pill shape
                     Box(
                         modifier = Modifier
                             .clip(CircleShape)
                             .border(0.5.dp, TnyxTheme.colors.warning.copy(alpha = 0.4f), CircleShape)
                             .background(TnyxTheme.colors.warning.copy(alpha = 0.1f))
-                            .padding(horizontal = 10.dp, vertical = 3.dp)
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
@@ -280,7 +274,7 @@ private fun UserProfileCard(
                                 text = state.planLabel.uppercase(),
                                 style = TnyxTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 9.sp,
+                                    fontSize = 10.sp,
                                     letterSpacing = 0.5.sp
                                 ),
                                 color = TnyxTheme.colors.warning
@@ -293,36 +287,43 @@ private fun UserProfileCard(
 
                 // BMI Badge Box
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                    horizontalAlignment = Alignment.End,
                     modifier = Modifier
-                        .border(1.dp, TnyxTheme.colors.textPrimary.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                        .align(Alignment.Top)
+                        .padding(start = 8.dp)
                 ) {
-                    Text(
-                        text = "BMI",
-                        style = TnyxTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                        color = TnyxTheme.colors.textMuted
-                    )
-                    Text(
-                        text = state.bmi.toString(),
-                        style = TnyxTheme.typography.titleLarge.copy(fontSize = 20.sp),
-                        fontWeight = FontWeight.Bold,
-                        color = TnyxTheme.colors.textPrimary
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Box(
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .background(Color(0xFF1B5E20).copy(alpha = 0.15f))
-                            .padding(horizontal = 8.dp, vertical = 2.dp)
-                    ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = "Healthy",
+                            text = "BMI: ",
+                            style = TnyxTheme.typography.bodySmall,
+                            color = TnyxTheme.colors.textSecondary
+                        )
+                        Text(
+                            text = if (state.bmi > 0.0) state.bmi.toString() else "-",
+                            style = TnyxTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                            color = TnyxTheme.colors.textPrimary
+                        )
+                    }
+                    
+                    val (bmiStatus, bmiColor) = remember(state.bmi) {
+                        when {
+                            state.bmi <= 0.0 -> Pair("", Color.Transparent)
+                            state.bmi < 18.5 -> Pair("Underweight", Color(0xFF03A9F4)) // Blue
+                            state.bmi < 25.0 -> Pair("Healthy", Color(0xFF4CAF50))     // Green
+                            state.bmi < 30.0 -> Pair("Overweight", Color(0xFFFF9800))  // Orange
+                            else -> Pair("Obese", Color(0xFFF44336))                   // Red
+                        }
+                    }
+
+                    if (bmiStatus.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = bmiStatus,
                             style = TnyxTheme.typography.labelSmall.copy(
-                                fontSize = 9.sp,
+                                fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
                             ),
-                            color = Color(0xFF4CAF50)
+                            color = bmiColor
                         )
                     }
                 }
@@ -332,7 +333,7 @@ private fun UserProfileCard(
 
             HorizontalDivider(
                 thickness = 0.5.dp,
-                color = TnyxTheme.colors.textPrimary.copy(alpha = 0.08f)
+                color = TnyxTheme.colors.textPrimary.copy(alpha = 0.2f)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -349,20 +350,12 @@ private fun UserProfileCard(
                     modifier = Modifier.weight(1f),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(TnyxTheme.colors.textPrimary.copy(alpha = 0.05f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.MonitorWeight,
-                            contentDescription = null,
-                            tint = TnyxTheme.colors.textPrimary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Rounded.MonitorWeight,
+                        contentDescription = null,
+                        tint = TnyxTheme.colors.textPrimary,
+                        modifier = Modifier.size(20.dp)
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
@@ -378,32 +371,18 @@ private fun UserProfileCard(
                     }
                 }
 
-                VerticalDivider(
-                    modifier = Modifier.height(24.dp),
-                    thickness = 0.5.dp,
-                    color = TnyxTheme.colors.textPrimary.copy(alpha = 0.08f)
-                )
-
                 // Height
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(TnyxTheme.colors.textPrimary.copy(alpha = 0.05f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Straighten,
-                            contentDescription = null,
-                            tint = TnyxTheme.colors.textPrimary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Rounded.Straighten,
+                        contentDescription = null,
+                        tint = TnyxTheme.colors.textPrimary,
+                        modifier = Modifier.size(20.dp)
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
@@ -419,11 +398,6 @@ private fun UserProfileCard(
                     }
                 }
 
-                VerticalDivider(
-                    modifier = Modifier.height(24.dp),
-                    thickness = 0.5.dp,
-                    color = TnyxTheme.colors.textPrimary.copy(alpha = 0.08f)
-                )
 
                 // BMR
                 Row(
@@ -431,20 +405,12 @@ private fun UserProfileCard(
                     modifier = Modifier.weight(1f),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(TnyxTheme.colors.textPrimary.copy(alpha = 0.05f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Whatshot,
-                            contentDescription = null,
-                            tint = TnyxTheme.colors.textPrimary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Rounded.Whatshot,
+                        contentDescription = null,
+                        tint = TnyxTheme.colors.textPrimary,
+                        modifier = Modifier.size(20.dp)
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
@@ -479,13 +445,13 @@ private fun ProgressPhotosBannerRedesign(
             // Stacked tilted polaroids visual using Compose coordinates
             Box(
                 modifier = Modifier
-                    .size(width = 96.dp, height = 96.dp),
+                    .size(width = 80.dp, height = 80.dp),
                 contentAlignment = Alignment.Center
             ) {
                 // Background polaroid 1 (rotated left)
                 Box(
                     modifier = Modifier
-                        .size(width = 54.dp, height = 64.dp)
+                        .size(width = 64.dp, height = 76.dp)
                         .graphicsLayer { rotationZ = -12f }
                         .background(Color.White, RoundedCornerShape(3.dp))
                         .border(0.5.dp, Color.LightGray, RoundedCornerShape(3.dp))
@@ -494,7 +460,7 @@ private fun ProgressPhotosBannerRedesign(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(44.dp)
+                            .height(52.dp)
                             .background(Color(0xFF2E2E2E))
                     )
                 }
@@ -502,7 +468,7 @@ private fun ProgressPhotosBannerRedesign(
                 // Foreground polaroid 2 (rotated right)
                 Box(
                     modifier = Modifier
-                        .size(width = 54.dp, height = 64.dp)
+                        .size(width = 64.dp, height = 76.dp)
                         .graphicsLayer { rotationZ = 8f }
                         .background(Color.White, RoundedCornerShape(3.dp))
                         .border(0.5.dp, Color.LightGray, RoundedCornerShape(3.dp))
@@ -511,7 +477,7 @@ private fun ProgressPhotosBannerRedesign(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(44.dp)
+                            .height(52.dp)
                             .background(Color(0xFF1C1C1C))
                     )
                 }
@@ -559,10 +525,13 @@ private fun ProgressPhotosBannerRedesign(
             // Add Pictures pill button
             OutlinedButton(
                 onClick = onAddPictures,
-                border = BorderStroke(1.dp, Color(0xFF00C853)),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF00C853)),
+                border = BorderStroke(0.5.dp, TnyxTheme.colors.textPrimary.copy(alpha = 0.12f)),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = TnyxTheme.colors.textPrimary.copy(alpha = 0.05f),
+                    contentColor = TnyxTheme.colors.textPrimary
+                ),
                 shape = RoundedCornerShape(16.dp),
-                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                 modifier = Modifier.height(32.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -662,12 +631,12 @@ private fun WorkoutWeeklyDurationChart() {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(130.dp)
+                    .height(170.dp)
             ) {
                 Canvas(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(110.dp)
+                        .height(145.dp)
                 ) {
                     val width = size.width
                     val height = size.height
@@ -800,36 +769,38 @@ private fun WorkoutWeeklyDurationChart() {
 @Composable
 private fun ActionsGrid2x2(onAction: (ProfileHomeAction) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             GridActionCard(
                 icon = Icons.Rounded.BarChart,
                 title = "Statistics",
-                subtitle = "Detailed insights",
                 onClick = { /* Navigate stats */ },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).fillMaxHeight()
             )
             GridActionCard(
                 icon = Icons.Rounded.FitnessCenter,
                 title = "Exercises",
-                subtitle = "Your exercise library",
                 onClick = { /* Navigate exercises */ },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).fillMaxHeight()
             )
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             GridActionCard(
                 icon = Icons.Rounded.Straighten,
                 title = "Measures",
-                subtitle = "Body & performance",
                 onClick = { /* Navigate measures */ },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).fillMaxHeight()
             )
             GridActionCard(
                 icon = Icons.Rounded.CalendarMonth,
                 title = "Calendar",
-                subtitle = "Workout schedule",
                 onClick = { /* Navigate calendar */ },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).fillMaxHeight()
             )
         }
     }
@@ -839,7 +810,6 @@ private fun ActionsGrid2x2(onAction: (ProfileHomeAction) -> Unit) {
 private fun GridActionCard(
     icon: ImageVector,
     title: String,
-    subtitle: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -868,18 +838,12 @@ private fun GridActionCard(
                 )
             }
             Spacer(modifier = Modifier.width(10.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = TnyxTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                    color = TnyxTheme.colors.textPrimary
-                )
-                Text(
-                    text = subtitle,
-                    style = TnyxTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                    color = TnyxTheme.colors.textMuted
-                )
-            }
+            Text(
+                text = title,
+                style = TnyxTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                color = TnyxTheme.colors.textPrimary,
+                modifier = Modifier.weight(1f)
+            )
             Icon(
                 imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
                 contentDescription = null,
@@ -893,38 +857,81 @@ private fun GridActionCard(
 @Composable
 private fun WorkoutHistorySection() {
     Column {
-        Text(
-            text = "Workout History",
-            style = TnyxTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = TnyxTheme.colors.textPrimary
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Empty state card
         TnyxCard(
             variant = TnyxCardVariant.Normal,
-            padding = 24.dp
+            padding = 16.dp
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.FitnessCenter,
-                    contentDescription = null,
-                    tint = TnyxTheme.colors.textMuted.copy(alpha = 0.4f),
-                    modifier = Modifier.size(48.dp)
-                )
-                Spacer(modifier = Modifier.height(10.dp))
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "No workouts",
-                    style = TnyxTheme.typography.bodyMedium,
-                    color = TnyxTheme.colors.textMuted,
-                    fontWeight = FontWeight.Medium
+                    text = "Workout History",
+                    style = TnyxTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = TnyxTheme.colors.textPrimary
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Stack of cards visual
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    // Third (bottom-most) layer
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.90f)
+                            .height(130.dp)
+                            .offset(y = 16.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(TnyxTheme.colors.background.copy(alpha = 0.4f))
+                            .border(0.5.dp, TnyxTheme.colors.textPrimary.copy(alpha = 0.04f), RoundedCornerShape(16.dp))
+                    )
+
+                    // Second (middle) layer
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.95f)
+                            .height(130.dp)
+                            .offset(y = 8.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(TnyxTheme.colors.background.copy(alpha = 0.7f))
+                            .border(0.5.dp, TnyxTheme.colors.textPrimary.copy(alpha = 0.06f), RoundedCornerShape(16.dp))
+                    )
+
+                    // Top (main) card
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(130.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(TnyxTheme.colors.background)
+                            .border(0.5.dp, TnyxTheme.colors.textPrimary.copy(alpha = 0.08f), RoundedCornerShape(16.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.FitnessCenter,
+                                contentDescription = null,
+                                tint = TnyxTheme.colors.textMuted.copy(alpha = 0.4f),
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(
+                                text = "No workouts",
+                                style = TnyxTheme.typography.bodyMedium,
+                                color = TnyxTheme.colors.textMuted,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+                
+                // Add extra spacer at bottom to account for the stack offset
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
 

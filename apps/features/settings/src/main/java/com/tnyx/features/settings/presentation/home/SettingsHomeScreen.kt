@@ -9,6 +9,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.HelpOutline
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.Logout
+import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.rounded.*
@@ -109,6 +110,33 @@ fun SettingsHomeScreen(
                 }
             }
 
+            // Quick Actions Section
+            item {
+                SettingsSection(title = "Quick Actions") {
+                    SettingsItem(
+                        icon = Icons.Rounded.Restaurant,
+                        iconColor = TnyxTheme.colors.success,
+                        title = "Nutrition Targets",
+                        subtitle = "Calories, macros, water & more",
+                        onClick = { onAction(SettingsHomeAction.NutritionTargetsClicked) }
+                    )
+                    SettingsItem(
+                        icon = Icons.Rounded.Accessibility,
+                        iconColor = TnyxTheme.colors.warning,
+                        title = "Workout Settings",
+                        subtitle = "Rest timer, warm-up, plates & more",
+                        onClick = { onAction(SettingsHomeAction.WorkoutSettingsClicked) }
+                    )
+                    SettingsItem(
+                        icon = Icons.Rounded.BarChart,
+                        iconColor = TnyxTheme.colors.info,
+                        title = "Graph Settings",
+                        subtitle = "Customize your progress graphs",
+                        onClick = { onAction(SettingsHomeAction.GraphSettingsClicked) }
+                    )
+                }
+            }
+
             // Preferences Section
             item {
                 SettingsSection(title = "Preferences") {
@@ -149,6 +177,13 @@ fun SettingsHomeScreen(
                         subtitle = "Download your data",
                         onClick = { onAction(SettingsHomeAction.ExportDataClicked) }
                     )
+                    SettingsItem(
+                        icon = Icons.Rounded.Watch,
+                        iconColor = TnyxTheme.colors.primary,
+                        title = "Health App Connections",
+                        subtitle = "Sync steps, workouts, sleep, and recovery",
+                        onClick = { onAction(SettingsHomeAction.HealthConnectionsClicked) }
+                    )
                 }
             }
 
@@ -175,6 +210,26 @@ fun SettingsHomeScreen(
                         title = "Contact Us",
                         subtitle = "We're here to help",
                         onClick = { onAction(SettingsHomeAction.ContactUsClicked) }
+                    )
+                }
+            }
+
+            // More Section
+            item {
+                SettingsSection(title = "More") {
+                    SettingsItem(
+                        icon = Icons.Rounded.CardGiftcard,
+                        iconColor = TnyxTheme.colors.warning,
+                        title = "Rewards",
+                        subtitle = "Refer friends, earn rewards",
+                        onClick = { onAction(SettingsHomeAction.RewardsClicked) }
+                    )
+                    SettingsItem(
+                        icon = Icons.AutoMirrored.Rounded.MenuBook,
+                        iconColor = TnyxTheme.colors.info,
+                        title = "Resources",
+                        subtitle = "Guides, articles & tools",
+                        onClick = { onAction(SettingsHomeAction.ResourcesClicked) }
                     )
                 }
             }

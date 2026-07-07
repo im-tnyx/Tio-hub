@@ -31,10 +31,5 @@ sealed interface ProfileHomeAction {
     data object JourneyHistoryClicked : ProfileHomeAction
     data object ProgressPhotosClicked : ProfileHomeAction
     data object AddProgressPhotosClicked : ProfileHomeAction
-    data object NutritionTargetsClicked : ProfileHomeAction
-    data object WorkoutSettingsClicked : ProfileHomeAction
     data object HealthConnectionsClicked : ProfileHomeAction
-    data object GraphSettingsClicked : ProfileHomeAction
-    data object RewardsClicked : ProfileHomeAction
-    data object ResourcesClicked : ProfileHomeAction
 }

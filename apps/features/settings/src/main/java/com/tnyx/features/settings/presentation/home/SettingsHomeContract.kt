@@ -28,6 +28,16 @@ sealed interface SettingsHomeAction {
     data object HelpFaqClicked : SettingsHomeAction
     data object ContactUsClicked : SettingsHomeAction
     
+    // Quick Actions
+    data object NutritionTargetsClicked : SettingsHomeAction
+    data object WorkoutSettingsClicked : SettingsHomeAction
+    data object GraphSettingsClicked : SettingsHomeAction
+    
+    // More
+    data object RewardsClicked : SettingsHomeAction
+    data object ResourcesClicked : SettingsHomeAction
+    data object HealthConnectionsClicked : SettingsHomeAction
+
     // Auth
     data object LogoutClicked : SettingsHomeAction
 }

@@ -24,9 +24,8 @@ fun ProfileHomeRoute(
                 ProfileHomeAction.SettingsClicked -> onOpenSettings()
                 ProfileHomeAction.BackClicked -> onNavigateBack()
                 ProfileHomeAction.SupportClicked -> { /* TODO: Navigate to support */ }
-                else -> {
-                    // TODO: Handle other launcher actions like Nutrition, Workout, etc.
-                }
+                ProfileHomeAction.ViewAllProgressClicked -> { /* TODO: Navigate to progress */ }
+                ProfileHomeAction.HealthConnectionsClicked -> { /* TODO: Navigate to health connections */ }
             }
         }
     )

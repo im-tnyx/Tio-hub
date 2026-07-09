@@ -49,16 +49,15 @@ class SupabaseProfileRepository(
 
     override suspend fun updateProfile(profile: UserProfile) {
         supabaseClient.from("profiles").update(
-            ProfileDto(
-                id = profile.id,
-                display_name = profile.displayName,
-                dob = profile.dob,
-                gender = profile.gender,
-                plan_label = profile.planLabel,
-                weight = profile.weight,
-                height = profile.height,
-                bmi = profile.bmi,
-                bmr = profile.bmr
+            mapOf(
+                "display_name" to profile.displayName,
+                "dob" to profile.dob,
+                "gender" to profile.gender,
+                "plan_label" to profile.planLabel,
+                "weight" to profile.weight,
+                "height" to profile.height,
+                "bmi" to profile.bmi,
+                "bmr" to profile.bmr
             )
         ) {
             filter {

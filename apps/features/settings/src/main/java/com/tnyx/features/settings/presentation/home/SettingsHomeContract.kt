@@ -15,6 +15,7 @@ sealed interface SettingsHomeAction {
     // Account
     data object PersonalInfoClicked : SettingsHomeAction
     data object SubscriptionClicked : SettingsHomeAction
+    data object ResetPasswordClicked : SettingsHomeAction
     
     // Preferences
     data object AppPreferencesClicked : SettingsHomeAction

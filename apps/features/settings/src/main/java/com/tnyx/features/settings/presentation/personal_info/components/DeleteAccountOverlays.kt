@@ -1,0 +1,277 @@
+package com.tnyx.features.settings.presentation.personal_info.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.tnyx.core.theme.TnyxTheme
+import com.tnyx.features.settings.presentation.personal_info.DeleteAccountStep
+import com.tnyx.features.settings.presentation.personal_info.PersonalInfoAction
+import com.tnyx.features.settings.presentation.personal_info.PersonalInfoUiState
+
+@Composable
+fun DeleteAccountOverlays(
+    state: PersonalInfoUiState,
+    onAction: (PersonalInfoAction) -> Unit
+) {
+    if (state.deleteStep == DeleteAccountStep.Idle) return
+
+    Dialog(
+        onDismissRequest = { onAction(PersonalInfoAction.OnDismissOverlays) },
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnBackPress = true,
+            dismissOnClickOutside = false
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.9f))
+        ) {
+            // Close Button
+            IconButton(
+                onClick = { onAction(PersonalInfoAction.OnDismissOverlays) },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(TnyxTheme.dimens.SpaceM)
+                    .statusBarsPadding()
+                    .background(Color.White.copy(alpha = 0.1f), CircleShape)
+            ) {
+                Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+            }
+
+            when (state.deleteStep) {
+                DeleteAccountStep.Confirm -> {
+                    ConfirmOverlay(onAction)
+                }
+                DeleteAccountStep.HoldToDelete -> {
+                    HoldToDeleteOverlay(state, onAction)
+                }
+                DeleteAccountStep.Completed -> {
+                    CompletedOverlay(onAction)
+                }
+                else -> {}
+            }
+        }
+    }
+}
+
+@Composable
+private fun BoxScope.ConfirmOverlay(onAction: (PersonalInfoAction) -> Unit) {
+    Column(
+        modifier = Modifier
+            .align(Alignment.Center)
+            .padding(TnyxTheme.dimens.SpaceM),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Are you sure?",
+            style = TnyxTheme.typography.headlineLarge,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceM))
+        Text(
+            text = "This means all your saved progress will be deleted permanently.",
+            color = Color.White.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center,
+            style = TnyxTheme.typography.bodyLarge
+        )
+        Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
+        Text(
+            text = "This action can't be reversed",
+            color = TnyxTheme.colors.error,
+            textAlign = TextAlign.Center,
+            style = TnyxTheme.typography.bodyMedium
+        )
+        Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceXL))
+
+        Button(
+            onClick = { onAction(PersonalInfoAction.OnKeepAccountClicked) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(TnyxTheme.components.button.height),
+            shape = TnyxTheme.shapes.Material.medium,
+            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black)
+        ) {
+            Text("Keep Account", fontWeight = FontWeight.Bold)
+        }
+
+        Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceM))
+
+        TextButton(
+            onClick = { onAction(PersonalInfoAction.OnConfirmDeleteClicked) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(TnyxTheme.components.button.height)
+                .clip(TnyxTheme.shapes.Material.medium)
+                .background(TnyxTheme.colors.error.copy(alpha = 0.15f)),
+            colors = ButtonDefaults.textButtonColors(contentColor = TnyxTheme.colors.error)
+        ) {
+            Text("Delete", fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun BoxScope.HoldToDeleteOverlay(
+    state: PersonalInfoUiState,
+    onAction: (PersonalInfoAction) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .align(Alignment.Center)
+            .padding(TnyxTheme.dimens.SpaceM),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Hold this button",
+            style = TnyxTheme.typography.headlineLarge,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
+        Text(
+            text = "to delete all your progress permanently.",
+            color = Color.White.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center,
+            style = TnyxTheme.typography.bodyLarge
+        )
+
+        Spacer(modifier = Modifier.height(64.dp))
+
+        HoldToDeleteButton(
+            progress = state.holdProgress,
+            remaining = state.remainingSeconds,
+            onHoldStarted = { onAction(PersonalInfoAction.OnHoldStarted) },
+            onHoldReleased = { onAction(PersonalInfoAction.OnHoldReleased) }
+        )
+
+        Spacer(modifier = Modifier.height(64.dp))
+
+        Button(
+            onClick = { onAction(PersonalInfoAction.OnKeepAccountClicked) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(TnyxTheme.components.button.height),
+            shape = TnyxTheme.shapes.Material.medium,
+            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black)
+        ) {
+            Text("Keep Account", fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun HoldToDeleteButton(
+    progress: Float,
+    remaining: Int,
+    onHoldStarted: () -> Unit,
+    onHoldReleased: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    LaunchedEffect(isPressed) {
+        if (isPressed) onHoldStarted() else onHoldReleased()
+    }
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        if (progress > 0) {
+            Text(
+                text = "$remaining",
+                color = TnyxTheme.colors.error,
+                style = TnyxTheme.typography.displayMedium,
+                fontWeight = FontWeight.Black,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+        } else {
+            Spacer(modifier = Modifier.height(70.dp))
+        }
+
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.size(140.dp)
+        ) {
+            CircularProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxSize(),
+                color = TnyxTheme.colors.error,
+                strokeWidth = 6.dp,
+                trackColor = Color.White.copy(alpha = 0.1f)
+            )
+
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+                    .background(TnyxTheme.colors.error)
+                    .clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        onClick = {}
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Lock,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun BoxScope.CompletedOverlay(onAction: (PersonalInfoAction) -> Unit) {
+    Column(
+        modifier = Modifier
+            .align(Alignment.Center)
+            .padding(TnyxTheme.dimens.SpaceM),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            Icons.Default.Lock,
+            contentDescription = null,
+            tint = Color.Green,
+            modifier = Modifier.size(64.dp)
+        )
+        Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceM))
+        Text(
+            text = "Account Deleted",
+            style = TnyxTheme.typography.headlineSmall,
+            color = Color.White,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceXL))
+        Button(
+            onClick = { onAction(PersonalInfoAction.OnDeleteCompletedShown) },
+            modifier = Modifier.fillMaxWidth().height(TnyxTheme.components.button.height),
+            shape = TnyxTheme.shapes.Material.medium,
+            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black)
+        ) {
+            Text("Close", fontWeight = FontWeight.Bold)
+        }
+    }
+}

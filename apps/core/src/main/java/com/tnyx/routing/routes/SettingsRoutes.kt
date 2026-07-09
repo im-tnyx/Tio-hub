@@ -30,4 +30,7 @@ sealed interface SettingsRoute {
 
     @Serializable
     data object About : SettingsRoute
+
+    @Serializable
+    data object PersonalInfo : SettingsRoute
 }

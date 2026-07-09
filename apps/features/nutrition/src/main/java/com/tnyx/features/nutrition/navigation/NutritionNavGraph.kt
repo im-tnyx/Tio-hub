@@ -6,6 +6,7 @@ import androidx.navigation.navigation
 import com.tnyx.features.nutrition.presentation.meal_diary.MealDiaryRoute
 import com.tnyx.features.nutrition.presentation.meal_editor.MealEditorRoute
 import com.tnyx.features.nutrition.presentation.meal_item_editor.MealItemEditorRoute
+import com.tnyx.features.nutrition.presentation.targets.NutritionTargetsRoute
 import com.tnyx.routing.routes.MainRoute
 
 fun NavGraphBuilder.nutritionGraph(
@@ -41,6 +42,12 @@ fun NavGraphBuilder.nutritionGraph(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
+
+        composable<NutritionScreen.Targets> {
+            NutritionTargetsRoute(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
     }
 }
 
@@ -54,4 +61,7 @@ sealed interface NutritionScreen {
 
     @kotlinx.serialization.Serializable
     data class MealItemEditor(val itemId: String) : NutritionScreen
+
+    @kotlinx.serialization.Serializable
+    data object Targets : NutritionScreen
 }

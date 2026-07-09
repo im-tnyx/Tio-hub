@@ -26,6 +26,7 @@ fun ProfileHomeRoute(
                 ProfileHomeAction.SupportClicked -> { /* TODO: Navigate to support */ }
                 ProfileHomeAction.ViewAllProgressClicked -> { /* TODO: Navigate to progress */ }
                 ProfileHomeAction.HealthConnectionsClicked -> { /* TODO: Navigate to health connections */ }
+                ProfileHomeAction.RefreshProfile -> viewModel.loadUserProfile()
             }
         }
     )

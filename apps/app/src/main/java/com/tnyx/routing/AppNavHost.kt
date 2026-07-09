@@ -10,9 +10,11 @@ import androidx.navigation.toRoute
 import com.tnyx.core.legal.presentation.route.LegalRoute
 import com.tnyx.features.splash.presentation.route.SplashRoute
 import com.tnyx.features.auth.navigation.authGraph
+import com.tnyx.features.nutrition.presentation.targets.NutritionTargetsRoute
 import com.tnyx.features.profile.navigation.profileGraph
 import com.tnyx.features.settings.navigation.settingsGraph
 import com.tnyx.features.welcome.navigation.welcomeScreen
+import com.tnyx.routing.routes.NutritionRoute
 import com.tnyx.routing.routes.RootRoute
 import com.tnyx.routing.routes.SettingsRoute
 
@@ -82,8 +84,20 @@ fun AppNavHost(
             navController = navController,
             onNavigateBack = {
                 navController.popBackStack()
+            },
+            onOpenNutritionTargets = {
+                navController.navigate(NutritionRoute.Targets)
+            },
+            onOpenAppPreferences = {
+                navController.navigate(SettingsRoute.AppPreferences)
             }
         )
+
+        composable<NutritionRoute.Targets> {
+            NutritionTargetsRoute(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
 
         dialog<RootRoute.Legal> { backStackEntry ->
             val args = backStackEntry.toRoute<RootRoute.Legal>()

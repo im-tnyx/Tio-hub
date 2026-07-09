@@ -11,6 +11,9 @@ sealed interface NutritionRoute {
     data object Home : NutritionRoute
 
     @Serializable
+    data object Targets : NutritionRoute
+
+    @Serializable
     data class MealDetails(val mealId: String) : NutritionRoute
 
     @Serializable

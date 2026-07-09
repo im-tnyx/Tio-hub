@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import com.tnyx.core.theme.TnyxTheme
 
 /**
@@ -34,7 +35,8 @@ fun TnyxPrimaryButton(
     expand: Boolean = false,
     textAlign: TextAlign = TextAlign.Center,
     maxLines: Int = 1,
-    overflow: TextOverflow = TextOverflow.Ellipsis
+    overflow: TextOverflow = TextOverflow.Ellipsis,
+    height: Dp? = null
 ) {
     val tokens = TnyxTheme.components.button
     
@@ -42,7 +44,7 @@ fun TnyxPrimaryButton(
         onClick = onPressed,
         modifier = modifier
             .then(if (expand) Modifier.fillMaxWidth() else Modifier)
-            .height(tokens.height),
+            .height(height ?: tokens.height),
         enabled = enabled,
         shape = TnyxTheme.shapes.Material.medium,
         colors = ButtonDefaults.buttonColors(
@@ -82,7 +84,8 @@ fun TnyxSecondaryButton(
     expand: Boolean = false,
     textAlign: TextAlign = TextAlign.Center,
     maxLines: Int = 1,
-    overflow: TextOverflow = TextOverflow.Ellipsis
+    overflow: TextOverflow = TextOverflow.Ellipsis,
+    height: Dp? = null
 ) {
     val tokens = TnyxTheme.components.button
     
@@ -95,7 +98,7 @@ fun TnyxSecondaryButton(
         onClick = onPressed,
         modifier = modifier
             .then(if (expand) Modifier.fillMaxWidth() else Modifier)
-            .height(tokens.height),
+            .height(height ?: tokens.height),
         enabled = enabled,
         shape = TnyxTheme.shapes.Material.medium,
         border = BorderStroke(TnyxTheme.dimens.BorderThin, borderColor),
@@ -133,7 +136,8 @@ fun TnyxGhostButton(
     expand: Boolean = false,
     textAlign: TextAlign = TextAlign.Center,
     maxLines: Int = 1,
-    overflow: TextOverflow = TextOverflow.Ellipsis
+    overflow: TextOverflow = TextOverflow.Ellipsis,
+    height: Dp? = null
 ) {
     val tokens = TnyxTheme.components.button
     
@@ -141,7 +145,7 @@ fun TnyxGhostButton(
         onClick = onPressed,
         modifier = modifier
             .then(if (expand) Modifier.fillMaxWidth() else Modifier)
-            .height(tokens.height),
+            .height(height ?: tokens.height),
         enabled = enabled,
         shape = TnyxTheme.shapes.Material.medium,
         colors = ButtonDefaults.textButtonColors(

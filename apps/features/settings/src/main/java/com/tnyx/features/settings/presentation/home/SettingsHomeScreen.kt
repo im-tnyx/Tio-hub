@@ -10,8 +10,6 @@ import androidx.compose.material.icons.automirrored.rounded.HelpOutline
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -35,9 +33,7 @@ fun SettingsHomeScreen(
     Scaffold(
         topBar = {
             SettingsTopBar(
-                onBack = { onAction(SettingsHomeAction.BackClicked) },
-                onSearch = { onAction(SettingsHomeAction.SearchClicked) },
-                onNotifications = { onAction(SettingsHomeAction.NotificationsClicked) }
+                onBack = { onAction(SettingsHomeAction.BackClicked) }
             )
         },
         containerColor = TnyxTheme.colors.background
@@ -49,45 +45,11 @@ fun SettingsHomeScreen(
             contentPadding = PaddingValues(TnyxTheme.dimens.SpaceM),
             verticalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceL)
         ) {
-            // User Header
+            // Pro upgrade card
             item {
-                TnyxCard(
-                    variant = TnyxCardVariant.Glass,
-                    onClick = { onAction(SettingsHomeAction.ProfileHeaderClicked) }
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(64.dp)
-                                .clip(CircleShape)
-                                .background(TnyxTheme.colors.surfaceVariant)
-                        )
-                        Spacer(modifier = Modifier.width(TnyxTheme.dimens.SpaceM))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = uiState.displayName,
-                                style = TnyxTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = TnyxTheme.colors.textPrimary
-                            )
-                            Text(
-                                text = uiState.email,
-                                style = TnyxTheme.typography.bodySmall,
-                                color = TnyxTheme.colors.textSecondary
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            SettingsProBadge(uiState.planLabel)
-                        }
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                            contentDescription = null,
-                            tint = TnyxTheme.colors.textMuted
-                        )
-                    }
-                }
+                SettingsProUpgradeCard(
+                    onUnlock = { onAction(SettingsHomeAction.SubscriptionClicked) }
+                )
             }
 
             // Account Section
@@ -102,8 +64,8 @@ fun SettingsHomeScreen(
                     )
                     SettingsItem(
                         icon = Icons.Rounded.Star,
-                        iconColor = TnyxTheme.colors.success,
-                        title = "Subscription",
+                        iconColor = TnyxTheme.colors.primary,
+                        title = "Manage Subscription",
                         subtitle = "Manage your plan and billing",
                         onClick = { onAction(SettingsHomeAction.SubscriptionClicked) }
                     )
@@ -115,21 +77,21 @@ fun SettingsHomeScreen(
                 SettingsSection(title = "Quick Actions") {
                     SettingsItem(
                         icon = Icons.Rounded.Restaurant,
-                        iconColor = TnyxTheme.colors.success,
+                        iconColor = TnyxTheme.colors.primary,
                         title = "Nutrition Targets",
                         subtitle = "Calories, macros, water & more",
                         onClick = { onAction(SettingsHomeAction.NutritionTargetsClicked) }
                     )
                     SettingsItem(
                         icon = Icons.Rounded.Accessibility,
-                        iconColor = TnyxTheme.colors.warning,
+                        iconColor = TnyxTheme.colors.primary,
                         title = "Workout Settings",
                         subtitle = "Rest timer, warm-up, plates & more",
                         onClick = { onAction(SettingsHomeAction.WorkoutSettingsClicked) }
                     )
                     SettingsItem(
                         icon = Icons.Rounded.BarChart,
-                        iconColor = TnyxTheme.colors.info,
+                        iconColor = TnyxTheme.colors.primary,
                         title = "Graph Settings",
                         subtitle = "Customize your progress graphs",
                         onClick = { onAction(SettingsHomeAction.GraphSettingsClicked) }
@@ -137,52 +99,15 @@ fun SettingsHomeScreen(
                 }
             }
 
-            // Preferences Section
+            // App Settings Section
             item {
-                SettingsSection(title = "Preferences") {
+                SettingsSection(title = "App Settings") {
                     SettingsItem(
-                        icon = Icons.Rounded.Settings,
+                        icon = Icons.Rounded.Tune,
                         iconColor = TnyxTheme.colors.primary,
                         title = "App Preferences",
                         subtitle = "Theme, language, units & more",
                         onClick = { onAction(SettingsHomeAction.AppPreferencesClicked) }
-                    )
-                    SettingsItem(
-                        icon = Icons.Rounded.Notifications,
-                        iconColor = TnyxTheme.colors.warning,
-                        title = "Notifications",
-                        subtitle = "Manage reminders and alerts",
-                        onClick = { onAction(SettingsHomeAction.ManageNotificationsClicked) }
-                    )
-                    SettingsItem(
-                        icon = Icons.Rounded.Translate,
-                        iconColor = TnyxTheme.colors.info,
-                        title = "Language",
-                        subtitle = "Choose your app language",
-                        value = "English",
-                        onClick = { onAction(SettingsHomeAction.LanguageClicked) }
-                    )
-                    SettingsItem(
-                        icon = Icons.Rounded.Square,
-                        iconColor = TnyxTheme.colors.primary,
-                        title = "Units",
-                        subtitle = "Metric (kg, cm)",
-                        value = "Metric",
-                        onClick = { onAction(SettingsHomeAction.UnitsClicked) }
-                    )
-                    SettingsItem(
-                        icon = Icons.Rounded.Share,
-                        iconColor = TnyxTheme.colors.warning,
-                        title = "Export Data",
-                        subtitle = "Download your data",
-                        onClick = { onAction(SettingsHomeAction.ExportDataClicked) }
-                    )
-                    SettingsItem(
-                        icon = Icons.Rounded.Watch,
-                        iconColor = TnyxTheme.colors.primary,
-                        title = "Health App Connections",
-                        subtitle = "Sync steps, workouts, sleep, and recovery",
-                        onClick = { onAction(SettingsHomeAction.HealthConnectionsClicked) }
                     )
                 }
             }
@@ -192,14 +117,14 @@ fun SettingsHomeScreen(
                 SettingsSection(title = "Support & About") {
                     SettingsItem(
                         icon = Icons.Rounded.Info,
-                        iconColor = TnyxTheme.colors.info,
+                        iconColor = TnyxTheme.colors.primary,
                         title = "About",
                         subtitle = "Version, terms and privacy",
                         onClick = { onAction(SettingsHomeAction.AboutClicked) }
                     )
                     SettingsItem(
                         icon = Icons.AutoMirrored.Rounded.HelpOutline,
-                        iconColor = TnyxTheme.colors.success,
+                        iconColor = TnyxTheme.colors.primary,
                         title = "Help & FAQ",
                         subtitle = "Get help and find answers",
                         onClick = { onAction(SettingsHomeAction.HelpFaqClicked) }
@@ -219,14 +144,14 @@ fun SettingsHomeScreen(
                 SettingsSection(title = "More") {
                     SettingsItem(
                         icon = Icons.Rounded.CardGiftcard,
-                        iconColor = TnyxTheme.colors.warning,
+                        iconColor = TnyxTheme.colors.primary,
                         title = "Rewards",
                         subtitle = "Refer friends, earn rewards",
                         onClick = { onAction(SettingsHomeAction.RewardsClicked) }
                     )
                     SettingsItem(
                         icon = Icons.AutoMirrored.Rounded.MenuBook,
-                        iconColor = TnyxTheme.colors.info,
+                        iconColor = TnyxTheme.colors.primary,
                         title = "Resources",
                         subtitle = "Guides, articles & tools",
                         onClick = { onAction(SettingsHomeAction.ResourcesClicked) }
@@ -285,10 +210,56 @@ fun SettingsHomeScreen(
 }
 
 @Composable
+private fun SettingsProUpgradeCard(
+    onUnlock: () -> Unit
+) {
+    TnyxCard(
+        variant = TnyxCardVariant.Normal,
+        padding = TnyxTheme.dimens.SpaceM
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Stars,
+                contentDescription = null,
+                tint = TnyxTheme.colors.warning,
+                modifier = Modifier.size(TnyxTheme.dimens.IconM)
+            )
+            Spacer(modifier = Modifier.width(TnyxTheme.dimens.SpaceM))
+            Text(
+                text = "TNYX PRO",
+                style = TnyxTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = TnyxTheme.colors.textPrimary,
+                modifier = Modifier.weight(1f)
+            )
+            Button(
+                onClick = onUnlock,
+                shape = CircleShape,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = TnyxTheme.colors.warning,
+                    contentColor = Color.Black
+                ),
+                contentPadding = PaddingValues(
+                    horizontal = TnyxTheme.dimens.SpaceM,
+                    vertical = TnyxTheme.dimens.SpaceS
+                )
+            ) {
+                Text(
+                    text = "Unlock",
+                    style = TnyxTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun SettingsTopBar(
-    onBack: () -> Unit,
-    onSearch: () -> Unit,
-    onNotifications: () -> Unit
+    onBack: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -307,12 +278,6 @@ private fun SettingsTopBar(
             color = TnyxTheme.colors.textPrimary,
             modifier = Modifier.weight(1f)
         )
-        IconButton(onClick = onSearch) {
-            Icon(Icons.Default.Search, null, tint = TnyxTheme.colors.textPrimary)
-        }
-        IconButton(onClick = onNotifications) {
-            Icon(Icons.Default.Notifications, null, tint = TnyxTheme.colors.textPrimary)
-        }
     }
 }
 
@@ -343,85 +308,68 @@ private fun SettingsItem(
     title: String,
     subtitle: String,
     value: String? = null,
+    showDivider: Boolean = true, // <-- यहाँ नया पैरामीटर जोड़ा गया है (डिफ़ॉल्ट रूप से true)
     onClick: () -> Unit
 ) {
-    Surface(
-        onClick = onClick,
-        color = Color.Transparent
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(TnyxTheme.dimens.SpaceM),
-            verticalAlignment = Alignment.CenterVertically
+    Column {
+        Surface(
+            onClick = onClick,
+            color = Color.Transparent
         ) {
-            Box(
+            Row(
                 modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(iconColor.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(TnyxTheme.dimens.SpaceM),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                     tint = iconColor,
+                    modifier = Modifier.size(24.dp)
+                )
+
+                Spacer(modifier = Modifier.width(TnyxTheme.dimens.SpaceM))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        style = TnyxTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = TnyxTheme.colors.textPrimary
+                    )
+                    Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceXS))
+                    Text(
+                        text = subtitle,
+                        style = TnyxTheme.typography.labelSmall,
+                        color = TnyxTheme.colors.textMuted
+                    )
+                }
+                if (value != null) {
+                    Text(
+                        text = value,
+                        style = TnyxTheme.typography.labelMedium,
+                        color = TnyxTheme.colors.textSecondary,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+                }
+
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = TnyxTheme.colors.textMuted,
                     modifier = Modifier.size(20.dp)
                 )
             }
-            Spacer(modifier = Modifier.width(TnyxTheme.dimens.SpaceM))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = TnyxTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = TnyxTheme.colors.textPrimary
-                )
-                Text(
-                    text = subtitle,
-                    style = TnyxTheme.typography.labelSmall,
-                    color = TnyxTheme.colors.textMuted
-                )
-            }
-            if (value != null) {
-                Text(
-                    text = value,
-                    style = TnyxTheme.typography.labelMedium,
-                    color = TnyxTheme.colors.textSecondary,
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                )
-            }
-            Icon(
-                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                contentDescription = null,
-                tint = TnyxTheme.colors.textMuted,
-                modifier = Modifier.size(20.dp)
+        }
+
+        // <-- यहाँ डिवाइडर की कंडीशन लगाई गई है
+        if (showDivider) {
+            HorizontalDivider(
+                modifier = Modifier.padding(start = 56.dp), // टेक्स्ट के नीचे से शुरू करने के लिए 56.dp की पैडिंग
+                thickness = 0.5.dp,
+                color = TnyxTheme.colors.textPrimary.copy(alpha = 0.08f)
             )
         }
-    }
-}
-
-@Composable
-private fun SettingsProBadge(label: String) {
-    Row(
-        modifier = Modifier
-            .clip(CircleShape)
-            .background(TnyxTheme.colors.warning.copy(alpha = 0.15f))
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Rounded.Star,
-            contentDescription = null,
-            tint = TnyxTheme.colors.warning,
-            modifier = Modifier.size(12.dp)
-        )
-        Spacer(Modifier.width(4.dp))
-        Text(
-            text = label,
-            style = TnyxTheme.typography.labelSmall,
-            color = TnyxTheme.colors.warning,
-            fontWeight = FontWeight.Bold
-        )
     }
 }

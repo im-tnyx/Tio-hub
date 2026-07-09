@@ -17,6 +17,7 @@ import com.tnyx.features.nutrition.navigation.NutritionScreen
 import com.tnyx.routing.graphs.mainGraph
 import com.tnyx.routing.routes.MainRoute
 import com.tnyx.routing.routes.ProfileRoute
+import com.tnyx.routing.routes.SettingsRoute
 
 /**
  * Main shell with bottom navigation.
@@ -45,6 +46,8 @@ fun MainScreen(
     val isBottomNavVisible = when {
         currentDestination?.hasRoute<NutritionScreen.MealEditor>() == true -> false
         currentDestination?.hasRoute<NutritionScreen.MealItemEditor>() == true -> false
+        currentDestination?.hasRoute<NutritionScreen.Targets>() == true -> false
+        currentDestination?.hasRoute<SettingsRoute.PersonalInfo>() == true -> false
         else -> true
     }
 

@@ -21,7 +21,7 @@ class ProfileHomeViewModel @Inject constructor(
         loadUserProfile()
     }
 
-    private fun loadUserProfile() {
+    fun loadUserProfile() {
         viewModelScope.launch {
             try {
                 profileRepository.getProfile("demo-user")

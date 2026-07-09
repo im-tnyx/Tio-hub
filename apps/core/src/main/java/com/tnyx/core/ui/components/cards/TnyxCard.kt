@@ -46,7 +46,7 @@ fun TnyxCard(
     val backgroundColor = when {
         variant == TnyxCardVariant.Glass && isDark -> TnyxTheme.colors.surfaceVariant.copy(alpha = 0.8f)
         variant == TnyxCardVariant.Glass -> TnyxTheme.colors.surfaceRaised.copy(alpha = 0.72f)
-        variant == TnyxCardVariant.Normal -> TnyxTheme.colors.surfaceRaised
+        variant == TnyxCardVariant.Normal -> TnyxTheme.colors.surfaceVariant
         variant == TnyxCardVariant.Outlined -> Color.Transparent
         else -> tokens.containerColor
     }

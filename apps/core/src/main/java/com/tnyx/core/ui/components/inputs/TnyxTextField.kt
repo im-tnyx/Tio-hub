@@ -1,6 +1,7 @@
 ﻿package com.tnyx.core.ui.components.inputs
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -12,10 +13,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import com.tnyx.core.theme.TnyxTheme
 
@@ -46,11 +49,15 @@ fun TnyxTextField(
     helperMessage: String? = null
 ) {
     val tokens = TnyxTheme.components.input
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
     val textColor = when {
         !enabled -> tokens.textColor.copy(alpha = 0.38f)
         isError -> TnyxTheme.colors.error
-        else -> tokens.textColor
+        isFocused -> TnyxTheme.colors.textPrimary
+        else -> TnyxTheme.colors.textSecondary
     }
+    
     val indicatorColor = if (isError) tokens.errorIndicatorColor else tokens.focusedIndicatorColor
 
     val colors = OutlinedTextFieldDefaults.colors(
@@ -64,9 +71,9 @@ fun TnyxTextField(
         errorBorderColor = tokens.errorIndicatorColor,
         cursorColor = TnyxTheme.colors.primary,
         errorCursorColor = tokens.errorIndicatorColor,
-        focusedTextColor = tokens.textColor,
-        unfocusedTextColor = tokens.textColor,
-        disabledTextColor = tokens.textColor.copy(alpha = 0.38f),
+        focusedTextColor = TnyxTheme.colors.textPrimary,
+        unfocusedTextColor = TnyxTheme.colors.textPrimary,
+        disabledTextColor = TnyxTheme.colors.textPrimary.copy(alpha = 0.38f),
         errorTextColor = TnyxTheme.colors.error,
         focusedPlaceholderColor = tokens.placeholderColor,
         unfocusedPlaceholderColor = tokens.placeholderColor,
@@ -88,6 +95,7 @@ fun TnyxTextField(
             onValueChange = onValueChange,
             modifier = Modifier
                 .fillMaxWidth()
+                .then(if (label != null) Modifier.padding(top = TnyxTheme.dimens.SpaceXXS) else Modifier)
                 .heightIn(min = tokens.height),
             interactionSource = interactionSource,
             singleLine = singleLine,
@@ -139,4 +147,43 @@ fun TnyxTextField(
             )
         }
     }
+}
+
+/**
+ * 🔹 TnyxPhoneField
+ * Standard phone input field with consistent styling.
+ * This is a stateless UI component.
+ */
+@Composable
+fun TnyxPhoneField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    label: String = "Mobile number",
+    placeholder: String? = null,
+    leadingIcon: @Composable (() -> Unit)? = null,
+    helperMessage: String? = "Use +country code, or 10 digit Indian number",
+    enabled: Boolean = true,
+    isError: Boolean = false,
+    errorMessage: String? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+) {
+    TnyxTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier.fillMaxWidth(),
+        label = { Text(label) },
+        placeholder = placeholder?.let { { Text(it) } },
+        leadingIcon = leadingIcon,
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
+        interactionSource = interactionSource,
+        enabled = enabled,
+        isError = isError,
+        errorMessage = errorMessage,
+        helperMessage = helperMessage,
+        singleLine = true
+    )
 }

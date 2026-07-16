@@ -4,6 +4,12 @@ TNYX is an AI health, fitness, nutrition, recovery, coaching, workout, wearable,
 
 The current checked-in app focus is native Android and Wear OS under `apps/`.
 
+## Repository Identity
+
+- This context applies to `G:\projects\Tio-hub`.
+- `G:\projects\Tnyx-hub` is a separate repository and is not runtime, backend, database, documentation, branch, or task truth for this checkout.
+- Flutter or other-repository work may be used only when the active task explicitly requests comparison or migration analysis.
+
 ## Current Platform Scope
 
 - `apps/app`: Android application shell and root navigation.

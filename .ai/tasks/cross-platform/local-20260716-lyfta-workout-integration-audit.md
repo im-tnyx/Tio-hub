@@ -91,6 +91,11 @@ Audit the Lyfta 1.577 behavior reference, the actual Tio-hub Android/Wear workou
 - The first implementation milestone is a thin offline flow: blank workout -> one set -> finish -> history -> restart recovery.
 - Watch follows the stable Phone engine and sends durable mutations through Wear Data Layer; it does not write directly to Supabase.
 - Production cloud sync stays feature-flagged off until a backend-mediated write path exists.
+- Lyfta remains the retained capability and core UX behavior reference; Tio owns the visual UI, implementation architecture, data boundary, and accessibility behavior.
+- Tnyx Flutter remains a screen and interaction comparison only. It does not determine Tio feature order, runtime truth, or persistence architecture.
+- Exercise identity remains stable across media presentation: one `exerciseId` can have `MALE`, `FEMALE`, and `NEUTRAL` media variants.
+- Workout media preference supports `AUTO`, explicit male/female/neutral override, and exact -> neutral -> placeholder fallback without silently switching male and female media.
+- Lyfta Community is an explicit Tio product `SKIP`, not a deferred Workout capability.
 - Existing unrelated Profile changes will be preserved.
 
 ## Release Gates
@@ -98,7 +103,7 @@ Audit the Lyfta 1.577 behavior reference, the actual Tio-hub Android/Wear workou
 - Exercise catalog, media, standards, and artwork licensing/provenance are not established.
 - Tio-hub has no checked-in production workout backend; remote sync cannot be claimed until that boundary exists.
 - Phone/Watch event identity, sequencing, acknowledgement, retry, and reconciliation must be implemented and tested before Wear beta.
-- Social, coaching marketplace, challenges, AI generation, subscription, ads, advanced recovery, and third-party integrations remain outside the 90-day core.
+- Community/social features are excluded from the Tio product scope. Coaching marketplace, AI generation, subscription, ads, advanced recovery, and third-party integrations remain outside the 90-day core.
 
 ## 90-Day Delivery Order
 
@@ -123,6 +128,10 @@ Audit the Lyfta 1.577 behavior reference, the actual Tio-hub Android/Wear workou
 - `.ai/tasks/README.md`
 - `.ai/templates/task-template.md`
 - `.ai/tasks/cross-platform/local-20260716-lyfta-workout-integration-audit.md`
+- `apps/docs/WORKOUT_PRODUCT_BLUEPRINT.md`
+- `apps/docs/README.md`
+- `apps/docs/ANDROID_APP_PROGRESS.md`
+- `apps/README.md`
 
 ## Validation
 
@@ -136,6 +145,12 @@ Audit the Lyfta 1.577 behavior reference, the actual Tio-hub Android/Wear workou
 - Result: 433 Lyfta-attributed rows, 619 `apilyfta.com` image links, 866 CloudFront video links, and 866 CloudFront thumbnail links.
 - Command: independent module-ownership, feasibility, and architecture challenge passes.
 - Result: sequencing converged on shared contracts -> Room -> thin Phone slice -> catalog/routines -> full engine -> history/schedule -> conditional Wear/cloud.
+- Command: current Wear gender-media source and catalog shape inspection.
+- Result: the prototype uses `pref_is_female: Boolean`; all 433 audited rows expose male and female media objects, while local thumbnail selection is not variant-keyed.
+- Command: local Markdown link validation for the Workout blueprint and updated documentation entry points.
+- Result: all new local documentation links resolve.
+- Command: `git diff --check`.
+- Result: PASS; no whitespace errors were reported.
 
 ## Next Action
 
@@ -148,6 +163,7 @@ Publish the existing Profile and AI-continuity work, then start workout implemen
 - `.ai/CURRENT.md`
 - `apps/docs/ANDROID_APP_PROGRESS.md`
 - `apps/docs/ARCHITECTURE.md`
+- `apps/docs/WORKOUT_PRODUCT_BLUEPRINT.md`
 - `apps/docs/PROFILE_SETTINGS_GUIDE.md`
 - `apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md`
 - `apps/docs/WEAR_OS_PROGRESS.md`

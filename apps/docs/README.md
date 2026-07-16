@@ -29,8 +29,9 @@ Use this path for a new contributor, AI assistant, or future maintainer:
 4. [Architecture](ARCHITECTURE.md)
 5. [Navigation Guide](NAVIGATION_GUIDE.md)
 6. [Profile / Settings Guide](PROFILE_SETTINGS_GUIDE.md)
-7. [Engineering Guidelines](ENGINEERING_GUIDELINES.md)
-8. [Definition Of Done](DEFINITION_OF_DONE.md)
+7. [Workout Product And UX Blueprint](WORKOUT_PRODUCT_BLUEPRINT.md)
+8. [Engineering Guidelines](ENGINEERING_GUIDELINES.md)
+9. [Definition Of Done](DEFINITION_OF_DONE.md)
 
 ## Documentation Map
 
@@ -39,6 +40,7 @@ Use this path for a new contributor, AI assistant, or future maintainer:
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Canonical Android module architecture, shell rules, design-system ownership, feature folder pattern, and long-term modular shape |
 | [NAVIGATION_GUIDE.md](NAVIGATION_GUIDE.md) | Type-safe navigation, root/main/modal graph policy, nested feature graphs, deep-link direction, and chrome policy |
 | [PROFILE_SETTINGS_GUIDE.md](PROFILE_SETTINGS_GUIDE.md) | Canonical ownership reference for Profile, Settings, Progress, Subscription entry, Personal Information, Health, Recovery, Resources, and Rewards |
+| [WORKOUT_PRODUCT_BLUEPRINT.md](WORKOUT_PRODUCT_BLUEPRINT.md) | Planned Workout product and UX target, Lyfta reference boundary, gender-aware exercise media contract, architecture gates, and 90-day delivery order |
 | [SUPABASE_INCREMENTAL_SETUP_PLAN.md](SUPABASE_INCREMENTAL_SETUP_PLAN.md) | Plan for replacing hardcoded data with repository-backed Supabase slices, RLS, seed data, and future TypeScript/Turborepo boundaries |
 | [ANDROID_APP_PROGRESS.md](ANDROID_APP_PROGRESS.md) | Current Android implementation status: completed foundation, skeletons, placeholders, known validation, and next recommended slices |
 | [NUTRITION.md](NUTRITION.md) | Nutrition runtime behavior, Meal Diary/Editor flow, UI/data boundary, hardcoded-data status, and persistence roadmap |
@@ -262,6 +264,17 @@ Read:
 - [ARCHITECTURE.md](ARCHITECTURE.md)
 
 Do not claim real sync, sensors, tiles, complications, notifications, or workout runtime unless the source proves it.
+
+### If You Are Working On Workout
+
+Read:
+
+- [WORKOUT_PRODUCT_BLUEPRINT.md](WORKOUT_PRODUCT_BLUEPRINT.md)
+- [ANDROID_APP_PROGRESS.md](ANDROID_APP_PROGRESS.md)
+- [ARCHITECTURE.md](ARCHITECTURE.md)
+- [WEAR_OS_PROGRESS.md](WEAR_OS_PROGRESS.md) when the change touches Watch
+
+Keep Lyfta as a behavior and UX reference only. Tio owns the visual UI, architecture, data, media provenance, and release boundary. Treat Tnyx Flutter as a screen comparison only.
 
 ### If You Are Opening A PR
 

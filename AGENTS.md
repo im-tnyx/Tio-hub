@@ -46,6 +46,10 @@ Report stale or conflicting documentation explicitly. Do not invent missing arch
 - `apps/wear/` owns Wear-specific runtime behavior.
 - `supabase/` owns checked-in migrations until an explicitly approved repository migration changes that boundary.
 
+Before creating or materially redesigning any Compose screen, inspect `apps/core/src/main/java/com/tnyx/core/theme/` and `apps/core/src/main/java/com/tnyx/core/ui/components/`. Reuse `TnyxTheme` tokens and an existing core component before introducing a feature-local visual primitive. Do not duplicate an existing `Tnyx*` component inside a feature.
+
+Keep feature semantics in the owning feature. A component may move to `apps/core/` only when it is domain-neutral and has demonstrated cross-feature reuse; otherwise keep it under the feature's `widgets/` package and compose it from core primitives.
+
 ## Reference And Provenance Rules
 
 - `design/references/` is reference material, not product-owned runtime source.

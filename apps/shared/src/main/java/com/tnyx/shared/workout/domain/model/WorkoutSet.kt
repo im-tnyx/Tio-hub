@@ -2,43 +2,40 @@ package com.tnyx.shared.workout.domain.model
 
 import kotlinx.serialization.Serializable
 
-/**
- * Set का type — Phone App और Watch App दोनों में same enum use होगा।
- *
- * Volume calculation rules:
- * - WARMUP → total volume में count नहीं होगा
- * - DROP_SET → rest timer skip होगा automatically
- * - SUPERSET → अगले exercise के साथ back-to-back चलेगा
- */
 @Serializable
 enum class SetType {
-    NORMAL,     // Standard working set
-    WARMUP,     // Warm-up (volume excluded)
-    DROP_SET,   // Drop set (no rest, reduced weight)
-    FAILURE,    // Taken to failure
-    SUPERSET    // Paired with next exercise
+    NORMAL,
+    WARMUP,
+    DROP_SET,
+    FAILURE,
+    SUPERSET
 }
 
-/**
- * एक logged set का data model।
- * Phone App → Watch App → Phone App sync में यही travel करता है।
- */
+/** One set nested under a stable session exercise entry. */
 @Serializable
 data class WorkoutSet(
     val id: String,
-    val exerciseId: String,
+    val exerciseEntryId: String,
     val setNumber: Int,
+    val schemaVersion: Int = WORKOUT_CONTRACT_VERSION,
     val type: SetType = SetType.NORMAL,
-    val weightKg: Double,
-    val reps: Int,
+    val weightKg: Double? = null,
+    val reps: Int? = null,
+    val durationSeconds: Int? = null,
+    val distanceMeters: Double? = null,
     val isCompleted: Boolean = false,
-    val rpe: Int? = null,          // Rate of Perceived Exertion (1–10)
+    val rpe: Int? = null,
     val notes: String = "",
-    val timestampMs: Long = 0L
+    val completedAtMs: Long? = null
 ) {
-    /** Volume में count होगा — Warm-up sets exclude */
-    val countsToVolume: Boolean get() = type != SetType.WARMUP
+    val countsToVolume: Boolean
+        get() = isCompleted && type != SetType.WARMUP
 
-    /** Total volume = weight × reps (Warm-up excluded) */
-    val volume: Double get() = if (countsToVolume) weightKg * reps else 0.0
+    val volumeKg: Double
+        get() = if (countsToVolume) (weightKg ?: 0.0) * (reps ?: 0) else 0.0
+
+    val hasRecordedMetric: Boolean
+        get() = (reps ?: 0) > 0 ||
+            (durationSeconds ?: 0) > 0 ||
+            (distanceMeters ?: 0.0) > 0.0
 }

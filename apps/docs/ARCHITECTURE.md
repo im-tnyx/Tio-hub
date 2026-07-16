@@ -92,12 +92,20 @@ shared/
 └── src/main/java/com/tnyx/shared/
     ├── workout/
     │   └── domain/
+    │       ├── logic/
+    │       │   ├── ExerciseMediaResolver.kt ← approved exact/neutral/placeholder resolution
+    │       │   └── WorkoutReducer.kt       ← deterministic session state transitions
     │       ├── model/
-    │       │   ├── SetType.kt         ← enum: NORMAL, WARMUP, DROP_SET, FAILURE, SUPERSET
-    │       │   ├── WorkoutSet.kt      ← logged set data (weight, reps, type)
-    │       │   └── WorkoutSession.kt  ← session + routine models
+    │       │   ├── ExerciseDefinition.kt    ← stable exercise identity
+    │       │   ├── ExerciseMedia.kt         ← preference, variants, provenance gate
+    │       │   ├── WorkoutContractVersion.kt
+    │       │   ├── WorkoutEngineState.kt    ← active session + rest timer state
+    │       │   ├── WorkoutMutation.kt       ← durable Phone/Wear mutation envelope
+    │       │   ├── WorkoutRoutine.kt        ← routine and planned exercise contracts
+    │       │   ├── WorkoutSession.kt        ← session and exercise-entry snapshots
+    │       │   └── WorkoutSet.kt            ← set type and logged metrics
     │       └── repository/
-    │           └── WorkoutRepository.kt ← interface (implemented in :app and :wearapp)
+    │           └── WorkoutRepository.kt     ← shared data boundary; implementation pending
     └── nutrition/
         └── domain/                    ← (future) NutritionLog, FoodEntry, NutritionRepository
 ```
@@ -130,6 +138,8 @@ Do not create these folders just to satisfy a tree. Add them when the first real
 ```
 
 > `:shared` किसी पर depend नहीं करता — यह सबसे base layer है।
+
+Workout contract v2 is implemented and unit-tested in `:shared`. Phone persistence and Wear runtime implementations are not checked in yet; do not infer them from the repository interface.
 
 ### क्या जाएगा `:shared` में
 

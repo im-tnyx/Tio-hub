@@ -41,7 +41,9 @@ If an item is not applicable, explain why in the PR description, implementation 
 
 ## UI And Accessibility
 
+- Core UI reuse audit is complete for every new or materially redesigned screen.
 - UI uses `TnyxTheme` and existing components where possible.
+- No existing `Tnyx*` component or token is duplicated in a feature without a documented reason.
 - Layout works on expected mobile viewports.
 - Touch targets are usable.
 - Text does not overlap or overflow incoherently.

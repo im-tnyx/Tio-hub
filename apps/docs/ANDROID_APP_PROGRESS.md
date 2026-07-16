@@ -99,8 +99,14 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
 - [x] Workout module exists.
 - [x] Workout graph exists.
 - [x] Workout tab is intentionally kept as a simple placeholder.
+- [x] Planned product/UX target and staged delivery order are documented in `WORKOUT_PRODUCT_BLUEPRINT.md`.
+- [x] Shared Workout contract v2 defines versioned exercise, media, routine, session, set, timer, and mutation models.
+- [x] `ExerciseMediaResolver` implements approved exact -> neutral -> placeholder resolution without male/female cross-fallback.
+- [x] `WorkoutReducer` implements deterministic start, exercise, set, timer, finish, and discard transitions with rejection reasons.
 - [ ] Workout redesign and real production screens are not implemented yet.
 - [ ] Workout repository-backed runtime is not implemented yet.
+
+Boundary note: shared contracts and unit tests are implemented, but Phone UI, persistence, media catalog integration, Settings UI, and real Wear sync remain unimplemented. The blueprint allows a Tio-owned visual UI while preserving the approved Lyfta-derived core UX behavior.
 
 ### Profile
 
@@ -197,6 +203,15 @@ Rule: Future module folders should be created only when runtime code needs them.
 
 ## ✅ Latest Validation
 
+### 2026-07-16: Workout shared contract v2
+
+- [x] `./gradlew.bat :shared:test :app:compileDebugKotlin :wear:compileDebugKotlin`
+- [x] Result: BUILD SUCCESSFUL
+- [x] Shared test result: 15 tests, 0 failures, 0 errors, 0 skipped
+- [x] Scope: contract serialization, KMP boundary, gender-media resolution, reducer transitions, Phone compile compatibility, and Wear compile compatibility
+
+### Previous validation
+
 - [x] `./gradlew.bat :app:compileDebugKotlin`
 - [x] Result: BUILD SUCCESSFUL
 - [x] Scope: AuthRepository boundary, FakeAuthRepository, Auth minimum screens, and AuthGraph wiring compile with app.
@@ -207,5 +222,5 @@ Known warning:
 
 ---
 
-**Last Updated:** 2026-06-29
-**Current Focus:** Replace `FakeAuthRepository` with real auth session source when Supabase/Firebase/backend direction is finalized, then wire `ProfileGraph` from avatar and `SettingsGraph` from gear icon.
+**Last Updated:** 2026-07-16
+**Current Focus:** Workout Stage 2: Phone persistence, atomic snapshot/mutation storage, repository implementation, and recovery tests. Workout UI remains a placeholder until that data boundary passes.

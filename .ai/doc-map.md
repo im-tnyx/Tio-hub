@@ -42,6 +42,7 @@ Task files cannot override runtime source, canonical docs, GitHub history, or da
 - Phone runtime: `apps/features/workout/`
 - Shared Phone/Watch contracts: `apps/shared/src/main/java/com/tnyx/shared/workout/`
 - Wear runtime: `apps/wear/src/main/java/com/tnyx/wear/`
+- Product, UX, gender-aware media, and 90-day target: `apps/docs/WORKOUT_PRODUCT_BLUEPRINT.md`
 - Workout persistence plan: `apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md`
 - Current status: `apps/docs/ANDROID_APP_PROGRESS.md`
 

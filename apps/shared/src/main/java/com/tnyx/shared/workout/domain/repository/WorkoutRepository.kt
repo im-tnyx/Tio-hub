@@ -1,39 +1,46 @@
 package com.tnyx.shared.workout.domain.repository
 
+import com.tnyx.shared.workout.domain.logic.WorkoutMutationRejection
+import com.tnyx.shared.workout.domain.model.ExerciseDefinition
+import com.tnyx.shared.workout.domain.model.WorkoutEngineState
+import com.tnyx.shared.workout.domain.model.WorkoutMutation
 import com.tnyx.shared.workout.domain.model.WorkoutRoutine
 import com.tnyx.shared.workout.domain.model.WorkoutSession
 import kotlinx.coroutines.flow.Flow
 
-/**
- * Workout Repository Interface — Shared
- *
- * यह interface :shared module में define होगा।
- * Implementation अलग-अलग होगी:
- *   - Phone App  → local database implementation
- *   - Watch App  → local watch-side cache implementation
- *
- * KMP के बाद: commonMain में यही interface रहेगा।
- */
+sealed interface WorkoutMutationApplyResult {
+    val state: WorkoutEngineState
+
+    data class Applied(
+        override val state: WorkoutEngineState
+    ) : WorkoutMutationApplyResult
+
+    data class AlreadyApplied(
+        override val state: WorkoutEngineState
+    ) : WorkoutMutationApplyResult
+
+    data class Rejected(
+        override val state: WorkoutEngineState,
+        val reason: WorkoutMutationRejection
+    ) : WorkoutMutationApplyResult
+}
+
+/** Platform-neutral Workout data boundary shared by Phone and Wear. */
 interface WorkoutRepository {
+    fun observeExerciseCatalog(): Flow<List<ExerciseDefinition>>
 
-    /** All routines — synced from server / local cache */
-    fun getRoutines(): Flow<List<WorkoutRoutine>>
+    suspend fun getExerciseDefinition(id: String): ExerciseDefinition?
 
-    /** Single routine by id */
+    fun observeRoutines(): Flow<List<WorkoutRoutine>>
+
     suspend fun getRoutineById(id: String): WorkoutRoutine?
 
-    /** Active session (if workout is ongoing) */
-    fun getActiveSession(): Flow<WorkoutSession?>
+    fun observeEngineState(): Flow<WorkoutEngineState>
 
-    /** Start a new workout session */
-    suspend fun startSession(routineId: String?): WorkoutSession
+    /** Apply once and persist the state snapshot plus outgoing mutation atomically. */
+    suspend fun applyMutation(mutation: WorkoutMutation): WorkoutMutationApplyResult
 
-    /** Log a completed set */
-    suspend fun logSet(sessionId: String, set: com.tnyx.shared.workout.domain.model.WorkoutSet)
+    fun observeSessionHistory(): Flow<List<WorkoutSession>>
 
-    /** End the active workout session */
-    suspend fun endSession(sessionId: String): WorkoutSession
-
-    /** All past workout sessions */
-    fun getSessionHistory(): Flow<List<WorkoutSession>>
+    suspend fun getSessionById(id: String): WorkoutSession?
 }

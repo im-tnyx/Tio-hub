@@ -62,7 +62,10 @@ Rules:
 
 ## UI
 
+- Before implementing a screen, inspect `:core` theme tokens and reusable UI components and record the reuse decision.
 - Use `TnyxTheme` and existing design-system components.
+- Do not recreate an existing `Tnyx*` component inside a feature. Prefer composition or a feature-owned wrapper.
+- Keep domain-specific widgets feature-local. Promote a widget to `:core` only when it is feature-agnostic and has demonstrated cross-feature reuse.
 - Avoid random hardcoded colors, typography, spacing, radius, and alpha values.
 - Keep text fitting inside its container across mobile viewports.
 - Provide loading, empty, and error states when the workflow needs them.

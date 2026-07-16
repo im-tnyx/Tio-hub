@@ -201,6 +201,8 @@ Workout tab currently stays intentionally clean: one basic placeholder destinati
 
 **Architecture Rule:** Shell sirf app chrome show/hide karta hai. Workout-specific sub-tabs, scroll hide/show behavior, cards, detail flows, ya redesign abhi runtime mein nahi hain. Future Workout redesign apne feature graph mein aayega, shell state/action coupling mein nahi.
 
+Planned Workout UX, Lyfta reference boundaries, gender-aware exercise media, and the stage-by-stage build order are defined in [docs/WORKOUT_PRODUCT_BLUEPRINT.md](docs/WORKOUT_PRODUCT_BLUEPRINT.md). That blueprint is planning truth, not current implementation status.
+
 ---
 
 ## 📋 Presentation Layer Rules (MVI Contract)
@@ -269,6 +271,7 @@ app/src/main/
 | [docs/ARCHITECTURE_CHANGELOG.md](docs/ARCHITECTURE_CHANGELOG.md) | Durable architecture change log |
 | [docs/adr/README.md](docs/adr/README.md) | Architecture Decision Records index |
 | [docs/NUTRITION.md](docs/NUTRITION.md) | Nutrition Meal Diary runtime, UI components, data boundary, and persistence roadmap |
+| [docs/WORKOUT_PRODUCT_BLUEPRINT.md](docs/WORKOUT_PRODUCT_BLUEPRINT.md) | Planned Workout UX, gender-aware exercise media contract, architecture, and 90-day delivery order |
 | [docs/NAVIGATION_GUIDE.md](docs/NAVIGATION_GUIDE.md) | 100+ screen type-safe navigation, nested graphs, route contracts, chrome policy |
 | [docs/PROFILE_SETTINGS_GUIDE.md](docs/PROFILE_SETTINGS_GUIDE.md) | Canonical Profile, Settings, Progress, Billing, Health, Recovery ownership reference |
 | [docs/ONBOARDING_FLOW_DETAILED.md](docs/ONBOARDING_FLOW_DETAILED.md) | Complete onboarding runtime flow reference |

@@ -17,6 +17,20 @@
     3. `TnyxThemeProvider.kt` (Actual value mapping)
 - **Modifier Order:** Modifier का क्रम Project की Visual Integrity के लिए महत्वपूर्ण है। `padding` और `background/clip` के क्रम को यूजर के ओरिजिनल कोड के अनुसार ही रखें।
 
+### Mandatory Core UI Reuse Gate
+
+Before creating or materially changing any Compose screen:
+
+1. Inspect `core/theme/TnyxTheme.kt`, `core/theme/tokens/`, and `core/ui/components/`.
+2. Record which existing theme tokens and components the screen will reuse.
+3. Use `TnyxTheme.colors`, `dimens`, `insets`, `elevation`, `typography`, `textStyles`, `motion`, `shapes`, `gradients`, `shadows`, and `components` instead of feature-local visual constants when an applicable token exists.
+4. Prefer existing components such as `TnyxPrimaryButton`, `TnyxSecondaryButton`, `TnyxGhostButton`, `TnyxCard`, `TnyxTextField`, `TnyxScreenHeader`, `TnyxDynamicHeader`, `TnyxTabSwitcher`, and `TnyxModalBottomSheet` before creating an equivalent composable.
+5. Do not copy or fork a core component into a feature merely to customize it. Extend a generic core API when the behavior remains feature-agnostic; otherwise wrap the core component in a feature-owned widget.
+6. Keep a widget feature-local when it contains domain language, feature state, or feature-specific behavior. Promote it to `core` only after real cross-feature reuse is demonstrated.
+7. If a new component token is required, update `TnyxComponentTokens`, `LocalTnyxComponentTokens`, and `TnyxThemeProvider` together and validate every affected caller.
+
+A screen review is incomplete until it confirms that no existing core component or token was unnecessarily duplicated.
+
 ## 3. Navigation (Source: NAVIGATION_GUIDE.md)
 - **Type-Safety:** केवल `@Serializable` रूट्स का उपयोग करें।
 - **Detection Logic:** Navigation 2.8.5+ के लिए हमेशा `it.hasRoute(Class::class)` जैसे Explicit Class checks का उपयोग करें ताकि Nested Graphs में डिटेक्शन फेल न हो।
@@ -33,5 +47,5 @@
 
 ---
 
-*Last Updated: 2024-12-30*
+*Last Updated: 2026-07-16*
 *Maintainer: TNYX Lead Architect*

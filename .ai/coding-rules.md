@@ -9,7 +9,8 @@ Follow the existing repository style before introducing new patterns.
 - Keep Compose screens dumb.
 - Keep feature logic inside the owning feature module.
 - Keep shell code free of feature-specific logic.
-- Prefer existing components, theme, and routing helpers.
+- Complete the mandatory core reuse audit in `.ai/ui-rules.md` before creating or redesigning a screen.
+- Prefer existing components, theme, and routing helpers; do not duplicate a core component inside a feature.
 - Avoid unnecessary abstractions.
 - Keep changes small and reviewable.
 

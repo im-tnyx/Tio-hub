@@ -4,11 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tnyx.shared.profile.domain.repository.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.LocalDate
+import java.time.Period
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @HiltViewModel
 class ProfileHomeViewModel @Inject constructor(
@@ -24,19 +26,35 @@ class ProfileHomeViewModel @Inject constructor(
     fun loadUserProfile() {
         viewModelScope.launch {
             try {
-                profileRepository.getProfile("demo-user")
+                profileRepository.getCurrentProfile()
                     .collect { profile ->
-                        val age = calculateAge(profile.dob)
-                        val formattedStatus = "$age year old - ${profile.gender.lowercase()}"
                         _uiState.update { state ->
                             state.copy(
                                 displayName = profile.displayName,
-                                status = formattedStatus,
+                                status = profile.statusLabel.ifBlank {
+                                    formatStatus(profile.dob, profile.gender)
+                                },
                                 planLabel = profile.planLabel,
+                                streak = profile.streak,
                                 weight = profile.weight,
+                                bodyFat = profile.bodyFat,
                                 height = profile.height,
                                 bmi = profile.bmi,
-                                bmr = profile.bmr
+                                bmr = profile.bmr,
+                                currentJourney = CurrentJourneyState(
+                                    name = profile.currentJourney.name,
+                                    initialWeight = profile.currentJourney.initialWeight,
+                                    targetWeight = profile.currentJourney.targetWeight,
+                                    progress = profile.currentJourney.progress
+                                ),
+                                progressPhotos = profile.progressPhotos,
+                                lastPhotoUpdateWeight = profile.lastPhotoUpdateWeight,
+                                lastPhotoUpdateDate = profile.lastPhotoUpdateDate,
+                                workoutChart = WorkoutChartState(
+                                    durationMinutes = profile.workoutChart.durationMinutes,
+                                    volumeKg = profile.workoutChart.volumeKg,
+                                    reps = profile.workoutChart.reps
+                                )
                             )
                         }
                     }
@@ -46,13 +64,21 @@ class ProfileHomeViewModel @Inject constructor(
         }
     }
 
-    private fun calculateAge(dobString: String): Int {
-        return try {
-            val birthDate = java.time.LocalDate.parse(dobString)
-            val currentDate = java.time.LocalDate.now()
-            java.time.Period.between(birthDate, currentDate).years
-        } catch (e: Exception) {
-            35 // Default fallback age
+    private fun formatStatus(dobString: String, gender: String): String {
+        val age = calculateAge(dobString) ?: return gender.lowercase().ifBlank { "" }
+        val normalizedGender = gender.lowercase()
+        return if (normalizedGender.isBlank()) {
+            "$age year old"
+        } else {
+            "$age year old - $normalizedGender"
         }
+    }
+
+    private fun calculateAge(dobString: String): Int? {
+        return runCatching {
+            val birthDate = LocalDate.parse(dobString)
+            val currentDate = LocalDate.now()
+            Period.between(birthDate, currentDate).years
+        }.getOrNull()
     }
 }

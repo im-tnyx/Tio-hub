@@ -11,16 +11,23 @@ data class ProfileHomeUiState(
     val bmi: Double = 0.0,
     val bmr: Int = 0,
     val currentJourney: CurrentJourneyState = CurrentJourneyState(),
-    val progressPhotos: List<String> = listOf(), // Image URLs or resource names
+    val progressPhotos: List<String> = emptyList(),
     val lastPhotoUpdateWeight: String = "",
-    val lastPhotoUpdateDate: String = ""
+    val lastPhotoUpdateDate: String = "",
+    val workoutChart: WorkoutChartState = WorkoutChartState()
 )
 
 data class CurrentJourneyState(
-    val name: String = "Gain Muscle",
-    val initialWeight: Double = 70.0,
-    val targetWeight: Double = 70.5,
-    val progress: Float = 0.2f // 0.0 to 1.0
+    val name: String = "",
+    val initialWeight: Double = 0.0,
+    val targetWeight: Double = 0.0,
+    val progress: Float = 0f
+)
+
+data class WorkoutChartState(
+    val durationMinutes: List<Float> = emptyList(),
+    val volumeKg: List<Float> = emptyList(),
+    val reps: List<Float> = emptyList()
 )
 
 sealed interface ProfileHomeAction {

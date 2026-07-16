@@ -95,6 +95,9 @@ fun ProfileHomeScreen(
             item {
                 Box(modifier = Modifier.padding(horizontal = TnyxTheme.dimens.SpaceS)) {
                     ProgressPhotosBanner(
+                        photoCount = uiState.progressPhotos.size,
+                        lastPhotoUpdateWeight = uiState.lastPhotoUpdateWeight,
+                        lastPhotoUpdateDate = uiState.lastPhotoUpdateDate,
                         onAddPictures = { onAction(ProfileHomeAction.AddProgressPhotosClicked) }
                     )
                 }
@@ -104,7 +107,7 @@ fun ProfileHomeScreen(
             // 3. Weekly Workout Duration Chart
             item {
                 Box(modifier = Modifier.padding(horizontal = TnyxTheme.dimens.SpaceS)) {
-                    WorkoutWeeklyDurationChart()
+                    WorkoutWeeklyDurationChart(chart = uiState.workoutChart)
                 }
                 Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceSM))
             }
@@ -431,6 +434,9 @@ private fun UserProfileCard(
 
 @Composable
 private fun ProgressPhotosBanner(
+    photoCount: Int,
+    lastPhotoUpdateWeight: String,
+    lastPhotoUpdateDate: String,
     onAddPictures: () -> Unit
 ) {
     TnyxCard(
@@ -506,14 +512,19 @@ private fun ProgressPhotosBanner(
                 // Main text instructions (title & description stay at the top)
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "What you see is what you believe!",
+                        text = if (photoCount > 0) "$photoCount progress photos" else "No progress photos yet",
                         style = TnyxTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = TnyxTheme.colors.textPrimary
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Consistently upload your photos to observe the changes over time.",
+                        text = when {
+                            lastPhotoUpdateWeight.isNotBlank() && lastPhotoUpdateDate.isNotBlank() ->
+                                "Last update: $lastPhotoUpdateWeight on $lastPhotoUpdateDate"
+                            lastPhotoUpdateDate.isNotBlank() -> "Last update: $lastPhotoUpdateDate"
+                            else -> "Add photos to track visual progress."
+                        },
                         style = TnyxTheme.typography.bodySmall,
                         color = TnyxTheme.colors.textSecondary,
                         lineHeight = 15.sp
@@ -558,16 +569,27 @@ private fun weekCountForRange(range: String): Int {
     }
 }
 
-// Generates deterministic mock values for a given point count/tab, since no real
-// workout-history backend exists yet; keeps the chart looking populated for every range.
-private fun generateMockPoints(count: Int, selectedTab: Int, maxVal: Float): List<Float> {
-    val base = when (selectedTab) {
-        1 -> listOf(20f, 45f, 10f, 30f, 85f, 20f, 60f)
-        2 -> listOf(10f, 40f, 20f, 15f, 70f, 25f, 55f)
-        else -> listOf(15f, 35f, 15f, 15f, 75f, 15f, 65f)
+private fun valuesForSelectedTab(chart: WorkoutChartState, selectedTab: Int): List<Float> {
+    return when (selectedTab) {
+        1 -> chart.volumeKg
+        2 -> chart.reps
+        else -> chart.durationMinutes
     }
-    return (0 until count).map { index ->
-        (base[index % base.size] * (0.85f + 0.05f * (index % 5))).coerceIn(5f, maxVal)
+}
+
+private fun axisLabelsForSelectedTab(selectedTab: Int, maxVal: Float): List<String> {
+    val safeMax = maxVal.toInt().coerceAtLeast(1)
+    val twoThirds = (safeMax * 2 / 3).coerceAtLeast(1)
+    val oneThird = (safeMax / 3).coerceAtLeast(1)
+    return when (selectedTab) {
+        1 -> listOf("${safeMax}kg", "${twoThirds}kg", "${oneThird}kg", "0kg")
+        2 -> listOf(safeMax.toString(), twoThirds.toString(), oneThird.toString(), "0")
+        else -> listOf(
+            formatChartValue(selectedTab, safeMax.toFloat()),
+            formatChartValue(selectedTab, twoThirds.toFloat()),
+            formatChartValue(selectedTab, oneThird.toFloat()),
+            "0m"
+        )
     }
 }
 
@@ -590,7 +612,7 @@ private fun formatHeaderValue(selectedTab: Int, totalValue: Float): String {
 }
 
 @Composable
-private fun WorkoutWeeklyDurationChart() {
+private fun WorkoutWeeklyDurationChart(chart: WorkoutChartState) {
     TnyxCard(
         variant = TnyxCardVariant.Normal,
         padding = 16.dp
@@ -659,38 +681,14 @@ private fun WorkoutWeeklyDurationChart() {
                 "${monday.format(rangeFormatter)} - ${monday.plusDays(6).format(rangeFormatter)}"
             }
 
-            // Data shown on the side (y-axis) & header changes according to the selected tab & range.
-            // For "Weekly" the exact historic values are kept; other ranges generate one point per week.
-            val chartData = remember(selectedTab, selectedRange) {
-                val maxVal = 90f
-                val points = if (isWeeklyRange) {
-                    when (selectedTab) {
-                        1 -> listOf(20f, 45f, 10f, 30f, 85f, 20f, 60f)
-                        2 -> listOf(10f, 40f, 20f, 15f, 70f, 25f, 55f)
-                        else -> listOf(15f, 35f, 15f, 15f, 75f, 15f, 65f)
-                    }
-                } else {
-                    generateMockPoints(weekCountForRange(selectedRange), selectedTab, maxVal)
-                }
-                val headerValue = if (isWeeklyRange) {
-                    when (selectedTab) {
-                        1 -> "12,450 kg"
-                        2 -> "186 reps"
-                        else -> "3h 18m"
-                    }
-                } else {
-                    formatHeaderValue(selectedTab, points.sum())
-                }
-                val axisLabels = when (selectedTab) {
-                    1 -> listOf("90kg", "60kg", "30kg", "0kg")
-                    2 -> listOf("90", "60", "30", "0")
-                    else -> listOf("1h30m", "1h", "30m", "0m")
-                }
+            val chartData = remember(selectedTab, chart) {
+                val points = valuesForSelectedTab(chart, selectedTab)
+                val maxVal = (points.maxOrNull() ?: 0f).coerceAtLeast(1f)
                 WeeklyChartData(
-                    headerValue = headerValue,
+                    headerValue = if (points.isEmpty()) "--" else formatHeaderValue(selectedTab, points.sum()),
                     points = points,
                     maxVal = maxVal,
-                    axisLabels = axisLabels
+                    axisLabels = axisLabelsForSelectedTab(selectedTab, maxVal)
                 )
             }
 
@@ -782,7 +780,21 @@ private fun WorkoutWeeklyDurationChart() {
 
             // Canvas Chart
 
-            Row(modifier = Modifier.fillMaxWidth()) {
+            if (chartData.points.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(110.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No workout data",
+                        style = TnyxTheme.typography.bodyMedium,
+                        color = TnyxTheme.colors.textMuted
+                    )
+                }
+            } else {
+                Row(modifier = Modifier.fillMaxWidth()) {
                 // Y-axis labels: time for Duration, weight for Volume, reps for Reps
                 Column(
                     modifier = Modifier
@@ -969,6 +981,7 @@ private fun WorkoutWeeklyDurationChart() {
                         }
                     }
                 }
+            }
             }
 
             Spacer(modifier = Modifier.height(12.dp))

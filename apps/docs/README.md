@@ -28,10 +28,11 @@ Use this path for a new contributor, AI assistant, or future maintainer:
 3. [Android App Progress](ANDROID_APP_PROGRESS.md)
 4. [Architecture](ARCHITECTURE.md)
 5. [Navigation Guide](NAVIGATION_GUIDE.md)
-6. [Profile / Settings Guide](PROFILE_SETTINGS_GUIDE.md)
-7. [Workout Product And UX Blueprint](WORKOUT_PRODUCT_BLUEPRINT.md)
-8. [Engineering Guidelines](ENGINEERING_GUIDELINES.md)
-9. [Definition Of Done](DEFINITION_OF_DONE.md)
+6. [Bottom Navigation Customization](BOTTOM_NAVIGATION_CUSTOMIZATION.md)
+7. [Profile / Settings Guide](PROFILE_SETTINGS_GUIDE.md)
+8. [Workout Product And UX Blueprint](WORKOUT_PRODUCT_BLUEPRINT.md)
+9. [Engineering Guidelines](ENGINEERING_GUIDELINES.md)
+10. [Definition Of Done](DEFINITION_OF_DONE.md)
 
 ## Documentation Map
 
@@ -39,6 +40,7 @@ Use this path for a new contributor, AI assistant, or future maintainer:
 |---|---|
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Canonical Android module architecture, shell rules, design-system ownership, feature folder pattern, and long-term modular shape |
 | [NAVIGATION_GUIDE.md](NAVIGATION_GUIDE.md) | Type-safe navigation, root/main/modal graph policy, nested feature graphs, deep-link direction, and chrome policy |
+| [BOTTOM_NAVIGATION_CUSTOMIZATION.md](BOTTOM_NAVIGATION_CUSTOMIZATION.md) | Product and architecture rules for Settings-only bottom-tab selection, ordering, persistence, reset, accessibility, and route eligibility |
 | [PROFILE_SETTINGS_GUIDE.md](PROFILE_SETTINGS_GUIDE.md) | Canonical ownership reference for Profile, Settings, Progress, Subscription entry, Personal Information, Health, Recovery, Resources, and Rewards |
 | [WORKOUT_PRODUCT_BLUEPRINT.md](WORKOUT_PRODUCT_BLUEPRINT.md) | Planned Workout product and UX target, Lyfta reference boundary, gender-aware exercise media contract, architecture gates, and 90-day delivery order |
 | [SUPABASE_INCREMENTAL_SETUP_PLAN.md](SUPABASE_INCREMENTAL_SETUP_PLAN.md) | Plan for replacing hardcoded data with repository-backed Supabase slices, RLS, seed data, and future TypeScript/Turborepo boundaries |
@@ -64,6 +66,7 @@ Current ADRs:
 - [ADR-0002: Profile Settings Progress Ownership](adr/0002-profile-settings-progress-ownership.md)
 - [ADR-0003: Type-Safe Navigation And Chrome Policy](adr/0003-type-safe-navigation-and-chrome-policy.md)
 - [ADR-0004: Incremental Supabase Setup](adr/0004-incremental-supabase-setup.md)
+- [ADR-0005: User-Configurable Bottom Navigation](adr/0005-user-configurable-bottom-navigation.md)
 
 Add or update an ADR when a change affects:
 
@@ -139,17 +142,19 @@ RootGraph
 `-- ModalGraph
 ```
 
-Main Graph tabs:
+Default Main Graph tabs:
 
 ```text
 Home
-Workout
 Nutrition
-Coach
+AI
+Workout
 Progress
 ```
 
-Profile opens from the avatar.
+Bottom navigation may become user-configurable only through Settings under the constraints in [BOTTOM_NAVIGATION_CUSTOMIZATION.md](BOTTOM_NAVIGATION_CUSTOMIZATION.md): Home remains first, three to six supported top-level destinations may be enabled, and Reset restores the exact five-tab default.
+
+Profile opens from the avatar until its top-level tab behavior is explicitly approved and implemented.
 
 Settings opens from the gear icon.
 
@@ -206,6 +211,22 @@ Confirm:
 - repository owner
 - chrome policy
 - loading/empty/error behavior
+
+### If You Are Changing Bottom Navigation
+
+Read:
+
+- [BOTTOM_NAVIGATION_CUSTOMIZATION.md](BOTTOM_NAVIGATION_CUSTOMIZATION.md)
+- [NAVIGATION_GUIDE.md](NAVIGATION_GUIDE.md)
+- [PROFILE_SETTINGS_GUIDE.md](PROFILE_SETTINGS_GUIDE.md) when Profile eligibility changes
+- [DEFINITION_OF_DONE.md](DEFINITION_OF_DONE.md)
+
+Hard rules:
+
+- Home remains first.
+- Only supported top-level route contracts are eligible.
+- Preferences change rendering and order, not feature ownership.
+- Home screen section customization is a separate future decision.
 
 ### If You Are Changing Profile, Settings, Or Progress
 

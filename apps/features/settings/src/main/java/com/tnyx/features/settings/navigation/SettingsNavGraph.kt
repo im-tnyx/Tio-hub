@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.tnyx.features.settings.presentation.app_preferences.AppPreferencesRoute
+import com.tnyx.features.settings.presentation.bottom_navigation.BottomNavigationRoute
 import com.tnyx.features.settings.presentation.home.SettingsHomeRoute
 import com.tnyx.routing.routes.SettingsRoute
 
@@ -28,7 +29,16 @@ fun NavGraphBuilder.settingsGraph(
 
         composable<SettingsRoute.AppPreferences> {
             AppPreferencesRoute(
-                onNavigateBack = onNavigateBack
+                onNavigateBack = onNavigateBack,
+                onOpenBottomNavigation = {
+                    navController.navigate(SettingsRoute.BottomNavigation)
+                },
+            )
+        }
+
+        composable<SettingsRoute.BottomNavigation> {
+            BottomNavigationRoute(
+                onNavigateBack = { navController.popBackStack() },
             )
         }
 

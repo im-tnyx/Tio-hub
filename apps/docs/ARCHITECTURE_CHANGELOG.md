@@ -4,15 +4,26 @@ This changelog records architecture decisions that affect project structure, dat
 
 Do not use this file for ordinary feature changes, bug fixes, or copy edits.
 
-## 2026-07-17
+## 2026-07-17 — Dynamic navigation catalog
+
+- Accepted Settings-only user customization for bottom-navigation visibility and order.
+- Kept the exact reset/default order as `Home | Nutrition | Tio | Workout | Progress`.
+- Expanded the optional catalog with `Meal Plan`, `Library`, and `You` while retaining the three-to-six tab limit.
+- Assigned Meal Plan to Nutrition ownership and Library to Workout ownership.
+- Promoted You to a true MainGraph destination that renders the Profile experience inside persistent shell chrome.
+- Kept root ProfileGraph as an avatar fallback when You is not enabled.
+- Added deterministic Home modes: Nutrition, Workout, Balanced, and Custom, derived from enabled domain tabs.
+- Confirmed that Home adaptation affects summary priority only and never silently changes saved navigation.
+- Kept Explore/Discover outside the current catalog until a distinct production route exists.
+
+## 2026-07-17 — Configurable navigation foundation
 
 - Proposed Settings-only user customization for eligible bottom-navigation destinations.
-- Kept the reset/default order as `Home | Nutrition | AI | Workout | Progress`.
+- Kept the reset/default order as `Home | Nutrition | AI | Workout | Progress` at the original stable-ID level; the user-facing AI label is now Tio.
 - Required Home to remain first and limited valid configurations to three through six tabs.
 - Defined the route graph as the destination source of truth while preferences control only the rendered eligible list and order.
 - Required stable destination identifiers, DataStore-backed local persistence, normalization, migration, and safe fallback to defaults.
-- Deferred Home screen section customization to a separate future decision because Home is a cross-domain summary surface.
-- Kept Explore unavailable until its production route exists and Profile unavailable as a persistent tab until its graph behavior is explicitly approved.
+- Deferred detailed Home section composition because Home is a cross-domain summary surface.
 
 ## 2026-07-16
 

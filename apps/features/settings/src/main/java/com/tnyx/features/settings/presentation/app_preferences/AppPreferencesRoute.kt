@@ -8,6 +8,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun AppPreferencesRoute(
     onNavigateBack: () -> Unit,
+    onOpenBottomNavigation: () -> Unit,
     viewModel: AppPreferencesViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -17,6 +18,7 @@ fun AppPreferencesRoute(
         onAction = { action ->
             when (action) {
                 AppPreferencesAction.BackClicked -> onNavigateBack()
+                AppPreferencesAction.BottomNavigationClicked -> onOpenBottomNavigation()
                 else -> viewModel.handleAction(action)
             }
         }

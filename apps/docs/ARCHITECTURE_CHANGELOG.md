@@ -4,6 +4,16 @@ This changelog records architecture decisions that affect project structure, dat
 
 Do not use this file for ordinary feature changes, bug fixes, or copy edits.
 
+## 2026-07-17
+
+- Proposed Settings-only user customization for eligible bottom-navigation destinations.
+- Kept the reset/default order as `Home | Nutrition | AI | Workout | Progress`.
+- Required Home to remain first and limited valid configurations to three through six tabs.
+- Defined the route graph as the destination source of truth while preferences control only the rendered eligible list and order.
+- Required stable destination identifiers, DataStore-backed local persistence, normalization, migration, and safe fallback to defaults.
+- Deferred Home screen section customization to a separate future decision because Home is a cross-domain summary surface.
+- Kept Explore unavailable until its production route exists and Profile unavailable as a persistent tab until its graph behavior is explicitly approved.
+
 ## 2026-07-16
 
 - Added versioned pure Kotlin Workout contract v2 for Phone/Wear exercise, routine, session, set, timer, and mutation state.

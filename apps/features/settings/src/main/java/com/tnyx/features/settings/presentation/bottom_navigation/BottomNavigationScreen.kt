@@ -21,12 +21,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.DateRange
 import androidx.compose.material.icons.rounded.FitnessCenter
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Insights
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.MenuBook
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -44,7 +47,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -95,20 +97,18 @@ fun BottomNavigationScreen(
             ) {
                 item {
                     Text(
-                        text = "Choose the tabs you use most. Home always stays first.",
+                        text = "Choose the areas you use most. Home always stays first and adapts its summary to your selection.",
                         style = TnyxTheme.typography.bodyMedium,
                         color = TnyxTheme.colors.textSecondary,
                     )
                 }
 
-                item {
-                    NavigationPreview(tabs = state.draftTabs)
-                }
+                item { NavigationPreview(tabs = state.draftTabs) }
 
-                if (state.errorMessage != null) {
+                state.errorMessage?.let { message ->
                     item {
                         ErrorMessage(
-                            message = state.errorMessage,
+                            message = message,
                             onDismiss = { onAction(BottomNavigationAction.DismissError) },
                         )
                     }
@@ -156,9 +156,7 @@ fun BottomNavigationScreen(
                 }
 
                 if (state.availableTabs.isNotEmpty()) {
-                    item {
-                        SectionHeader(title = "AVAILABLE TABS")
-                    }
+                    item { SectionHeader(title = "AVAILABLE TABS") }
 
                     items(
                         items = state.availableTabs,
@@ -174,7 +172,7 @@ fun BottomNavigationScreen(
 
                 item {
                     Text(
-                        text = "Keep between $MIN_BOTTOM_NAV_TABS and $MAX_BOTTOM_NAV_TABS tabs. Changes apply after Save.",
+                        text = "Keep between $MIN_BOTTOM_NAV_TABS and $MAX_BOTTOM_NAV_TABS tabs. Meal Plan, Library and You are optional; the default remains unchanged.",
                         style = TnyxTheme.typography.labelSmall,
                         color = TnyxTheme.colors.textMuted,
                     )
@@ -276,15 +274,7 @@ private fun NavigationPreview(tabs: List<ShellTab>) {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        TabIcon(
-                            tab = tab,
-                            tint = if (tab == ShellTab.Ai) {
-                                TnyxTheme.colors.ai
-                            } else {
-                                TnyxTheme.colors.textSecondary
-                            },
-                            modifier = Modifier.size(22.dp),
-                        )
+                        TabIcon(tab = tab, modifier = Modifier.size(22.dp))
                         Text(
                             text = tab.displayLabel(),
                             style = TnyxTheme.typography.labelSmall,
@@ -314,11 +304,7 @@ private fun VisibleTabRow(
             .padding(start = 16.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TabIcon(
-            tab = tab,
-            tint = if (tab == ShellTab.Ai) TnyxTheme.colors.ai else TnyxTheme.colors.textSecondary,
-            modifier = Modifier.size(24.dp),
-        )
+        TabIcon(tab = tab, modifier = Modifier.size(24.dp))
         Spacer(modifier = Modifier.size(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -392,18 +378,20 @@ private fun AvailableTabRow(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TabIcon(
-                tab = tab,
-                tint = if (tab == ShellTab.Ai) TnyxTheme.colors.ai else TnyxTheme.colors.textSecondary,
-                modifier = Modifier.size(24.dp),
-            )
+            TabIcon(tab = tab, modifier = Modifier.size(24.dp))
             Spacer(modifier = Modifier.size(16.dp))
-            Text(
-                text = tab.displayLabel(),
-                style = TnyxTheme.typography.bodyMedium,
-                color = TnyxTheme.colors.textPrimary,
-                modifier = Modifier.weight(1f),
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = tab.displayLabel(),
+                    style = TnyxTheme.typography.bodyMedium,
+                    color = TnyxTheme.colors.textPrimary,
+                )
+                Text(
+                    text = tab.supportingLabel(),
+                    style = TnyxTheme.typography.labelSmall,
+                    color = TnyxTheme.colors.textMuted,
+                )
+            }
             OutlinedButton(onClick = onAdd, enabled = enabled) {
                 Icon(
                     imageVector = Icons.Rounded.Add,
@@ -433,9 +421,7 @@ private fun ErrorMessage(
                 color = TnyxTheme.colors.textPrimary,
                 modifier = Modifier.weight(1f),
             )
-            TextButton(onClick = onDismiss) {
-                Text("Dismiss")
-            }
+            TextButton(onClick = onDismiss) { Text("Dismiss") }
         }
     }
 }
@@ -474,20 +460,22 @@ private fun SectionHeader(
 @Composable
 private fun TabIcon(
     tab: ShellTab,
-    tint: Color,
     modifier: Modifier = Modifier,
 ) {
     val icon: ImageVector = when (tab) {
         ShellTab.Home -> Icons.Rounded.Home
         ShellTab.Nutrition -> Icons.Rounded.Restaurant
+        ShellTab.MealPlan -> Icons.Rounded.DateRange
         ShellTab.Ai -> Icons.Outlined.AutoAwesome
         ShellTab.Workout -> Icons.Rounded.FitnessCenter
+        ShellTab.WorkoutLibrary -> Icons.Rounded.MenuBook
         ShellTab.Progress -> Icons.Rounded.Insights
+        ShellTab.You -> Icons.Rounded.Person
     }
     Icon(
         imageVector = icon,
         contentDescription = null,
-        tint = tint,
+        tint = if (tab == ShellTab.Ai) TnyxTheme.colors.ai else TnyxTheme.colors.textSecondary,
         modifier = modifier,
     )
 }
@@ -495,7 +483,21 @@ private fun TabIcon(
 private fun ShellTab.displayLabel(): String = when (this) {
     ShellTab.Home -> "Home"
     ShellTab.Nutrition -> "Nutrition"
+    ShellTab.MealPlan -> "Meal Plan"
     ShellTab.Ai -> "Tio"
     ShellTab.Workout -> "Workout"
+    ShellTab.WorkoutLibrary -> "Library"
     ShellTab.Progress -> "Progress"
+    ShellTab.You -> "You"
+}
+
+private fun ShellTab.supportingLabel(): String = when (this) {
+    ShellTab.Home -> "Adaptive summary"
+    ShellTab.Nutrition -> "Food logging and targets"
+    ShellTab.MealPlan -> "Plans and meal suggestions"
+    ShellTab.Ai -> "AI coaching"
+    ShellTab.Workout -> "Current training"
+    ShellTab.WorkoutLibrary -> "Exercises, routines and programs"
+    ShellTab.Progress -> "Trends and achievements"
+    ShellTab.You -> "Profile, goals and settings"
 }

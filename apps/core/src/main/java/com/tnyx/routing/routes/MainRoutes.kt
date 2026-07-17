@@ -14,11 +14,20 @@ sealed interface MainRoute {
     data object NutritionGraph : MainRoute
 
     @Serializable
+    data object MealPlan : MainRoute
+
+    @Serializable
     data object AiCoach : MainRoute
 
     @Serializable
     data object WorkoutGraph : MainRoute
 
     @Serializable
+    data object WorkoutLibrary : MainRoute
+
+    @Serializable
     data object ProgressGraph : MainRoute
+
+    @Serializable
+    data object You : MainRoute
 }

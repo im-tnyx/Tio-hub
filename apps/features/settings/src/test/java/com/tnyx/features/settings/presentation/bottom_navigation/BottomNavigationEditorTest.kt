@@ -1,5 +1,6 @@
 package com.tnyx.features.settings.presentation.bottom_navigation
 
+import com.tnyx.core.ui.shell.domain.model.DEFAULT_BOTTOM_NAV_TABS
 import com.tnyx.core.ui.shell.domain.model.ShellTab
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -45,6 +46,24 @@ class BottomNavigationEditorTest {
                 ShellTab.Progress,
             ),
             toggleBottomNavigationTab(tabs, ShellTab.Progress),
+        )
+    }
+
+    @Test
+    fun `meal plan library and you are available without changing defaults`() {
+        val state = BottomNavigationUiState(
+            savedTabs = DEFAULT_BOTTOM_NAV_TABS,
+            draftTabs = DEFAULT_BOTTOM_NAV_TABS,
+            isLoading = false,
+        )
+
+        assertEquals(
+            listOf(
+                ShellTab.MealPlan,
+                ShellTab.WorkoutLibrary,
+                ShellTab.You,
+            ),
+            state.availableTabs,
         )
     }
 

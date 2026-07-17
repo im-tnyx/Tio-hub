@@ -1,6 +1,7 @@
 package com.tnyx.features.settings.presentation.bottom_navigation
 
 import androidx.compose.runtime.Immutable
+import com.tnyx.core.ui.shell.domain.model.BOTTOM_NAV_TAB_CATALOG
 import com.tnyx.core.ui.shell.domain.model.DEFAULT_BOTTOM_NAV_TABS
 import com.tnyx.core.ui.shell.domain.model.MAX_BOTTOM_NAV_TABS
 import com.tnyx.core.ui.shell.domain.model.MIN_BOTTOM_NAV_TABS
@@ -24,7 +25,7 @@ data class BottomNavigationUiState(
         get() = !isLoading && !isSaving && draftTabs != DEFAULT_BOTTOM_NAV_TABS
 
     val availableTabs: List<ShellTab>
-        get() = ShellTab.entries.filterNot(draftTabs::contains)
+        get() = BOTTOM_NAV_TAB_CATALOG.filterNot(draftTabs::contains)
 }
 
 sealed interface BottomNavigationAction {

@@ -142,22 +142,25 @@ sealed interface NutritionRoute {
 
 ---
 
-## ⚡ Supabase and Data Strategy
+## ⚡ Supabase and Future Backend Strategy
 
 Current app slices may still contain temporary sample or hardcoded data. That is acceptable only as UI scaffolding.
+
+The current implementation strategy is **Supabase-backed app completion first, custom backend later**. Do not create a backend runtime before the core Android/Wear product flows and repository contracts are stable.
 
 ### The target direction is:
 
 1.  Define domain/repository contract.
 2.  Keep shared phone/watch models in `apps/shared` where reuse is real.
-3.  Add Supabase/backend-backed implementation in the platform/data layer.
+3.  Add Supabase-backed implementation in the platform/data layer during the current app phase.
 4.  Keep screens rendering `UiState`; never let screens depend on table shape.
 5.  Add RLS, seed data, and validation when a slice becomes persistent.
+6.  Start custom backend planning later through an ADR-backed runtime decision.
 
 > [!CAUTION]
 > No service-role key, admin key, private key, or production secret belongs in Android, Wear, web public code, screenshots, or committed docs.
 
-*See [`apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md`](apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md).*
+*See [`apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md`](apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md), [`apps/docs/BACKEND_TRANSITION_PLAN.md`](apps/docs/BACKEND_TRANSITION_PLAN.md), and [`apps/docs/adr/0005-backend-transition-after-supabase-app-completion.md`](apps/docs/adr/0005-backend-transition-after-supabase-app-completion.md).*
 
 ---
 
@@ -177,104 +180,3 @@ Current app slices may still contain temporary sample or hardcoded data. That is
 git clone https://github.com/im-tnyx/Tio-hub.git
 cd Tio-hub
 ```
-
-Open the **`apps/`** directory (not the root directory) in Android Studio, then sync Gradle.
-
-### Build From Terminal
-
-From the repository root:
-```bash
-cd apps
-./gradlew :app:assembleDebug
-```
-
-On Windows PowerShell:
-```powershell
-cd apps
-.\gradlew.bat :app:assembleDebug
-```
-
-### Run Tests
-
-```bash
-cd apps
-./gradlew test
-```
-
-On Windows PowerShell:
-```powershell
-cd apps
-.\gradlew.bat test
-```
-
-For focused checks, prefer module-level commands:
-```bash
-./gradlew :app:testDebugUnitTest
-./gradlew :features:nutrition:testDebugUnitTest
-./gradlew :shared:test
-```
-
-### Run The App
-
-1.  Open `apps/` in Android Studio.
-2.  Select the `app` configuration for Android phone.
-3.  Select the `wear` module/configuration for Wear OS work.
-4.  Build and run on emulator or physical device.
-
----
-
-## 📚 Documentation Index
-
-| Document | Purpose / Summary |
-| :--- | :--- |
-| [`.ai/README.md`](.ai/README.md) | Short AI/contributor orientation layer; canonical docs live in `apps/docs/`. |
-| [`apps/docs/ENGINEERING_GUIDELINES.md`](apps/docs/ENGINEERING_GUIDELINES.md) | Production engineering rules and review expectations. |
-| [`apps/docs/DEFINITION_OF_DONE.md`](apps/docs/DEFINITION_OF_DONE.md) | Merge-readiness checklist for feature, UI, data, and docs work. |
-| [`apps/docs/ARCHITECTURE_CHANGELOG.md`](apps/docs/ARCHITECTURE_CHANGELOG.md) | Durable architecture change log. |
-| [`apps/docs/adr/README.md`](apps/docs/adr/README.md) | Architecture Decision Records index. |
-| [`apps/README.md`](apps/README.md) | Android app-focused technical overview. |
-| [`apps/docs/README.md`](apps/docs/README.md) | Canonical Android/Wear documentation map and reading paths. |
-| [`apps/docs/ARCHITECTURE.md`](apps/docs/ARCHITECTURE.md) | Module ownership, design system, shell, feature patterns. |
-| [`apps/docs/NAVIGATION_GUIDE.md`](apps/docs/NAVIGATION_GUIDE.md) | Type-safe navigation and graph policy. |
-| [`apps/docs/PROFILE_SETTINGS_GUIDE.md`](apps/docs/PROFILE_SETTINGS_GUIDE.md) | Profile, Settings, Progress, ownership rules. |
-| [`apps/docs/ONBOARDING_FLOW_DETAILED.md`](apps/docs/ONBOARDING_FLOW_DETAILED.md) | Complete onboarding flow reference. |
-| [`apps/docs/TNYX_MODULAR_ONBOARDING.md`](apps/docs/TNYX_MODULAR_ONBOARDING.md) | Modular onboarding implementation guide. |
-| [`apps/docs/NUTRITION.md`](apps/docs/NUTRITION.md) | Nutrition runtime, UI, and persistence roadmap. |
-| [`apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md`](apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md) | Supabase migration plan and security boundaries. |
-| [`apps/docs/TESTING_GUIDE.md`](apps/docs/TESTING_GUIDE.md) | Testing strategy and expectations. |
-| [`apps/docs/ANDROID_APP_PROGRESS.md`](apps/docs/ANDROID_APP_PROGRESS.md) | Android implementation progress. |
-| [`apps/docs/WEAR_OS_PLAN.md`](apps/docs/WEAR_OS_PLAN.md) | Wear OS planning. |
-| [`apps/docs/WEAR_OS_PROGRESS.md`](apps/docs/WEAR_OS_PROGRESS.md) | Wear OS progress tracking. |
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome. Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) before opening a PR.
-
-### Quick expectations:
-
-*   Work from a focused branch.
-*   Keep changes small and reviewable.
-*   Follow Clean Architecture and MVI boundaries.
-*   Use `TnyxTheme` tokens for UI.
-*   Keep navigation type-safe.
-*   Do not commit secrets, generated outputs, APKs/AABs, `.env`, or local caches.
-*   Update docs when architecture, navigation, persistence, or ownership changes.
-
----
-
-## 🛡️ Code of Conduct
-
-This project follows a contributor-friendly Code of Conduct. Be respectful, specific, and constructive. Disagreement is fine; personal attacks are not.
-
-See [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
-
----
-
-## 📜 License
-
-Tio-hub is licensed under the MIT License. See [`LICENSE`](LICENSE).
-
----
-*Last Updated: 2026-06-29 — Maintained by TNYX Engineering.*

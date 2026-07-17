@@ -34,6 +34,7 @@ data class AppPreferencesUiState(
 
 sealed interface AppPreferencesAction {
     data object BackClicked : AppPreferencesAction
+    data object BottomNavigationClicked : AppPreferencesAction
     data object NotificationsToggled : AppPreferencesAction
     data object RemindersToggled : AppPreferencesAction
     data object RemindersExpandedToggled : AppPreferencesAction

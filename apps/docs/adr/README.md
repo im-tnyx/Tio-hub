@@ -10,7 +10,7 @@ ADRs should be short, explicit, and linked from the relevant canonical docs when
 - [ADR-0002: Profile Settings Progress Ownership](0002-profile-settings-progress-ownership.md)
 - [ADR-0003: Type-Safe Navigation And Chrome Policy](0003-type-safe-navigation-and-chrome-policy.md)
 - [ADR-0004: Incremental Supabase Setup](0004-incremental-supabase-setup.md)
-- [ADR-0005: User-Configurable Navigation And Home Layout](0005-user-configurable-navigation-and-home-layout.md)
+- [ADR-0005: User-Configurable Bottom Navigation](0005-user-configurable-bottom-navigation.md)
 
 ## ADR Status Values
 

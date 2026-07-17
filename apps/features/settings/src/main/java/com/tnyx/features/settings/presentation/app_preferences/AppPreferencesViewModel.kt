@@ -13,7 +13,8 @@ class AppPreferencesViewModel @Inject constructor() : ViewModel() {
 
     fun handleAction(action: AppPreferencesAction) {
         when (action) {
-            AppPreferencesAction.BackClicked -> Unit
+            AppPreferencesAction.BackClicked,
+            AppPreferencesAction.BottomNavigationClicked -> Unit
             AppPreferencesAction.NotificationsToggled -> {
                 _uiState.value = _uiState.value.copy(
                     notificationsEnabled = !_uiState.value.notificationsEnabled

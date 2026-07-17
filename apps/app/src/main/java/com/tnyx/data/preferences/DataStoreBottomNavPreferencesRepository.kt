@@ -68,8 +68,8 @@ class DataStoreBottomNavPreferencesRepository @Inject constructor(
         val rawTabs = preferences[TABS_KEY] ?: return DEFAULT_BOTTOM_NAV_TABS
         val storedIds = rawTabs
             .split(TAB_SEPARATOR)
-            .map(String::trim)
-            .filter(String::isNotEmpty)
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
 
         if (storedIds.isEmpty()) {
             return DEFAULT_BOTTOM_NAV_TABS

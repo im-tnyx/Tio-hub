@@ -1,13 +1,13 @@
 # Architecture Summary
 
-TNYX Android uses a Gradle multi-module architecture with feature-owned modules.
+TNYX Android uses a Gradle multi-module architecture with feature-owned modules and a Settings-configurable MainGraph shell.
 
 The target shape is Clean Architecture with feature-level vertical slices.
 
 ## Core Rules
 
-- App shell owns root navigation and chrome only.
-- Feature modules own their routes, screens, view models, and feature logic.
+- App shell owns top-level navigation and chrome only.
+- Feature modules own their routes, screens, view models, repositories, and feature logic.
 - Screens are dumb UI.
 - Business logic belongs in `ViewModel`, use cases, repositories, or domain services.
 - Cross-feature navigation goes through public route contracts.
@@ -28,17 +28,31 @@ Compose screens must not perform network calls, repository writes, persistence, 
 
 ## Main Navigation
 
-Main bottom tabs:
+Exact default:
 
-- Home
-- Workout
-- Nutrition
-- Coach
-- Progress
+```text
+Home | Nutrition | Tio | Workout | Progress
+```
 
-Profile is launched from the top-right avatar.
+Supported optional catalog:
 
-Settings is launched from the gear icon.
+```text
+Home | Nutrition | Meal Plan | Tio | Workout | Library | Progress | You
+```
+
+Rules:
+
+- Home is fixed first.
+- Users select three through six tabs in Settings.
+- Stable IDs persist; labels and icons do not.
+- Meal Plan belongs to Nutrition.
+- Library belongs to Workout.
+- You is the MainGraph profile destination.
+- When You is enabled, avatar selects You; otherwise avatar may open root ProfileGraph.
+- Home derives Nutrition, Workout, Balanced, or Custom summary mode from enabled domain tabs.
+- The app never silently changes saved navigation.
+
+Settings remains root-launched from the gear/You experience.
 
 ## Future Modules
 

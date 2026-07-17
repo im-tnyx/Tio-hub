@@ -86,18 +86,26 @@ fun MainScreen(
                     }
                     navActions.navigateToTopLevelDestination(route)
                 }
+
                 is ShellAction.ProfileClicked -> {
-                    if (ShellTab.You in bottomTabs) {
-                        navActions.navigateToTopLevelDestination(MainRoute.You)
-                    } else {
-                        rootNavController.navigate(ProfileRoute.Graph)
+                    when (resolveProfileEntryAction(bottomTabs, selectedTab)) {
+                        ProfileEntryAction.OpenStandaloneProfile -> {
+                            rootNavController.navigate(ProfileRoute.Graph)
+                        }
+
+                        ProfileEntryAction.SelectYouTab -> {
+                            navActions.navigateToTopLevelDestination(MainRoute.You)
+                        }
+
+                        ProfileEntryAction.NoOp -> Unit
                     }
                 }
+
                 else -> {
                     // Other shell actions are handled by their owning surfaces.
                 }
             }
-        }
+        },
     ) {
         NavHost(
             navController = mainNavController,

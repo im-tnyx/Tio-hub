@@ -9,8 +9,19 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.weight
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -19,59 +30,67 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import com.tnyx.core.R
 import com.tnyx.core.theme.TnyxTheme
-import com.tnyx.core.ui.shell.presentation.state.ShellTab
+import com.tnyx.core.ui.shell.domain.model.ShellTab
 
 private data class BottomNavTab(
     val tab: ShellTab,
     val label: String,
-    val selectedIconRes: Int?,
-    val unselectedIconRes: Int?,
-    val isSpecial: Boolean = false
+    val selectedIconRes: Int? = null,
+    val unselectedIconRes: Int? = null,
+    val usesTioIcon: Boolean = false,
 )
 
 private val NAV_TABS = listOf(
     BottomNavTab(
-        tab = ShellTab.Home, label = "Home",
+        tab = ShellTab.Home,
+        label = "Home",
         selectedIconRes = R.drawable.ic_nav_home_filled,
-        unselectedIconRes = R.drawable.ic_nav_home_outlined
+        unselectedIconRes = R.drawable.ic_nav_home_outlined,
     ),
     BottomNavTab(
-        tab = ShellTab.Nutrition, label = "Nutrition",
+        tab = ShellTab.Nutrition,
+        label = "Nutrition",
         selectedIconRes = R.drawable.ic_nav_nutrition_filled,
-        unselectedIconRes = R.drawable.ic_nav_nutrition_outlined
+        unselectedIconRes = R.drawable.ic_nav_nutrition_outlined,
     ),
     BottomNavTab(
-        tab = ShellTab.Ai, label = "AI",
-        selectedIconRes = null, unselectedIconRes = null,
-        isSpecial = true
+        tab = ShellTab.Ai,
+        label = "Tio",
+        usesTioIcon = true,
     ),
     BottomNavTab(
-        tab = ShellTab.Workout, label = "Workout",
+        tab = ShellTab.Workout,
+        label = "Workout",
         selectedIconRes = R.drawable.ic_nav_workout_filled,
-        unselectedIconRes = R.drawable.ic_nav_workout_outlined
+        unselectedIconRes = R.drawable.ic_nav_workout_outlined,
     ),
     BottomNavTab(
-        tab = ShellTab.Progress, label = "Progress",
+        tab = ShellTab.Progress,
+        label = "Progress",
         selectedIconRes = R.drawable.ic_nav_progress_filled,
-        unselectedIconRes = R.drawable.ic_nav_progress_outlined
+        unselectedIconRes = R.drawable.ic_nav_progress_outlined,
     ),
 )
 
+private val NAV_TABS_BY_ID = NAV_TABS.associateBy(BottomNavTab::tab)
+
 @Composable
 fun MainBottomNav(
+    tabs: List<ShellTab>,
     selectedTab: ShellTab,
     onTabSelected: (ShellTab) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val tokens = TnyxTheme.components.navigation
+
     Column(
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
             .background(TnyxTheme.colors.surface)
             .navigationBarsPadding()
     ) {
@@ -81,23 +100,21 @@ fun MainBottomNav(
         )
 
         Row(
-            modifier = Modifier.fillMaxWidth().height(tokens.bottomNavHeight),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(tokens.bottomNavHeight),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceAround
+            horizontalArrangement = Arrangement.SpaceAround,
         ) {
-            NAV_TABS.forEach { navTab ->
-                val isSelected = selectedTab == navTab.tab
-                if (navTab.isSpecial) {
-                    AiNavTabItem(isSelected = isSelected, onClick = { onTabSelected(navTab.tab) })
-                } else {
-                    NavIcon(
-                        selectedIconRes = navTab.selectedIconRes!!,
-                        unselectedIconRes = navTab.unselectedIconRes!!,
-                        label = navTab.label,
-                        isSelected = isSelected,
-                        onClick = { onTabSelected(navTab.tab) }
-                    )
-                }
+            tabs.mapNotNull(NAV_TABS_BY_ID::get).forEach { navTab ->
+                NavIcon(
+                    selectedIconRes = navTab.selectedIconRes,
+                    unselectedIconRes = navTab.unselectedIconRes,
+                    usesTioIcon = navTab.usesTioIcon,
+                    label = navTab.label,
+                    isSelected = selectedTab == navTab.tab,
+                    onClick = { onTabSelected(navTab.tab) },
+                )
             }
         }
     }
@@ -105,29 +122,30 @@ fun MainBottomNav(
 
 @Composable
 private fun RowScope.NavIcon(
-    selectedIconRes: Int,
-    unselectedIconRes: Int,
+    selectedIconRes: Int?,
+    unselectedIconRes: Int?,
+    usesTioIcon: Boolean,
     label: String,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val tokens = TnyxTheme.components.navigation
-    
-    // 1. Smooth Color Transition
     val animatedColor by animateColorAsState(
-        targetValue = if (isSelected) TnyxTheme.colors.textPrimary else TnyxTheme.colors.textSecondary,
+        targetValue = if (isSelected) {
+            TnyxTheme.colors.textPrimary
+        } else {
+            TnyxTheme.colors.textSecondary
+        },
         animationSpec = tween(durationMillis = 300),
-        label = "nav_color_anim"
+        label = "nav_color_anim",
     )
-
-    // 2. Smooth Scale Effect
     val animatedScale by animateFloatAsState(
-        targetValue = if (isSelected) 1.05f else 1.0f,
+        targetValue = if (isSelected) 1.05f else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioLowBouncy,
-            stiffness = Spring.StiffnessLow
+            stiffness = Spring.StiffnessLow,
         ),
-        label = "nav_scale_anim"
+        label = "nav_scale_anim",
     )
 
     Column(
@@ -137,10 +155,10 @@ private fun RowScope.NavIcon(
             .clickable(
                 onClick = onClick,
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null
+                indication = null,
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         Box(
             modifier = Modifier
@@ -149,47 +167,40 @@ private fun RowScope.NavIcon(
                     scaleX = animatedScale
                     scaleY = animatedScale
                 },
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
-            // 3. Crossfade between icons to avoid "jump"
-            Crossfade(
-                targetState = if (isSelected) selectedIconRes else unselectedIconRes,
-                animationSpec = tween(durationMillis = 250),
-                label = "nav_icon_fade"
-            ) { iconRes ->
+            if (usesTioIcon) {
                 Icon(
-                    painter = painterResource(id = iconRes),
+                    imageVector = Icons.Outlined.AutoAwesome,
                     contentDescription = label,
                     tint = animatedColor,
-                    modifier = Modifier.size(tokens.bottomNavIconSize)
+                    modifier = Modifier.size(tokens.bottomNavIconSize),
                 )
+            } else {
+                Crossfade(
+                    targetState = if (isSelected) {
+                        requireNotNull(selectedIconRes)
+                    } else {
+                        requireNotNull(unselectedIconRes)
+                    },
+                    animationSpec = tween(durationMillis = 250),
+                    label = "nav_icon_fade",
+                ) { iconRes ->
+                    Icon(
+                        painter = painterResource(id = iconRes),
+                        contentDescription = label,
+                        tint = animatedColor,
+                        modifier = Modifier.size(tokens.bottomNavIconSize),
+                    )
+                }
             }
         }
+
         Text(
             text = label,
             style = TnyxTheme.typography.labelSmall,
             color = animatedColor,
-            fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal
+            fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
         )
-    }
-}
-
-@Composable
-private fun RowScope.AiNavTabItem(isSelected: Boolean, onClick: () -> Unit) {
-    val tokens = TnyxTheme.components.navigation
-    Box(
-        modifier = Modifier.weight(1f).fillMaxHeight().clickable(
-            onClick = onClick,
-            interactionSource = remember { MutableInteractionSource() },
-            indication = null
-        ),
-        contentAlignment = Alignment.Center
-    ) {
-        Box(
-            modifier = Modifier.size(tokens.bottomNavAiIconSize).clip(CircleShape).clickable { onClick() },
-            contentAlignment = Alignment.Center
-        ) {
-            AiTabIcon(isSelected = isSelected)
-        }
     }
 }

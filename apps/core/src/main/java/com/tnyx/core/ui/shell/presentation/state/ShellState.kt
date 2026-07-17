@@ -1,17 +1,8 @@
 package com.tnyx.core.ui.shell.presentation.state
 
 import androidx.compose.runtime.Immutable
-
-/**
- * Tabs available in the app shell.
- */
-enum class ShellTab {
-    Home,
-    Nutrition,
-    Ai,
-    Workout,
-    Progress
-}
+import com.tnyx.core.ui.shell.domain.model.DEFAULT_BOTTOM_NAV_TABS
+import com.tnyx.core.ui.shell.domain.model.ShellTab
 
 enum class ShellPlanTier {
     Free,
@@ -22,6 +13,7 @@ enum class ShellPlanTier {
 @Immutable
 data class ShellUiState(
     val selectedTab: ShellTab = ShellTab.Home,
+    val bottomTabs: List<ShellTab> = DEFAULT_BOTTOM_NAV_TABS,
     val isBottomNavVisible: Boolean = true,
     val appBarOpacity: Float = 0f,
     val planTier: ShellPlanTier = ShellPlanTier.Free

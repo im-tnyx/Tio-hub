@@ -142,22 +142,25 @@ sealed interface NutritionRoute {
 
 ---
 
-## ⚡ Supabase and Data Strategy
+## ⚡ Supabase and Future Backend Strategy
 
 Current app slices may still contain temporary sample or hardcoded data. That is acceptable only as UI scaffolding.
+
+The current implementation strategy is **Supabase-backed app completion first, custom backend later**. Do not create a backend runtime before the core Android/Wear product flows and repository contracts are stable.
 
 ### The target direction is:
 
 1.  Define domain/repository contract.
 2.  Keep shared phone/watch models in `apps/shared` where reuse is real.
-3.  Add Supabase/backend-backed implementation in the platform/data layer.
+3.  Add Supabase-backed implementation in the platform/data layer during the current app phase.
 4.  Keep screens rendering `UiState`; never let screens depend on table shape.
 5.  Add RLS, seed data, and validation when a slice becomes persistent.
+6.  Start custom backend planning later through an ADR-backed runtime decision.
 
 > [!CAUTION]
 > No service-role key, admin key, private key, or production secret belongs in Android, Wear, web public code, screenshots, or committed docs.
 
-*See [`apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md`](apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md).*
+*See [`apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md`](apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md), [`apps/docs/BACKEND_TRANSITION_PLAN.md`](apps/docs/BACKEND_TRANSITION_PLAN.md), and [`apps/docs/adr/0005-backend-transition-after-supabase-app-completion.md`](apps/docs/adr/0005-backend-transition-after-supabase-app-completion.md).*
 
 ---
 
@@ -241,6 +244,7 @@ For focused checks, prefer module-level commands:
 | [`apps/docs/TNYX_MODULAR_ONBOARDING.md`](apps/docs/TNYX_MODULAR_ONBOARDING.md) | Modular onboarding implementation guide. |
 | [`apps/docs/NUTRITION.md`](apps/docs/NUTRITION.md) | Nutrition runtime, UI, and persistence roadmap. |
 | [`apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md`](apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md) | Supabase migration plan and security boundaries. |
+| [`apps/docs/BACKEND_TRANSITION_PLAN.md`](apps/docs/BACKEND_TRANSITION_PLAN.md) | Supabase-first app completion and future custom backend transition plan. |
 | [`apps/docs/TESTING_GUIDE.md`](apps/docs/TESTING_GUIDE.md) | Testing strategy and expectations. |
 | [`apps/docs/ANDROID_APP_PROGRESS.md`](apps/docs/ANDROID_APP_PROGRESS.md) | Android implementation progress. |
 | [`apps/docs/WEAR_OS_PLAN.md`](apps/docs/WEAR_OS_PLAN.md) | Wear OS planning. |

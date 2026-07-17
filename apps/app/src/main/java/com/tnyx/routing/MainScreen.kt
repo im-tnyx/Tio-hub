@@ -1,17 +1,20 @@
 package com.tnyx.routing
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.tnyx.core.ui.shell.domain.model.ShellTab
 import com.tnyx.core.ui.shell.presentation.action.ShellAction
 import com.tnyx.core.ui.shell.presentation.shell.TnyxShell
-import com.tnyx.core.ui.shell.presentation.state.ShellTab
 import com.tnyx.core.ui.shell.presentation.state.ShellUiState
 import com.tnyx.features.nutrition.navigation.NutritionScreen
 import com.tnyx.routing.graphs.mainGraph
@@ -24,12 +27,14 @@ import com.tnyx.routing.routes.SettingsRoute
  */
 @Composable
 fun MainScreen(
-    @Suppress("UNUSED_PARAMETER") rootNavController: NavHostController,
+    rootNavController: NavHostController,
+    viewModel: MainScreenViewModel = hiltViewModel(),
 ) {
     val mainNavController = rememberNavController()
     val navActions = remember(mainNavController) {
         TnyxNavigationActions(mainNavController)
     }
+    val bottomTabs by viewModel.bottomTabs.collectAsState()
 
     val navBackStackEntry by mainNavController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -51,10 +56,17 @@ fun MainScreen(
         else -> true
     }
 
+    LaunchedEffect(bottomTabs, selectedTab) {
+        if (selectedTab !in bottomTabs) {
+            navActions.navigateToTopLevelDestination(MainRoute.Home)
+        }
+    }
+
     TnyxShell(
         state = ShellUiState(
             selectedTab = selectedTab,
-            isBottomNavVisible = isBottomNavVisible
+            bottomTabs = bottomTabs,
+            isBottomNavVisible = isBottomNavVisible,
         ),
         onAction = { action ->
             when (action) {
@@ -79,7 +91,7 @@ fun MainScreen(
     ) {
         NavHost(
             navController = mainNavController,
-            startDestination = MainRoute.Home
+            startDestination = MainRoute.Home,
         ) {
             mainGraph(navController = mainNavController)
         }

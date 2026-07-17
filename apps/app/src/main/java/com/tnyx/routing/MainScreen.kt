@@ -41,10 +41,13 @@ fun MainScreen(
 
     val selectedTab = when {
         currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.WorkoutGraph::class) } == true -> ShellTab.Workout
+        currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.WorkoutLibrary::class) } == true -> ShellTab.WorkoutLibrary
         currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.Home::class) } == true -> ShellTab.Home
         currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.NutritionGraph::class) } == true -> ShellTab.Nutrition
+        currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.MealPlan::class) } == true -> ShellTab.MealPlan
         currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.AiCoach::class) } == true -> ShellTab.Ai
         currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.ProgressGraph::class) } == true -> ShellTab.Progress
+        currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.You::class) } == true -> ShellTab.You
         else -> ShellTab.Home
     }
 
@@ -74,14 +77,21 @@ fun MainScreen(
                     val route = when (action.tab) {
                         ShellTab.Home -> MainRoute.Home
                         ShellTab.Nutrition -> MainRoute.NutritionGraph
+                        ShellTab.MealPlan -> MainRoute.MealPlan
                         ShellTab.Ai -> MainRoute.AiCoach
                         ShellTab.Workout -> MainRoute.WorkoutGraph
+                        ShellTab.WorkoutLibrary -> MainRoute.WorkoutLibrary
                         ShellTab.Progress -> MainRoute.ProgressGraph
+                        ShellTab.You -> MainRoute.You
                     }
                     navActions.navigateToTopLevelDestination(route)
                 }
                 is ShellAction.ProfileClicked -> {
-                    rootNavController.navigate(ProfileRoute.Graph)
+                    if (ShellTab.You in bottomTabs) {
+                        navActions.navigateToTopLevelDestination(MainRoute.You)
+                    } else {
+                        rootNavController.navigate(ProfileRoute.Graph)
+                    }
                 }
                 else -> {
                     // Other shell actions are handled by their owning surfaces.
@@ -93,7 +103,13 @@ fun MainScreen(
             navController = mainNavController,
             startDestination = MainRoute.Home,
         ) {
-            mainGraph(navController = mainNavController)
+            mainGraph(
+                navController = mainNavController,
+                enabledTabs = bottomTabs,
+                onOpenSettings = {
+                    rootNavController.navigate(SettingsRoute.Graph)
+                },
+            )
         }
     }
 }

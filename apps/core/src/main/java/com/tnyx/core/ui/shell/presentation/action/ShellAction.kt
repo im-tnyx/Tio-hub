@@ -1,6 +1,6 @@
 package com.tnyx.core.ui.shell.presentation.action
 
-import com.tnyx.core.ui.shell.presentation.state.ShellTab
+import com.tnyx.core.ui.shell.domain.model.ShellTab
 
 sealed class ShellAction {
     data class TabSelected(val tab: ShellTab) : ShellAction()

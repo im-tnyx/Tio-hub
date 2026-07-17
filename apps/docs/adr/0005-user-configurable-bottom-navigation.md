@@ -1,113 +1,143 @@
 # ADR-0005: User-Configurable Bottom Navigation
 
-**Status:** Proposed  
+**Status:** Accepted  
 **Date:** 2026-07-17
 
 ## Context
 
-Tio currently exposes a fixed five-item bottom navigation:
+Tio serves different user intents: some users primarily log nutrition, some primarily train, and others use a mixed coaching experience. A single fixed information hierarchy cannot represent all of these workflows well.
+
+The predictable first-launch and reset default remains:
 
 ```text
-Home | Nutrition | AI | Workout | Progress
+Home | Nutrition | Tio | Workout | Progress
 ```
 
-The product direction requires users to personalize eligible top-level destinations from Settings while preserving a simple default experience, type-safe navigation, chrome policy, accessibility, and feature ownership boundaries.
-
-Home is a cross-domain summary surface. Its layout and section composition will be designed separately after the owning tabs and their workflows are mature. This decision therefore covers bottom navigation only.
+Home is a cross-domain summary. Detailed actions remain in the owning tabs, but Home may adapt its summary emphasis to the explicitly enabled domains.
 
 ## Decision
 
-Tio will support explicit user customization of bottom-navigation destination order and visibility through Settings.
+Tio supports explicit user customization of bottom-navigation order and visibility through Settings.
 
 ### Constraints
 
-- Default: `Home | Nutrition | AI | Workout | Progress`.
 - Home is required and remains first.
 - Total enabled tabs: minimum three, maximum six.
 - Duplicate destinations are invalid.
-- Eligible destinations come from a stable catalog backed by supported top-level route contracts.
-- Initial catalog may include Home, Nutrition, AI, Workout, Progress, Explore, and Profile.
-- Explore and Profile must not be exposed until their runtime navigation behavior is explicitly supported.
-- Selected state continues to derive from the navigation back stack.
-- Reset restores the exact default configuration.
-- Settings is the only surface that changes the saved tab configuration.
+- Reset restores the exact five-tab default.
+- Settings is the only surface that changes the saved configuration.
+- The app never silently reorders, adds, or removes tabs.
+- Selected state derives from the navigation hierarchy.
+
+### Supported catalog
+
+The ordered catalog is:
+
+```text
+Home
+Nutrition
+Meal Plan
+Tio
+Workout
+Library
+Progress
+You
+```
+
+Stable identifiers remain independent of display labels:
+
+- `ai` displays as Tio,
+- `workout_library` displays as Library,
+- `you` displays as You.
+
+Meal Plan and Library are optional top-level foundations owned by Nutrition and Workout respectively. They do not change the default configuration.
+
+### You architecture
+
+You is promoted to a true MainGraph top-level destination that renders the profile experience inside the persistent shell.
+
+- When You is enabled, the avatar selects You.
+- When You is disabled, the avatar may continue opening the root ProfileGraph.
+
+This resolves the previous Profile architecture question without pretending a root-graph launcher is a persistent tab.
+
+### Adaptive Home boundary
+
+Home derives a high-level mode from the enabled domain tabs:
+
+- Nutrition: Nutrition and/or Meal Plan only,
+- Workout: Workout and/or Library only,
+- Balanced: at least one nutrition and one workout domain,
+- Custom: neither domain group.
+
+This mode may prioritize future Home summaries. It does not authorize automatic navigation changes or move feature business logic into the shell.
 
 ### Persistence
 
-Preferences use stable identifiers and a local DataStore-backed repository. Stored configurations are normalized to remove duplicates, unknown identifiers, unavailable destinations, and invalid counts. Corrupted state falls back to defaults.
+Preferences use stable identifiers in a local DataStore-backed repository. Normalization removes duplicates, unknown destinations and invalid counts, forces Home first, caps the list at six and falls back safely to the default.
+
+New optional destinations are never inserted into an existing valid saved configuration.
 
 ### Ownership
 
-- The app shell owns rendering and top-level navigation interaction only.
-- The preferences layer owns saved ordering, visibility, validation, and migration only.
-- Feature domains continue to own their calculations, repositories, use cases, and screens.
-- No feature ViewModel or internal screen is imported into the shell or another feature.
-
-### Home boundary
-
-Home screen section customization is not part of this ADR. Home remains a summary of important information from owning domains; detailed actions and management stay inside Nutrition, AI, Workout, Progress, and future eligible tabs.
-
-### Automation boundary
-
-The app may explain or suggest customization options, but it will not silently reorder, add, or hide destinations. AI-driven automatic rearrangement is outside this decision.
+- The shell owns rendering and top-level navigation interaction.
+- The preferences layer owns visibility, order, validation and migration.
+- Nutrition owns Meal Plan workflows.
+- Workout owns Library workflows.
+- Profile/Settings ownership is presented under You.
+- Feature calculations, repositories and detailed screens remain outside the shell.
 
 ## Consequences
 
 ### Positive
 
-- The default experience remains predictable.
-- Users can prioritize their most-used top-level areas.
-- Bottom navigation becomes state-driven and testable.
-- Feature ownership remains compatible with the modular architecture.
-- Reset provides a deterministic recovery path.
+- Tio can behave like a nutrition app, workout app or mixed coaching app without separate products.
+- The default remains simple and stable.
+- Users explicitly control their primary workflows.
+- You provides a clearer user-centered label than Profile.
+- Home has a deterministic basis for future adaptive summaries.
 
 ### Costs
 
-- Preference schema migration and normalization are required.
-- Settings needs accessible reorder controls in addition to drag-and-drop.
-- Every configurable destination needs a stable identifier and availability rules.
-- Profile needs an explicit decision between a true `MainGraph` tab and an interim root-graph launcher.
+- Every catalog destination requires a supported route and selected-state mapping.
 - Six-tab layouts require font-scale and localization validation.
+- Meal Plan and Library need feature-owned product implementation beyond their initial foundation screens.
+- Root ProfileGraph and MainGraph You must coexist safely during migration.
 
 ## Rejected Alternatives
 
-### Keep all navigation fixed
+### Fixed navigation for every user
 
-Rejected because it forces one information hierarchy on every user and does not support the requested personalization.
+Rejected because it forces the same hierarchy on nutrition-only, workout-only and mixed users.
 
-### Add AI as another floating action button
+### Automatic AI personalization
 
-Rejected because the app already has a FAB and multiple floating primary actions create unclear hierarchy. AI remains a destination.
+Rejected because silent navigation changes reduce predictability and user control.
 
-### Allow arbitrary screens as tabs
+### Profile as a fake launcher tab
 
-Rejected because deep destinations may not support persistent chrome, stable back-stack behavior, or top-level route semantics.
+Rejected because a root-level launcher cannot provide correct persistent selected-state behavior.
 
-### Automatically personalize using behavior or AI
+### Suggestions as a standalone tab
 
-Rejected for the initial implementation because silent navigation changes reduce predictability and user control.
+Rejected for now. Nutrition suggestions belong in Meal Plan, workout suggestions belong in Workout/Library, and cross-domain coaching belongs in Tio.
 
-### Include Home layout customization in the same decision
+### Full Home customization in this ADR
 
-Rejected for now because Home summarizes the entire app and depends on stable domain tabs, contracts, and product priorities. Home layout will be specified separately later.
+Rejected. This decision establishes deterministic Home mode only; detailed Home card composition remains separate product work.
 
-### Store labels and icons directly
+## Implementation Reference
 
-Rejected because localized labels and resources are unstable persistence identifiers.
-
-## Implementation Guidance
-
-Detailed product rules, suggested models, testing requirements, and delivery order are documented in:
+Detailed rules and tests are documented in:
 
 - [`BOTTOM_NAVIGATION_CUSTOMIZATION.md`](../BOTTOM_NAVIGATION_CUSTOMIZATION.md)
 - [`NAVIGATION_GUIDE.md`](../NAVIGATION_GUIDE.md)
 - [`PROFILE_SETTINGS_GUIDE.md`](../PROFILE_SETTINGS_GUIDE.md)
 
-## Validation Required Before Acceptance
+## Validation Still Required
 
-- Product confirmation that Home remains fixed first.
-- Product confirmation of the three-to-six tab range.
-- Architecture decision for Profile when selected as a tab.
-- Route readiness criteria for Explore.
-- UX validation at supported font scales and languages.
-- Unit, UI, navigation, migration, and accessibility test plans.
+- local compile and unit-test execution,
+- runtime persistence after process restart,
+- selected-state checks for all optional routes,
+- six-tab font-scale and localization checks,
+- and accessibility review of reorder and toggle controls.

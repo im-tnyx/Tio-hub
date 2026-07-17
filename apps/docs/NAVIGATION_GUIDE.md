@@ -1,10 +1,12 @@
 ﻿# TNYX Production-Grade Navigation Architecture Guide
 
-**Last updated: 2026-06-27**
+**Last updated: 2026-07-17**
 
 यह guide TNYX app के 100+ screens scale को संभालने के लिए frozen navigation architecture define करती है। हम **Type-Safe Navigation (Kotlin Serialization)**, **Nested Graphs**, **Feature-Owned Navigation**, और **Chrome Policy** का उपयोग करते हैं।
 
 Canonical ownership source: [PROFILE_SETTINGS_GUIDE.md](PROFILE_SETTINGS_GUIDE.md)
+
+Bottom-navigation customization rules: [BOTTOM_NAVIGATION_CUSTOMIZATION.md](BOTTOM_NAVIGATION_CUSTOMIZATION.md)
 
 ---
 
@@ -109,18 +111,24 @@ Onboarding initial data collection और resume flow own करेगा। Onb
 
 ### Layer 4: Main Graph (`MainScreen.kt`)
 
-Main Graph persistent app chrome और bottom tabs host करेगा:
+Main Graph persistent app chrome और supported top-level destinations host करेगा:
 
 ```text
 MainGraph
 ├── HomeGraph
-├── WorkoutGraph
 ├── NutritionGraph
-├── CoachGraph
+├── AiCoach
+├── WorkoutGraph
 └── ProgressGraph
 ```
 
-Main Graph business rules own नहीं करेगा। Tab selection और selected destination derivation `NavBackStack` से होगी।
+Default rendered order:
+
+```text
+Home | Nutrition | AI | Workout | Progress
+```
+
+Main Graph business rules own नहीं करेगा। Tab selection और selected destination derivation `NavBackStack` से होगी। Settings-backed preferences केवल eligible destinations की rendered list और order control कर सकती हैं; route graph supported-destination source of truth रहेगा।
 
 ### Layer 5: Profile Graph
 
@@ -133,9 +141,11 @@ Profile Graph avatar से launch होगा। Profile **Fitness Hub + Accou
 
 Profile Journey, Progress Photos, Rewards, Resources, Nutrition Targets, Workout Settings, Health Connections, या Subscription business logic own नहीं करेगा।
 
+Profile को configurable persistent tab के रूप में expose करने से पहले उसे true `MainGraph` destination बनाने या root-graph launcher behavior को explicitly approve करने का architecture decision आवश्यक है।
+
 ### Layer 6: Settings Graph
 
-Settings Graph gear icon से launch होगा। Settings app config और account controls का owner है। Feature-specific settings owning feature graph में रहेंगी; Settings केवल route launch कर सकता है।
+Settings Graph gear icon से launch होगा। Settings app config और account controls का owner है। Feature-specific settings owning feature graph में रहेंगी; Settings केवल route launch कर सकता है। Bottom-navigation preferences UI और validation Settings/App Preferences में रहेंगी, जबकि shell केवल saved valid state render करेगा।
 
 ### Layer 7: Modal Graph
 
@@ -170,34 +180,59 @@ Allowed policies:
 `MainShell` feature-specific UI logic contain नहीं करेगा।
 
 Allowed:
+
 - Top bar.
 - Bottom nav.
 - Shell-level spacing/insets.
 - Route-derived selected tab.
+- Validated ordered tab state rendering.
 - Chrome policy application.
 
 Not allowed:
+
 - Nutrition calculations.
 - Workout save/update logic.
 - Progress analytics.
 - Subscription entitlement decision.
 - Health connection logic.
 - Feature repository calls.
+- Destination eligibility decisions based on feature-internal runtime state.
 
 ---
 
 ## 5. UI Chrome Policy (TopBar & BottomNav)
 
 - **BottomBar:** `TnyxShell` और `MainScreen.kt` में centralized रहेगा।
-- **Active State:** active tab `navController.currentBackStackEntry?.destination?.hierarchy` से derive होगा।
+- **Rendered Tabs:** static private UI list की जगह validated Settings-backed ordered list receive करेगा।
+- **Active State:** active tab `navController.currentBackStackEntry?.destination?.hierarchy` से derive होगा। Saved index active-state source नहीं होगा।
 - **TopBar:** screen-level needs के हिसाब से owning Route/Screen wire करेगा। Shell generic top bar दे सकता है, feature-specific action नहीं।
 - **Workout:** abhi clean placeholder hai. Shell mein Workout-specific secondary nav, scroll hide/show, ya sub-tab state nahi hai.
-- **Profile Avatar:** `ProfileGraph` launch करेगा।
+- **Profile Avatar:** `ProfileGraph` launch करेगा जब तक approved persistent-tab behavior implement नहीं होता।
 - **Settings Gear:** `SettingsGraph` launch करेगा।
 
 ---
 
-## 6. Scaling Tips
+## 6. Configurable Bottom Navigation Policy
+
+Canonical product details [BOTTOM_NAVIGATION_CUSTOMIZATION.md](BOTTOM_NAVIGATION_CUSTOMIZATION.md) में हैं। Architecture constraints:
+
+- Default: `Home | Nutrition | AI | Workout | Progress`.
+- Home mandatory है और index zero पर रहेगा।
+- Valid total तीन से छह tabs है।
+- Duplicate destinations invalid हैं।
+- Preferences stable destination IDs store करेंगी, labels या icon resources नहीं।
+- DataStore local persistence recommended है।
+- Invalid, corrupted, unknown, या unavailable destinations normalize होंगे; unrecoverable state default पर fallback होगी।
+- Current selected destination remove होने पर Save के बाद shell Home पर लौटेगा।
+- New optional destinations existing valid user configuration में silently insert नहीं होंगे।
+- Explore route/screen ready होने के बाद ही eligible होगा।
+- Profile explicit graph behavior approve होने के बाद ही eligible होगा।
+- Customization केवल Settings से होगी; AI या behavioral automation silently navigation change नहीं करेगा।
+- Home screen section customization इस policy का हिस्सा नहीं है। Home app summary surface रहेगा और उसका layout separate future decision होगा।
+
+---
+
+## 7. Scaling Tips
 
 1. **Nested Navigation:** हर feature अपना `NavGraphBuilder.navigation()` graph own करेगा।
 2. **Deep Links:** Deep links public route contracts पर map होंगे, internal widget/screen classes पर नहीं।
@@ -205,10 +240,11 @@ Not allowed:
 4. **Launcher vs Owner:** Profile/Settings launch कर सकते हैं; owning feature ही business logic और repository call करेगा।
 5. **Chrome Policy:** हर new destination में chrome policy explicitly declare करें।
 6. **Route Contracts:** Public route contracts को stable रखें; internal route names refactor हो सकते हैं।
+7. **Eligibility:** हर top-level feature automatically configurable tab नहीं बनेगा; stable top-level route semantics required हैं।
 
 ---
 
-## 7. Workout Placeholder Pattern
+## 8. Workout Placeholder Pattern
 
 Workout tab currently has one simple placeholder destination inside `WorkoutNavGraph`.
 
@@ -222,7 +258,7 @@ Rules:
 
 ---
 
-## 8. Ownership-Aligned Navigation Examples
+## 9. Ownership-Aligned Navigation Examples
 
 | User Action | Navigate To | Business Logic Owner |
 |---|---|---|
@@ -238,4 +274,5 @@ Rules:
 ---
 
 **CTO Note:**
-TNYX navigation freeze का लक्ष्य यह है कि 100+ screens के बाद भी `AppNavHost` छोटा रहे, `MainShell` feature-specific न बने, और teams independently feature graphs evolve कर सकें। Root graph app state handle करेगा, Main graph persistent chrome handle करेगा, Profile/Settings launcher graphs होंगे, और business logic हमेशा owning feature/domain में रहेगी।
+
+TNYX navigation freeze का लक्ष्य यह है कि 100+ screens के बाद भी `AppNavHost` छोटा रहे, `MainShell` feature-specific न बने, और teams independently feature graphs evolve कर सकें। Root graph app state handle करेगा, Main graph persistent chrome और supported top-level destinations handle करेगा, Settings validated user ordering persist करेगा, Profile/Settings launcher graphs रहेंगे जब तक explicitly promoted नहीं होते, और business logic हमेशा owning feature/domain में रहेगी।

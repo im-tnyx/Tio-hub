@@ -103,10 +103,14 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
 - [x] Shared Workout contract v2 defines versioned exercise, media, routine, session, set, timer, and mutation models.
 - [x] `ExerciseMediaResolver` implements approved exact -> neutral -> placeholder resolution without male/female cross-fallback.
 - [x] `WorkoutReducer` implements deterministic start, exercise, set, timer, finish, and discard transitions with rejection reasons.
+- [x] Phone Room database v1 persists the engine-state snapshot, completed-session history, catalog/routine JSON records, and mutation outbox in `apps/app`.
+- [x] `RoomWorkoutRepository` applies reducer output and snapshot/outbox writes inside one Room transaction with mutation-ID and origin-sequence guards.
+- [x] File-backed Robolectric recovery tests prove active-session/set recovery, idempotency, ordering, terminal history behavior, and rollback (6 tests, 0 failures).
+- [x] Full shared/Phone/Wear validation gate passed on 2026-07-17 for `:shared:test :app:testDebugUnitTest :app:compileDebugKotlin :wear:compileDebugKotlin`.
 - [ ] Workout redesign and real production screens are not implemented yet.
-- [ ] Workout repository-backed runtime is not implemented yet.
+- [ ] Workout feature UI is not yet wired to the repository-backed runtime.
 
-Boundary note: shared contracts and unit tests are implemented, but Phone UI, persistence, media catalog integration, Settings UI, and real Wear sync remain unimplemented. The blueprint allows a Tio-owned visual UI while preserving the approved Lyfta-derived core UX behavior.
+Boundary note: shared contracts and Phone persistence/recovery are implemented, but Phone UI consumption, approved media catalog integration, Settings UI, remote outbox delivery, and real Wear sync remain unimplemented. The blueprint allows a Tio-owned visual UI while preserving the approved Lyfta-derived core UX behavior.
 
 ### Profile
 
@@ -210,6 +214,12 @@ Rule: Future module folders should be created only when runtime code needs them.
 - [x] Shared test result: 15 tests, 0 failures, 0 errors, 0 skipped
 - [x] Scope: contract serialization, KMP boundary, gender-media resolution, reducer transitions, Phone compile compatibility, and Wear compile compatibility
 
+### 2026-07-17: Workout Stage 2 validation gate
+
+- [x] `./gradlew.bat :shared:test :app:testDebugUnitTest :app:compileDebugKotlin :wear:compileDebugKotlin`
+- [x] Result: BUILD SUCCESSFUL
+- [x] Scope: Phone Room persistence v1, `RoomWorkoutRepository`, shared reducer compatibility, recovery tests, Phone compile compatibility, and Wear compile compatibility
+
 ### Previous validation
 
 - [x] `./gradlew.bat :app:compileDebugKotlin`
@@ -222,5 +232,5 @@ Known warning:
 
 ---
 
-**Last Updated:** 2026-07-16
-**Current Focus:** Workout Stage 2: Phone persistence, atomic snapshot/mutation storage, repository implementation, and recovery tests. Workout UI remains a placeholder until that data boundary passes.
+**Last Updated:** 2026-07-17
+**Current Focus:** Workout Stage 2 exit criteria now pass on the current Android branch and the work is review-ready. The next implementation gate is Workout Stage 3: the first thin offline vertical slice (`Start blank workout -> add one exercise -> complete one set -> finish -> open history -> restart app and verify recovery`).

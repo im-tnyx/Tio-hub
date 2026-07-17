@@ -105,7 +105,7 @@ shared/
     │       │   ├── WorkoutSession.kt        ← session and exercise-entry snapshots
     │       │   └── WorkoutSet.kt            ← set type and logged metrics
     │       └── repository/
-    │           └── WorkoutRepository.kt     ← shared data boundary; implementation pending
+    │           └── WorkoutRepository.kt     ← shared data boundary; Phone Room implementation in :app
     └── nutrition/
         └── domain/                    ← (future) NutritionLog, FoodEntry, NutritionRepository
 ```
@@ -139,7 +139,24 @@ Do not create these folders just to satisfy a tree. Add them when the first real
 
 > `:shared` किसी पर depend नहीं करता — यह सबसे base layer है।
 
-Workout contract v2 is implemented and unit-tested in `:shared`. Phone persistence and Wear runtime implementations are not checked in yet; do not infer them from the repository interface.
+Workout contract v2 is implemented and unit-tested in `:shared`. Phone Room persistence v1 is implemented in `:app`; Workout Compose consumption and Wear runtime implementations are not checked in yet.
+
+Phone Workout persistence ownership:
+
+```text
+apps/app/src/main/java/com/tnyx/
+├── data/workout/
+│   ├── RoomWorkoutRepository.kt       ← reducer + atomic Room transaction owner
+│   ├── WorkoutPersistenceCodec.kt     ← versioned shared-contract JSON codec
+│   ├── WorkoutEntityMappers.kt        ← shared model ↔ Room row mapping
+│   └── local/
+│       ├── WorkoutDatabase.kt         ← Room database v1
+│       ├── WorkoutDao.kt              ← snapshot, outbox, history, catalog, routine queries
+│       └── WorkoutEntities.kt         ← Android-only Room entities
+└── di/WorkoutDataModule.kt            ← database, DAO, codec, repository Hilt providers
+```
+
+The accepted mutation path is `WorkoutReducer -> Room transaction -> engine-state snapshot + mutation outbox (+ completed history when applicable)`. Duplicate IDs with different payloads and non-increasing per-device sequences are rejected explicitly. The outbox is durable local intent only; no backend delivery is implemented.
 
 ### क्या जाएगा `:shared` में
 
@@ -948,5 +965,5 @@ Current rule:
 
 *Maintained as Android architecture source guide for Tnyx.*
 
-**Last updated: 2026-06-27**
+**Last updated: 2026-07-16**
 

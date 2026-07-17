@@ -26,6 +26,8 @@ import com.tnyx.shared.workout.domain.model.WorkoutSet
 enum class WorkoutMutationRejection {
     UNSUPPORTED_VERSION,
     INVALID_MUTATION,
+    MUTATION_ID_CONFLICT,
+    OUT_OF_ORDER_MUTATION,
     SESSION_ALREADY_ACTIVE,
     NO_ACTIVE_SESSION,
     SESSION_NOT_ACTIVE,

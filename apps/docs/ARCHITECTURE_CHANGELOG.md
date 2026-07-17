@@ -10,8 +10,12 @@ Do not use this file for ordinary feature changes, bug fixes, or copy edits.
 - Added `WorkoutReducer` as the deterministic shared transition owner; UI and platform persistence must not duplicate session mutation rules.
 - Defined one canonical exercise identity with `MALE`, `FEMALE`, and `NEUTRAL` presentation media variants.
 - Added approved-release and provenance gates to exercise media resolution with exact -> neutral -> placeholder fallback.
-- Replaced command-specific repository methods with catalog, engine-state, history, and atomic mutation boundaries; platform implementations remain pending.
+- Replaced command-specific repository methods with catalog, engine-state, history, and atomic mutation boundaries; Phone now has a Room implementation while Wear remains pending.
 - Added a mandatory pre-screen `:core` reuse gate: agents and contributors must inspect `TnyxTheme`, tokens, and existing UI components before introducing a new visual primitive.
+- Added Phone Room persistence v1 under `apps/app` with engine-state snapshot, mutation outbox, completed-session history, catalog/routine rows, and Hilt composition.
+- Implemented `RoomWorkoutRepository` so reducer application, snapshot persistence, outbox insertion, and completed-history writes share one Room transaction.
+- Added explicit mutation-ID conflict and per-device sequence rejection to prevent silent idempotency collisions and out-of-order local writes.
+- Kept outbox delivery, Workout Compose consumption, remote sync, and Wear runtime behavior outside this persistence stage.
 
 ## 2026-06-29
 

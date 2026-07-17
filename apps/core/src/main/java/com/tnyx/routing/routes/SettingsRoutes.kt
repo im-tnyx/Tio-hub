@@ -17,6 +17,9 @@ sealed interface SettingsRoute {
     data object AppPreferences : SettingsRoute
 
     @Serializable
+    data object BottomNavigation : SettingsRoute
+
+    @Serializable
     data object Notifications : SettingsRoute
 
     @Serializable

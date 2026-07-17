@@ -22,6 +22,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.weight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.rounded.DateRange
+import androidx.compose.material.icons.rounded.MenuBook
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -31,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import com.tnyx.core.R
@@ -42,7 +46,7 @@ private data class BottomNavTab(
     val label: String,
     val selectedIconRes: Int? = null,
     val unselectedIconRes: Int? = null,
-    val usesTioIcon: Boolean = false,
+    val imageVector: ImageVector? = null,
 )
 
 private val NAV_TABS = listOf(
@@ -59,9 +63,14 @@ private val NAV_TABS = listOf(
         unselectedIconRes = R.drawable.ic_nav_nutrition_outlined,
     ),
     BottomNavTab(
+        tab = ShellTab.MealPlan,
+        label = "Meal Plan",
+        imageVector = Icons.Rounded.DateRange,
+    ),
+    BottomNavTab(
         tab = ShellTab.Ai,
         label = "Tio",
-        usesTioIcon = true,
+        imageVector = Icons.Outlined.AutoAwesome,
     ),
     BottomNavTab(
         tab = ShellTab.Workout,
@@ -70,10 +79,20 @@ private val NAV_TABS = listOf(
         unselectedIconRes = R.drawable.ic_nav_workout_outlined,
     ),
     BottomNavTab(
+        tab = ShellTab.WorkoutLibrary,
+        label = "Library",
+        imageVector = Icons.Rounded.MenuBook,
+    ),
+    BottomNavTab(
         tab = ShellTab.Progress,
         label = "Progress",
         selectedIconRes = R.drawable.ic_nav_progress_filled,
         unselectedIconRes = R.drawable.ic_nav_progress_outlined,
+    ),
+    BottomNavTab(
+        tab = ShellTab.You,
+        label = "You",
+        imageVector = Icons.Rounded.Person,
     ),
 )
 
@@ -110,7 +129,7 @@ fun MainBottomNav(
                 NavIcon(
                     selectedIconRes = navTab.selectedIconRes,
                     unselectedIconRes = navTab.unselectedIconRes,
-                    usesTioIcon = navTab.usesTioIcon,
+                    imageVector = navTab.imageVector,
                     label = navTab.label,
                     isSelected = selectedTab == navTab.tab,
                     onClick = { onTabSelected(navTab.tab) },
@@ -124,7 +143,7 @@ fun MainBottomNav(
 private fun RowScope.NavIcon(
     selectedIconRes: Int?,
     unselectedIconRes: Int?,
-    usesTioIcon: Boolean,
+    imageVector: ImageVector?,
     label: String,
     isSelected: Boolean,
     onClick: () -> Unit,
@@ -169,9 +188,9 @@ private fun RowScope.NavIcon(
                 },
             contentAlignment = Alignment.Center,
         ) {
-            if (usesTioIcon) {
+            if (imageVector != null) {
                 Icon(
-                    imageVector = Icons.Outlined.AutoAwesome,
+                    imageVector = imageVector,
                     contentDescription = label,
                     tint = animatedColor,
                     modifier = Modifier.size(tokens.bottomNavIconSize),
@@ -201,6 +220,7 @@ private fun RowScope.NavIcon(
             style = TnyxTheme.typography.labelSmall,
             color = animatedColor,
             fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
+            maxLines = 1,
         )
     }
 }

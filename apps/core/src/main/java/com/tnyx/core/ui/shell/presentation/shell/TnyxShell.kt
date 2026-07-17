@@ -7,8 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.tnyx.core.theme.TnyxTheme
+import com.tnyx.core.ui.shell.domain.model.ShellTab
 import com.tnyx.core.ui.shell.presentation.action.ShellAction
-import com.tnyx.core.ui.shell.presentation.state.ShellTab
 import com.tnyx.core.ui.shell.presentation.state.ShellUiState
 import com.tnyx.core.ui.shell.presentation.widgets.MainBottomNav
 import com.tnyx.core.ui.shell.presentation.widgets.MainTopBar
@@ -43,6 +43,7 @@ fun TnyxShell(
 
         if (state.isBottomNavVisible) {
             MainBottomNav(
+                tabs = state.bottomTabs,
                 selectedTab = state.selectedTab,
                 onTabSelected = { onAction(ShellAction.TabSelected(it)) },
                 modifier = Modifier.align(Alignment.BottomCenter)

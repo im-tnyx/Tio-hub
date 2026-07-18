@@ -15,6 +15,7 @@ data class WorkoutExercise(
     val exerciseId: String,
     val exerciseNameSnapshot: String,
     val order: Int,
+    val trackingTypeSnapshot: ExerciseTrackingType = ExerciseTrackingType.WEIGHT_REPS,
     val restSeconds: Int = 90,
     val sets: List<WorkoutSet> = emptyList(),
     val notes: String = "",

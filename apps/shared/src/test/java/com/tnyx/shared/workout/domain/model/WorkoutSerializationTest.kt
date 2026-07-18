@@ -50,6 +50,7 @@ class WorkoutSerializationTest {
         val exercise = ExerciseDefinition(
             id = "exercise-1",
             name = "Bench Press",
+            trackingType = ExerciseTrackingType.WEIGHT_REPS,
             mediaAssets = listOf(
                 ExerciseMediaAsset(
                     id = "exercise-1-female-v1",
@@ -68,6 +69,47 @@ class WorkoutSerializationTest {
 
         assertEquals(exercise, decoded)
         assertEquals(ExerciseMediaVariant.FEMALE, decoded.mediaAssets.single().variant)
+        assertEquals(ExerciseTrackingType.WEIGHT_REPS, decoded.trackingType)
         assertEquals("exercise-1", decoded.id)
+    }
+
+    @Test
+    fun legacyExerciseDefinitionDefaultsToWeightAndRepsTracking() {
+        val decoded = json.decodeFromString<ExerciseDefinition>(
+            """{"id":"exercise-legacy","name":"Legacy exercise"}"""
+        )
+
+        assertEquals(ExerciseTrackingType.WEIGHT_REPS, decoded.trackingType)
+    }
+
+    @Test
+    fun sessionExerciseRoundTripsTrackingSnapshot() {
+        val exercise = WorkoutExercise(
+            id = "entry-1",
+            exerciseId = "exercise-1",
+            exerciseNameSnapshot = "Bodyweight Squat",
+            order = 0,
+            trackingTypeSnapshot = ExerciseTrackingType.BODYWEIGHT_REPS
+        )
+
+        assertEquals(exercise, json.decodeFromString<WorkoutExercise>(json.encodeToString(exercise)))
+    }
+
+    @Test
+    fun stepBasedSetRoundTripsAsADurableMetric() {
+        val set = WorkoutSet(
+            id = "set-steps",
+            exerciseEntryId = "entry-steps",
+            setNumber = 1,
+            steps = 500,
+            durationSeconds = 300,
+            isCompleted = true,
+            completedAtMs = 2_000L
+        )
+
+        val decoded = json.decodeFromString<WorkoutSet>(json.encodeToString(set))
+
+        assertEquals(set, decoded)
+        assertTrue(decoded.hasRecordedMetric)
     }
 }

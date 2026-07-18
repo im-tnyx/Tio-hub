@@ -28,10 +28,10 @@ Use these sources in this order:
 
 Current source now proves that:
 
-- Phone Workout is one placeholder destination in `apps/features/workout/`.
+- Phone Workout has typed Home/History destinations and a Stage 3 thin offline UI in `apps/features/workout/`.
 - `apps/shared/` contains Workout contract v2, the deterministic reducer, gender-aware media resolution, and repository boundaries.
 - Phone Room database v1, atomic snapshot/outbox persistence, `RoomWorkoutRepository`, Hilt composition, and targeted recovery tests exist in `apps/app/`.
-- Production Workout screens do not consume the repository yet. The Stage 2 persistence/recovery exit gate now passes on the current Android branch, and the next engineering gate is Stage 3 (`First thin offline vertical slice`).
+- The Stage 3 Phone slice now consumes `WorkoutRepository` through a feature coordinator and supports start blank -> add one first-party exercise -> complete one set -> finish -> history. Local automated recovery/idempotency and shared/Phone/Wear gates pass; device force-stop/relaunch UX smoke remains before Stage 3 review closes.
 - Wear contains prototype screens, local JSON parsing, simulated sync text, and a boolean gender preference. It is not the target Phone/Watch runtime.
 - The checked-in Wear exercise catalog and its third-party media remain blocked for release until provenance and licence clearance are explicit.
 

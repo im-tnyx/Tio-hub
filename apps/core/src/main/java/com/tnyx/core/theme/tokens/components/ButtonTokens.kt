@@ -2,9 +2,11 @@ package com.tnyx.core.theme.tokens.components
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import com.tnyx.core.theme.tokens.foundation.TnyxDimens
 import com.tnyx.core.theme.tokens.foundation.TnyxPalette
+import com.tnyx.core.theme.tokens.typography.TnyxTypography
 
 /**
  * Tnyx Button Component Specs
@@ -18,6 +20,10 @@ data class ButtonTokens(
     val contentColor: Color,
     val disabledContainerColor: Color,
     val disabledContentColor: Color,
+    val secondaryContentColor: Color,
+    val secondaryBorderColor: Color,
+    val mutedBorderColor: Color,
+    val disabledBorderColor: Color,
     val textStyle: TextStyle? = null // Handled by Theme typography if null
 )
 
@@ -29,5 +35,10 @@ val DefaultButtonTokens = ButtonTokens(
     containerColor = TnyxPalette.Black,
     contentColor = TnyxPalette.White,
     disabledContainerColor = TnyxPalette.Neutral100,
-    disabledContentColor = TnyxPalette.Neutral400
+    disabledContentColor = TnyxPalette.Neutral400,
+    secondaryContentColor = TnyxPalette.Black,
+    secondaryBorderColor = TnyxPalette.Black,
+    mutedBorderColor = TnyxPalette.Neutral200,
+    disabledBorderColor = TnyxPalette.Neutral200,
+    textStyle = TnyxTypography.labelLarge.copy(fontWeight = FontWeight.Bold)
 )

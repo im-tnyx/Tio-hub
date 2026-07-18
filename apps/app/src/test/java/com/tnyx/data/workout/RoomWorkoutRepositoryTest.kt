@@ -92,6 +92,32 @@ class RoomWorkoutRepositoryTest {
     }
 
     @Test
+    fun nextPhoneSequenceSurvivesDatabaseReopen() = runBlocking {
+        val databaseName = "workout-sequence-${UUID.randomUUID()}.db"
+        context.deleteDatabase(databaseName)
+        val firstDatabase = openFileDatabase(databaseName)
+        val firstRepository = repositoryFor(firstDatabase)
+
+        assertEquals(
+            0L,
+            firstRepository.nextMutationSequence(WorkoutMutationOrigin.PHONE, "phone-device")
+        )
+        assertApplied(firstRepository.applyMutation(startMutation(sequence = 0L)))
+        firstDatabase.close()
+
+        val reopenedDatabase = openFileDatabase(databaseName)
+        val reopenedRepository = repositoryFor(reopenedDatabase)
+        assertEquals(
+            1L,
+            reopenedRepository.nextMutationSequence(WorkoutMutationOrigin.PHONE, "phone-device")
+        )
+
+        reopenedDatabase.close()
+        context.deleteDatabase(databaseName)
+        Unit
+    }
+
+    @Test
     fun duplicateMutationIdIsIdempotent() = runBlocking {
         val start = startMutation(sequence = 1L)
         val first = repository.applyMutation(start)

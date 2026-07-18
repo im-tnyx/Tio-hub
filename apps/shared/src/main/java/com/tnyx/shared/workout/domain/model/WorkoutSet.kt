@@ -21,6 +21,7 @@ data class WorkoutSet(
     val type: SetType = SetType.NORMAL,
     val weightKg: Double? = null,
     val reps: Int? = null,
+    val steps: Int? = null,
     val durationSeconds: Int? = null,
     val distanceMeters: Double? = null,
     val isCompleted: Boolean = false,
@@ -36,6 +37,7 @@ data class WorkoutSet(
 
     val hasRecordedMetric: Boolean
         get() = (reps ?: 0) > 0 ||
+            (steps ?: 0) > 0 ||
             (durationSeconds ?: 0) > 0 ||
             (distanceMeters ?: 0.0) > 0.0
 }

@@ -56,7 +56,11 @@ fun TnyxThemeProvider(
                 containerColor = palette.primary,
                 contentColor = palette.onPrimary,
                 disabledContainerColor = palette.surfaceVariant,
-                disabledContentColor = palette.textMuted
+                disabledContentColor = palette.textMuted,
+                secondaryContentColor = palette.textPrimary,
+                secondaryBorderColor = palette.primary,
+                mutedBorderColor = palette.surfaceVariant,
+                disabledBorderColor = palette.surfaceVariant
             ),
             input = DefaultInputTokens.copy(
                 containerColor = palette.surface,
@@ -64,11 +68,23 @@ fun TnyxThemeProvider(
                 placeholderColor = palette.textMuted,
                 focusedIndicatorColor = palette.primary,
                 unfocusedIndicatorColor = palette.surfaceVariant,
-                errorIndicatorColor = palette.error
+                errorIndicatorColor = palette.error,
+                disabledContainerColor = palette.surfaceVariant,
+                disabledBorderColor = palette.surfaceVariant,
+                disabledTextColor = palette.textMuted,
+                disabledPlaceholderColor = palette.textMuted
             ),
             card = DefaultCardTokens.copy(
                 containerColor = palette.surface,
-                borderColor = palette.textPrimary.copy(alpha = 0.1f)
+                borderColor = palette.textPrimary.copy(alpha = 0.1f),
+                normalContainerColor = palette.surfaceVariant,
+                glassContainerColor = if (palette.isDark) {
+                    palette.surfaceVariant.copy(alpha = 0.8f)
+                } else {
+                    palette.surfaceRaised.copy(alpha = 0.72f)
+                },
+                glassBorderColor = palette.textPrimary.copy(alpha = 0.16f),
+                outlinedBorderColor = palette.textPrimary.copy(alpha = 0.16f)
             ),
             sheet = DefaultSheetTokens.copy(
                 containerColor = palette.surfaceRaised,
@@ -77,7 +93,11 @@ fun TnyxThemeProvider(
                 dividerColor = palette.textPrimary.copy(alpha = 0.08f)
             ),
             navigation = NavigationTokens(),
-            calendar = CalendarTokens()
+            calendar = CalendarTokens(),
+            header = DefaultHeaderTokens.copy(
+                containerColor = palette.background,
+                contentColor = palette.textPrimary
+            )
         )
     ) {
         MaterialTheme(

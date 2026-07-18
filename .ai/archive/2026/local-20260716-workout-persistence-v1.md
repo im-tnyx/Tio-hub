@@ -1,7 +1,7 @@
 ---
 task_id: local-20260716-workout-persistence-v1
 title: Workout Phone persistence and recovery boundary
-status: review
+status: complete
 priority: high
 owner: android
 branch: codex/workout-persistence-v1
@@ -9,7 +9,7 @@ github_issue:
 github_pr:
 platforms: [android]
 created: 2026-07-16
-updated: 2026-07-17
+updated: 2026-07-18
 ---
 
 # Task: Workout Phone persistence and recovery boundary
@@ -106,7 +106,7 @@ Persist the shared Workout contract on Phone so an active session and its last c
 
 ## Next Action
 
-Stage 2 is review-ready. On explicit user request, commit and push this branch for review; after landing, switch the active task to Stage 3 (`First thin offline vertical slice`).
+Stage 2 landed on `main` at `b91788b`. The active task moved to Stage 3 (`First thin offline vertical slice`).
 
 ## Canonical References
 

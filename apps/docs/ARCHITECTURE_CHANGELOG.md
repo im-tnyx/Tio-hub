@@ -4,6 +4,19 @@ This changelog records architecture decisions that affect project structure, dat
 
 Do not use this file for ordinary feature changes, bug fixes, or copy edits.
 
+## 2026-07-18 — Workout thin offline presentation boundary
+
+- Replaced the Workout placeholder with feature-owned typed Home and History destinations.
+- Added `WorkoutSessionCoordinator` as the Stage 3 use-case boundary between `WorkoutViewModel` actions and the shared `WorkoutRepository`.
+- Kept mutation creation, outbox-backed monotonic Phone sequencing, first-party starter exercise construction, input validation, and finish idempotency outside Compose.
+- Reused `TnyxTheme`, `TnyxScreenHeader`, `TnyxCard`, `TnyxTextField`, and Tnyx button primitives without adding a feature-local design system.
+- Extended the mandatory component-token chain with Header tokens and tokenized Button, Input, and Card state colors so feature consumers do not carry literal dimensions, alpha values, or typography overrides.
+- Mapped completed Workout state to the semantic success color instead of the primary brand color.
+- Added additive `ExerciseTrackingType` and durable tracking snapshots so catalog, routine, and active-session presentation can select metric fields without branching on names or media.
+- Replaced the singular Workout presentation model with keyed exercise/set/metric UI state and a feature-owned `WorkoutExerciseEditor` supporting Active, Routine-edit, and Read-only policies; only Active mode is currently wired.
+- Kept Workout editor semantics under `:features:workout`; it composes core Tnyx primitives rather than promoting domain components into `:core`.
+- Kept full catalog/media, routines, advanced workout execution, Wear runtime, remote outbox delivery, and cloud sync outside this slice.
+
 ## 2026-07-17 — Dynamic navigation catalog
 
 - Accepted Settings-only user customization for bottom-navigation visibility and order.

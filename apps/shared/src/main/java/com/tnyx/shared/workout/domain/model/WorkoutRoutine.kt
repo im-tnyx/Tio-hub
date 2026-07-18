@@ -24,6 +24,7 @@ data class RoutineExercise(
     val exerciseNameSnapshot: String,
     val order: Int,
     val plannedSets: Int,
+    val trackingTypeSnapshot: ExerciseTrackingType = ExerciseTrackingType.WEIGHT_REPS,
     val targetReps: RepRange = RepRange(),
     val restSeconds: Int = 90,
     val setType: SetType = SetType.NORMAL,

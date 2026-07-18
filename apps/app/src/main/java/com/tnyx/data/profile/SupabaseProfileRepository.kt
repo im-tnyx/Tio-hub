@@ -6,6 +6,7 @@ import com.tnyx.shared.profile.domain.model.ProfileWorkoutChart
 import com.tnyx.shared.profile.domain.model.UserProfile
 import com.tnyx.shared.profile.domain.repository.ProfileRepository
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.storage.storage
 import io.ktor.http.ContentType
@@ -70,6 +71,9 @@ class SupabaseProfileRepository(
     }
 
     override suspend fun updateProfile(profile: UserProfile) {
+        val currentUserId = currentUserId()
+        require(profile.id == currentUserId) { "Cannot update another user's profile" }
+
         supabaseClient.from("profiles").update(
             mapOf(
                 "display_name" to profile.displayName,
@@ -83,7 +87,7 @@ class SupabaseProfileRepository(
             ),
         ) {
             filter {
-                eq("id", profile.id)
+                eq("id", currentUserId)
             }
         }
         currentProfile.value = profile
@@ -92,8 +96,11 @@ class SupabaseProfileRepository(
     override suspend fun updateAvatar(jpegBytes: ByteArray): String {
         require(jpegBytes.isNotEmpty()) { "Avatar image is empty" }
 
+        val currentUserId = currentUserId()
         val profile = currentProfile.value ?: getCurrentProfileDto().toDomain()
-        val objectPath = avatarObjectPath(profile.id)
+        require(profile.id == currentUserId) { "Current profile does not match the signed-in user" }
+
+        val objectPath = avatarObjectPath(currentUserId)
         val bucket = supabaseClient.storage.from(AVATAR_BUCKET)
 
         bucket.upload(objectPath, jpegBytes) {
@@ -108,7 +115,7 @@ class SupabaseProfileRepository(
             mapOf("avatar_url" to cacheBustedUrl),
         ) {
             filter {
-                eq("id", profile.id)
+                eq("id", currentUserId)
             }
         }
 
@@ -117,8 +124,11 @@ class SupabaseProfileRepository(
     }
 
     override suspend fun removeAvatar() {
+        val currentUserId = currentUserId()
         val profile = currentProfile.value ?: getCurrentProfileDto().toDomain()
-        val objectPath = avatarObjectPath(profile.id)
+        require(profile.id == currentUserId) { "Current profile does not match the signed-in user" }
+
+        val objectPath = avatarObjectPath(currentUserId)
         val bucket = supabaseClient.storage.from(AVATAR_BUCKET)
 
         runCatching {
@@ -129,16 +139,25 @@ class SupabaseProfileRepository(
             mapOf<String, Any?>("avatar_url" to null),
         ) {
             filter {
-                eq("id", profile.id)
+                eq("id", currentUserId)
             }
         }
         currentProfile.value = profile.copy(avatarUrl = null)
     }
 
     private suspend fun getCurrentProfileDto(): ProfileDto {
+        val currentUserId = currentUserId()
         return supabaseClient.from("profiles").select {
-            limit(count = 1)
+            filter {
+                eq("id", currentUserId)
+            }
         }.decodeSingle()
+    }
+
+    private fun currentUserId(): String {
+        return requireNotNull(supabaseClient.auth.currentUserOrNull()?.id) {
+            "A signed-in user is required for profile access"
+        }
     }
 
     private fun avatarObjectPath(profileId: String): String {

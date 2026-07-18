@@ -10,6 +10,9 @@ import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.storage.storage
 import io.ktor.http.ContentType
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
 
@@ -47,8 +50,13 @@ class SupabaseProfileRepository(
     private val supabaseClient: SupabaseClient,
 ) : ProfileRepository {
 
+    private val currentProfile = MutableStateFlow<UserProfile?>(null)
+
     override fun getCurrentProfile(): Flow<UserProfile> = flow {
-        emit(getCurrentProfileDto().toDomain())
+        if (currentProfile.value == null) {
+            currentProfile.value = getCurrentProfileDto().toDomain()
+        }
+        emitAll(currentProfile.filterNotNull())
     }
 
     override fun getProfile(userId: String): Flow<UserProfile> = flow {
@@ -78,12 +86,13 @@ class SupabaseProfileRepository(
                 eq("id", profile.id)
             }
         }
+        currentProfile.value = profile
     }
 
     override suspend fun updateAvatar(jpegBytes: ByteArray): String {
         require(jpegBytes.isNotEmpty()) { "Avatar image is empty" }
 
-        val profile = getCurrentProfileDto()
+        val profile = currentProfile.value ?: getCurrentProfileDto().toDomain()
         val objectPath = avatarObjectPath(profile.id)
         val bucket = supabaseClient.storage.from(AVATAR_BUCKET)
 
@@ -103,11 +112,12 @@ class SupabaseProfileRepository(
             }
         }
 
+        currentProfile.value = profile.copy(avatarUrl = cacheBustedUrl)
         return cacheBustedUrl
     }
 
     override suspend fun removeAvatar() {
-        val profile = getCurrentProfileDto()
+        val profile = currentProfile.value ?: getCurrentProfileDto().toDomain()
         val objectPath = avatarObjectPath(profile.id)
         val bucket = supabaseClient.storage.from(AVATAR_BUCKET)
 
@@ -122,6 +132,7 @@ class SupabaseProfileRepository(
                 eq("id", profile.id)
             }
         }
+        currentProfile.value = profile.copy(avatarUrl = null)
     }
 
     private suspend fun getCurrentProfileDto(): ProfileDto {

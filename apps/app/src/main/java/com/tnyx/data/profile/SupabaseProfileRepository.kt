@@ -1,5 +1,6 @@
 package com.tnyx.data.profile
 
+import com.tnyx.shared.profile.domain.model.MembershipTier
 import com.tnyx.shared.profile.domain.model.ProfileJourney
 import com.tnyx.shared.profile.domain.model.ProfileWorkoutChart
 import com.tnyx.shared.profile.domain.model.UserProfile
@@ -17,6 +18,7 @@ data class ProfileDto(
     val dob: String? = null,
     val gender: String? = null,
     val plan_label: String? = null,
+    val avatar_url: String? = null,
     val weight: Double? = null,
     val height: Int? = null,
     val bmi: Double? = null,
@@ -33,11 +35,11 @@ data class ProfileDto(
     val last_photo_update_date: String? = null,
     val chart_duration_minutes: List<Float>? = null,
     val chart_volume_kg: List<Float>? = null,
-    val chart_reps: List<Float>? = null
+    val chart_reps: List<Float>? = null,
 )
 
 class SupabaseProfileRepository(
-    private val supabaseClient: SupabaseClient
+    private val supabaseClient: SupabaseClient,
 ) : ProfileRepository {
 
     override fun getCurrentProfile(): Flow<UserProfile> = flow {
@@ -68,8 +70,8 @@ class SupabaseProfileRepository(
                 "weight" to profile.weight,
                 "height" to profile.height,
                 "bmi" to profile.bmi,
-                "bmr" to profile.bmr
-            )
+                "bmr" to profile.bmr,
+            ),
         ) {
             filter {
                 eq("id", profile.id)
@@ -95,7 +97,7 @@ class SupabaseProfileRepository(
                 name = journey_name.orEmpty(),
                 initialWeight = journey_initial_weight ?: 0.0,
                 targetWeight = journey_target_weight ?: 0.0,
-                progress = (journey_progress ?: 0f).coerceIn(0f, 1f)
+                progress = (journey_progress ?: 0f).coerceIn(0f, 1f),
             ),
             progressPhotos = progress_photos.orEmpty(),
             lastPhotoUpdateWeight = last_photo_update_weight.orEmpty(),
@@ -103,8 +105,10 @@ class SupabaseProfileRepository(
             workoutChart = ProfileWorkoutChart(
                 durationMinutes = chart_duration_minutes.orEmpty(),
                 volumeKg = chart_volume_kg.orEmpty(),
-                reps = chart_reps.orEmpty()
-            )
+                reps = chart_reps.orEmpty(),
+            ),
+            avatarUrl = avatar_url?.takeIf(String::isNotBlank),
+            membershipTier = MembershipTier.fromPlanLabel(plan_label),
         )
     }
 }

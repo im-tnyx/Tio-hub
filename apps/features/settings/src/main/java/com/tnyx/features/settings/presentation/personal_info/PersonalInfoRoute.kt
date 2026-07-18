@@ -47,7 +47,7 @@ fun PersonalInfoRoute(
                 context.readAvatarJpeg(uri)
             }
             if (jpegBytes == null) {
-                viewModel.onAction(PersonalInfoAction.OnDismissAvatarError)
+                viewModel.onAction(PersonalInfoAction.OnAvatarProcessingFailed)
             } else {
                 viewModel.onAction(PersonalInfoAction.OnAvatarBytesReady(jpegBytes))
             }
@@ -130,10 +130,14 @@ fun PersonalInfoRoute(
 }
 
 private fun Context.readAvatarJpeg(uri: Uri): ByteArray? {
-    val source = contentResolver.openInputStream(uri)?.use(BitmapFactory::decodeStream) ?: return null
+    val source = contentResolver.openInputStream(uri)?.use { input ->
+        BitmapFactory.decodeStream(input)
+    } ?: return null
 
     return try {
         val edge = min(source.width, source.height)
+        if (edge <= 0) return null
+
         val left = (source.width - edge) / 2
         val top = (source.height - edge) / 2
         val square = Bitmap.createBitmap(source, left, top, edge, edge)

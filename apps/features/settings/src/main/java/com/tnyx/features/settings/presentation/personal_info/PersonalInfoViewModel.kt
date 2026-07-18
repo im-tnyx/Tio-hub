@@ -95,6 +95,9 @@ class PersonalInfoViewModel @Inject constructor(
             PersonalInfoAction.OnBackClicked -> Unit
             PersonalInfoAction.OnChangePhotoClicked -> Unit
             is PersonalInfoAction.OnAvatarBytesReady -> uploadAvatar(action.jpegBytes)
+            PersonalInfoAction.OnAvatarProcessingFailed -> update {
+                it.copy(avatarError = "This photo could not be processed. Choose another image.")
+            }
             PersonalInfoAction.OnRemovePhotoClicked -> removeAvatar()
             PersonalInfoAction.OnDismissAvatarError -> update { it.copy(avatarError = null) }
             PersonalInfoAction.OnDeleteAccountClicked -> update { it.copy(deleteStep = DeleteAccountStep.Confirm) }

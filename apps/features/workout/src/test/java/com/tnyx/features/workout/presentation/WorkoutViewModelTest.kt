@@ -3,8 +3,9 @@ package com.tnyx.features.workout.presentation
 import com.tnyx.features.workout.domain.WorkoutCommandResult
 import com.tnyx.features.workout.domain.WorkoutDashboard
 import com.tnyx.features.workout.domain.WorkoutSessionCoordinator
-import com.tnyx.shared.workout.domain.model.WorkoutEngineState
+import com.tnyx.shared.workout.domain.model.ExerciseDefinition
 import com.tnyx.shared.workout.domain.model.ExerciseTrackingType
+import com.tnyx.shared.workout.domain.model.WorkoutEngineState
 import com.tnyx.shared.workout.domain.model.WorkoutExercise
 import com.tnyx.shared.workout.domain.model.WorkoutSession
 import com.tnyx.shared.workout.domain.model.WorkoutSet
@@ -38,6 +39,7 @@ class WorkoutViewModelTest {
             assertTrue(state.hasActiveSession)
             val exercise = state.exercises.single()
             assertEquals("Bodyweight Squat", exercise.name)
+            assertEquals("quadriceps", exercise.bodyPart)
             val set = exercise.sets.single()
             assertTrue(set.isCompleted)
             assertEquals(
@@ -189,5 +191,13 @@ private fun restoredDashboard(isCompleted: Boolean = true): WorkoutDashboard {
             ),
         ),
         history = emptyList(),
+        exerciseCatalog = listOf(
+            ExerciseDefinition(
+                id = "starter-exercise",
+                name = "Bodyweight Squat",
+                primaryMuscleGroups = listOf("quadriceps"),
+                trackingType = ExerciseTrackingType.BODYWEIGHT_REPS,
+            ),
+        ),
     )
 }

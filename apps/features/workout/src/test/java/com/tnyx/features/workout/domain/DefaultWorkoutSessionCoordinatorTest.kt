@@ -43,6 +43,10 @@ class DefaultWorkoutSessionCoordinatorTest {
             ExerciseTrackingType.BODYWEIGHT_REPS,
             dashboard.history.single().exercises.single().trackingTypeSnapshot,
         )
+        val starterDefinition = dashboard.exerciseCatalog.single {
+            it.id == DefaultWorkoutSessionCoordinator.STARTER_EXERCISE_ID
+        }
+        assertEquals(listOf("quadriceps"), starterDefinition.primaryMuscleGroups)
     }
 
     @Test

@@ -26,6 +26,8 @@ Create a production-safe, feature-owned Android body-part icon boundary that can
 - [x] Preview artwork is isolated to the `debug` source set.
 - [x] `main` and release variants contain only placeholder aliases until provenance and licence clearance.
 - [x] Feature UI can render a body-part icon through one reusable composable.
+- [x] Workout dashboard carries resource-free catalog metadata into `WorkoutExerciseUi`.
+- [x] Workout editor resolves its header icon from the exercise's stable catalog identity.
 - [x] Unit tests cover canonical names, normalization, aliases, and fallback behavior.
 - [ ] Workout feature tests and compile gate pass.
 - [ ] A device preview verifies all fourteen debug icons on light and dark Tio surfaces.
@@ -40,9 +42,9 @@ Create a production-safe, feature-owned Android body-part icon boundary that can
 ## Out Of Scope
 
 - Equipment icon and equipment photo registry.
-- Exercise catalog ingestion or body-part metadata migration.
+- Exercise catalog ingestion, catalog persistence, or body-part metadata migration.
 - Muscle-map male/female asset naming and resolution.
-- Wiring an icon into `WorkoutExerciseEditor` before stable body-part metadata reaches its `UiState`.
+- Provenance changes beyond the feature-owned starter definition.
 - Moving domain-specific body-part semantics into `apps/core/`.
 - Production release of reference-derived artwork without approved provenance and licence evidence.
 
@@ -50,6 +52,8 @@ Create a production-safe, feature-owned Android body-part icon boundary that can
 
 - Keep the body-part registry feature-owned because its taxonomy is workout/catalog domain language, not a domain-neutral core primitive.
 - Keep `ExerciseDefinition` resource-agnostic. Presentation resolves its string body-part value to an Android drawable at the feature boundary.
+- Resolve editor metadata by stable `exerciseId`; never infer a body part from the display name.
+- Keep the Stage 3 first-party `Bodyweight Squat` definition in the feature coordinator until full catalog ingestion owns it.
 - Use `debug` resource overlays for the current artwork. The same names resolve to a neutral placeholder in `main` and release builds.
 - Normalize the twelve self-contained SVG files to lossless 192x192 transparent WebP for deterministic Android loading.
 - Keep cardio and stretching as debug VectorDrawable resources with corrected Tio resource names.
@@ -58,7 +62,10 @@ Create a production-safe, feature-owned Android body-part icon boundary that can
 ## Data Flow
 
 ```text
-Exercise/catalog body-part string
+ExerciseDefinition.primaryMuscleGroups
+             |
+             v
+WorkoutDashboard -> WorkoutExerciseUi.bodyPart
              |
              v
 BodyPartIconRegistry.normalize + alias lookup
@@ -83,12 +90,14 @@ release: body-part resource -> placeholder alias
 - Twelve generated WebP resources: PASS at 192x192 with alpha channel.
 - XML parse: PASS for all four new XML resource files.
 - Trailing-whitespace scan: PASS.
+- Editor metadata flow and all `WorkoutDashboard` call sites: static scan PASS.
+- Changed Compose code introduces no raw `dp` or `Color` hardcodes: PASS.
 - Kotlin unit tests and Gradle compile: pending.
 - Device light/dark preview: pending.
 
 ## Next Action
 
-Run the focused Workout test/compile gate. Then add a temporary debug preview or wire the registry only after a stable body-part value is included in `WorkoutExerciseUi`.
+Run the focused Workout test/compile gate, then verify the editor header and all fourteen debug icons on light and dark Tio surfaces.
 
 ## Canonical References
 

@@ -7,9 +7,14 @@ import com.tnyx.shared.profile.domain.model.UserProfile
 import com.tnyx.shared.profile.domain.repository.ProfileRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.storage.storage
+import io.ktor.http.ContentType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
+
+private const val AVATAR_BUCKET = "profile-avatars"
+private const val AVATAR_FILE_NAME = "avatar.jpg"
 
 @Serializable
 data class ProfileDto(
@@ -43,11 +48,7 @@ class SupabaseProfileRepository(
 ) : ProfileRepository {
 
     override fun getCurrentProfile(): Flow<UserProfile> = flow {
-        val dto = supabaseClient.from("profiles").select {
-            limit(count = 1)
-        }.decodeSingle<ProfileDto>()
-
-        emit(dto.toDomain())
+        emit(getCurrentProfileDto().toDomain())
     }
 
     override fun getProfile(userId: String): Flow<UserProfile> = flow {
@@ -77,6 +78,60 @@ class SupabaseProfileRepository(
                 eq("id", profile.id)
             }
         }
+    }
+
+    override suspend fun updateAvatar(jpegBytes: ByteArray): String {
+        require(jpegBytes.isNotEmpty()) { "Avatar image is empty" }
+
+        val profile = getCurrentProfileDto()
+        val objectPath = avatarObjectPath(profile.id)
+        val bucket = supabaseClient.storage.from(AVATAR_BUCKET)
+
+        bucket.upload(objectPath, jpegBytes) {
+            upsert = true
+            contentType = ContentType.Image.JPEG
+        }
+
+        val publicUrl = bucket.publicUrl(objectPath)
+        val cacheBustedUrl = "$publicUrl?v=${System.currentTimeMillis()}"
+
+        supabaseClient.from("profiles").update(
+            mapOf("avatar_url" to cacheBustedUrl),
+        ) {
+            filter {
+                eq("id", profile.id)
+            }
+        }
+
+        return cacheBustedUrl
+    }
+
+    override suspend fun removeAvatar() {
+        val profile = getCurrentProfileDto()
+        val objectPath = avatarObjectPath(profile.id)
+        val bucket = supabaseClient.storage.from(AVATAR_BUCKET)
+
+        runCatching {
+            bucket.delete(objectPath)
+        }
+
+        supabaseClient.from("profiles").update(
+            mapOf<String, Any?>("avatar_url" to null),
+        ) {
+            filter {
+                eq("id", profile.id)
+            }
+        }
+    }
+
+    private suspend fun getCurrentProfileDto(): ProfileDto {
+        return supabaseClient.from("profiles").select {
+            limit(count = 1)
+        }.decodeSingle()
+    }
+
+    private fun avatarObjectPath(profileId: String): String {
+        return "$profileId/$AVATAR_FILE_NAME"
     }
 
     private fun ProfileDto.toDomain(): UserProfile {

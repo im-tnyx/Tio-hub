@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -63,7 +62,7 @@ fun TnyxPrimaryButton(
             maxLines = maxLines,
             overflow = overflow,
             spacing = tokens.iconSpacing,
-            textStyle = (tokens.textStyle ?: TnyxTheme.typography.labelLarge).copy(fontWeight = FontWeight.Bold)
+            textStyle = tokens.textStyle ?: TnyxTheme.typography.labelLarge
         )
     }
 }
@@ -90,8 +89,8 @@ fun TnyxSecondaryButton(
     val tokens = TnyxTheme.components.button
     
     val borderColor = when (variant) {
-        TnyxSecondaryVariant.Standard -> if (enabled) TnyxTheme.colors.primary else TnyxTheme.colors.surfaceVariant
-        TnyxSecondaryVariant.Muted -> if (enabled) TnyxTheme.colors.textPrimary.copy(alpha = 0.16f) else TnyxTheme.colors.surfaceVariant
+        TnyxSecondaryVariant.Standard -> if (enabled) tokens.secondaryBorderColor else tokens.disabledBorderColor
+        TnyxSecondaryVariant.Muted -> if (enabled) tokens.mutedBorderColor else tokens.disabledBorderColor
     }
 
     OutlinedButton(
@@ -104,8 +103,8 @@ fun TnyxSecondaryButton(
         border = BorderStroke(TnyxTheme.dimens.BorderThin, borderColor),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = Color.Transparent,
-            contentColor = TnyxTheme.colors.textPrimary,
-            disabledContentColor = TnyxTheme.colors.textSecondary.copy(alpha = 0.38f)
+            contentColor = tokens.secondaryContentColor,
+            disabledContentColor = tokens.disabledContentColor
         ),
         contentPadding = PaddingValues(horizontal = tokens.horizontalPadding)
     ) {
@@ -149,8 +148,8 @@ fun TnyxGhostButton(
         enabled = enabled,
         shape = TnyxTheme.shapes.Material.medium,
         colors = ButtonDefaults.textButtonColors(
-            contentColor = TnyxTheme.colors.textPrimary,
-            disabledContentColor = TnyxTheme.colors.textSecondary.copy(alpha = 0.38f)
+            contentColor = tokens.secondaryContentColor,
+            disabledContentColor = tokens.disabledContentColor
         ),
         contentPadding = PaddingValues(horizontal = tokens.horizontalPadding)
     ) {

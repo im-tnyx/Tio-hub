@@ -39,21 +39,19 @@ fun TnyxCard(
     content: @Composable () -> Unit
 ) {
     val tokens = TnyxTheme.components.card
-    val isDark = TnyxTheme.colors.isDark
     val finalShape = shape ?: RoundedCornerShape(tokens.cornerRadius)
     val finalPadding = padding ?: tokens.contentPadding
 
     val backgroundColor = when {
-        variant == TnyxCardVariant.Glass && isDark -> TnyxTheme.colors.surfaceVariant.copy(alpha = 0.8f)
-        variant == TnyxCardVariant.Glass -> TnyxTheme.colors.surfaceRaised.copy(alpha = 0.72f)
-        variant == TnyxCardVariant.Normal -> TnyxTheme.colors.surfaceVariant
+        variant == TnyxCardVariant.Glass -> tokens.glassContainerColor
+        variant == TnyxCardVariant.Normal -> tokens.normalContainerColor
         variant == TnyxCardVariant.Outlined -> Color.Transparent
         else -> tokens.containerColor
     }
 
     val borderColor = when (variant) {
-        TnyxCardVariant.Glass -> tokens.borderColor.copy(alpha = 0.16f)
-        TnyxCardVariant.Outlined -> TnyxTheme.colors.textPrimary.copy(alpha = 0.16f)
+        TnyxCardVariant.Glass -> tokens.glassBorderColor
+        TnyxCardVariant.Outlined -> tokens.outlinedBorderColor
         TnyxCardVariant.Normal -> Color.Transparent
         else -> tokens.borderColor
     }

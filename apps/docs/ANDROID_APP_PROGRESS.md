@@ -98,19 +98,25 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
 
 - [x] Workout module exists.
 - [x] Workout graph exists.
-- [x] Workout tab is intentionally kept as a simple placeholder.
+- [x] Workout graph now exposes typed Home and History destinations.
 - [x] Planned product/UX target and staged delivery order are documented in `WORKOUT_PRODUCT_BLUEPRINT.md`.
 - [x] Shared Workout contract v2 defines versioned exercise, media, routine, session, set, timer, and mutation models.
 - [x] `ExerciseMediaResolver` implements approved exact -> neutral -> placeholder resolution without male/female cross-fallback.
 - [x] `WorkoutReducer` implements deterministic start, exercise, set, timer, finish, and discard transitions with rejection reasons.
 - [x] Phone Room database v1 persists the engine-state snapshot, completed-session history, catalog/routine JSON records, and mutation outbox in `apps/app`.
 - [x] `RoomWorkoutRepository` applies reducer output and snapshot/outbox writes inside one Room transaction with mutation-ID and origin-sequence guards.
-- [x] File-backed Robolectric recovery tests prove active-session/set recovery, idempotency, ordering, terminal history behavior, and rollback (6 tests, 0 failures).
+- [x] File-backed Robolectric recovery tests prove active-session/set recovery, persisted next-sequence recovery, idempotency, ordering, terminal history behavior, and rollback (7 tests, 0 failures).
 - [x] Full shared/Phone/Wear validation gate passed on 2026-07-17 for `:shared:test :app:testDebugUnitTest :app:compileDebugKotlin :wear:compileDebugKotlin`.
-- [ ] Workout redesign and real production screens are not implemented yet.
-- [ ] Workout feature UI is not yet wired to the repository-backed runtime.
+- [x] Stage 3 Phone UI follows `Route + Screen + ViewModel + UiState + Action -> Coordinator -> WorkoutRepository`.
+- [x] The thin offline flow starts a blank workout, adds one first-party starter exercise, completes one reps-based set, finishes once, and renders Room-backed history.
+- [x] Coordinator and ViewModel tests cover ordered mutation sequencing across sessions, invalid input, restored UI state, and repeated-finish idempotency (7 tests, 0 failures).
+- [x] Workout and its reused core Button, Input, Card, and Header consumers resolve visual state through `TnyxTheme` component/semantic tokens without feature-local hardcoded colors, dimensions, alpha values, or typography overrides.
+- [x] Workout source now has additive exercise tracking types/snapshots and a feature-owned reusable exercise editor with keyed multiple-exercise, set, and metric UI state; Active mode is wired while Routine-edit and Read-only consumers remain future work.
+- [x] Active Workout now uses a dense full-width set table with tracking-type columns, add-set, latest completed-session `Previous` mapping/copy, and an RPE 5-10 selector for strength/reps exercises.
+- [ ] Corrected reusable-editor feature tests/compile and the full Phone/Wear gate remain pending because the local rerun was blocked by the Codex Gradle-cache usage limit.
+- [ ] Exercise catalog/media, routine builder, notes, live rest timer, advanced set types, reordering, and device UX smoke are not implemented yet.
 
-Boundary note: shared contracts and Phone persistence/recovery are implemented, but Phone UI consumption, approved media catalog integration, Settings UI, remote outbox delivery, and real Wear sync remain unimplemented. The blueprint allows a Tio-owned visual UI while preserving the approved Lyfta-derived core UX behavior.
+Boundary note: shared contracts, Phone persistence/recovery, and the first repository-backed Phone UI slice are implemented. Approved media catalog integration, routine building, advanced session UX, Settings UI, remote outbox delivery, and real Wear sync remain unimplemented. The blueprint allows a Tio-owned visual UI while preserving the approved Lyfta-derived core UX behavior.
 
 ### Profile
 
@@ -196,7 +202,7 @@ Rule: Future module folders should be created only when runtime code needs them.
 - `apps/shared`: pure Kotlin shared domain contracts.
 - `apps/features/auth`: Auth graph skeleton.
 - `apps/features/onboarding`: Splash/welcome/onboarding foundation.
-- `apps/features/workout`: Simple Workout placeholder graph.
+- `apps/features/workout`: Typed Workout graph, Stage 3 offline coordinator, Phone UI, and focused tests.
 - `apps/features/nutrition`: Nutrition diary/editor screens.
 - `apps/features/profile`: Profile launcher skeleton.
 - `apps/features/settings`: Settings config skeleton.
@@ -220,6 +226,14 @@ Rule: Future module folders should be created only when runtime code needs them.
 - [x] Result: BUILD SUCCESSFUL
 - [x] Scope: Phone Room persistence v1, `RoomWorkoutRepository`, shared reducer compatibility, recovery tests, Phone compile compatibility, and Wear compile compatibility
 
+### 2026-07-18: Workout Stage 3 local validation gate
+
+- [x] `./gradlew.bat :shared:test :features:workout:testDebugUnitTest :app:testDebugUnitTest :app:compileDebugKotlin :wear:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL
+- [x] Workout feature result: 7 tests, 0 failures, 0 errors, 0 skipped
+- [x] Scope: typed Workout navigation, repository-backed coordinator, thin offline Phone UI, restored UI state, finish idempotency, theme/component-token compliance, shared compatibility, Phone tests/compile, and Wear compile
+- [ ] Device/emulator force-stop and relaunch UX smoke remains a review action
+
 ### Previous validation
 
 - [x] `./gradlew.bat :app:compileDebugKotlin`
@@ -232,5 +246,5 @@ Known warning:
 
 ---
 
-**Last Updated:** 2026-07-17
-**Current Focus:** Workout Stage 2 exit criteria now pass on the current Android branch and the work is review-ready. The next implementation gate is Workout Stage 3: the first thin offline vertical slice (`Start blank workout -> add one exercise -> complete one set -> finish -> open history -> restart app and verify recovery`).
+**Last Updated:** 2026-07-18
+**Current Focus:** Re-prove the dense Stage 3 editor compile/tests, then complete device smoke for RPE, add-set, Previous copy, history, and force-stop recovery before Stage 4 exercise catalog and approved media work begins.

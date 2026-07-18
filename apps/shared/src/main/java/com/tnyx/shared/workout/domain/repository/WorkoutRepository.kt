@@ -4,6 +4,7 @@ import com.tnyx.shared.workout.domain.logic.WorkoutMutationRejection
 import com.tnyx.shared.workout.domain.model.ExerciseDefinition
 import com.tnyx.shared.workout.domain.model.WorkoutEngineState
 import com.tnyx.shared.workout.domain.model.WorkoutMutation
+import com.tnyx.shared.workout.domain.model.WorkoutMutationOrigin
 import com.tnyx.shared.workout.domain.model.WorkoutRoutine
 import com.tnyx.shared.workout.domain.model.WorkoutSession
 import kotlinx.coroutines.flow.Flow
@@ -36,6 +37,12 @@ interface WorkoutRepository {
     suspend fun getRoutineById(id: String): WorkoutRoutine?
 
     fun observeEngineState(): Flow<WorkoutEngineState>
+
+    /** Return the next durable sequence for one mutation origin/device pair. */
+    suspend fun nextMutationSequence(
+        origin: WorkoutMutationOrigin,
+        originDeviceId: String
+    ): Long
 
     /** Apply once and persist the state snapshot plus outgoing mutation atomically. */
     suspend fun applyMutation(mutation: WorkoutMutation): WorkoutMutationApplyResult

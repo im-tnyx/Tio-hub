@@ -476,7 +476,12 @@ object WorkoutReducer {
 
     private fun WorkoutSet.isValidSet(): Boolean {
         if (schemaVersion != WORKOUT_CONTRACT_VERSION || id.isBlank() || exerciseEntryId.isBlank()) return false
-        if (setNumber <= 0 || reps?.let { it < 0 } == true || durationSeconds?.let { it < 0 } == true) return false
+        if (
+            setNumber <= 0 ||
+            reps?.let { it < 0 } == true ||
+            steps?.let { it < 0 } == true ||
+            durationSeconds?.let { it < 0 } == true
+        ) return false
         if (weightKg?.let { !it.isFinite() || it < 0.0 } == true) return false
         if (distanceMeters?.let { !it.isFinite() || it < 0.0 } == true) return false
         if (rpe?.let { it !in 1..10 } == true) return false

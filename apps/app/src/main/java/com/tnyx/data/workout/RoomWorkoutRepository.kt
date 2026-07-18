@@ -9,6 +9,7 @@ import com.tnyx.shared.workout.domain.logic.WorkoutReductionResult
 import com.tnyx.shared.workout.domain.model.ExerciseDefinition
 import com.tnyx.shared.workout.domain.model.WorkoutEngineState
 import com.tnyx.shared.workout.domain.model.WorkoutMutation
+import com.tnyx.shared.workout.domain.model.WorkoutMutationOrigin
 import com.tnyx.shared.workout.domain.model.WorkoutRoutine
 import com.tnyx.shared.workout.domain.model.WorkoutSession
 import com.tnyx.shared.workout.domain.model.WorkoutSessionStatus
@@ -43,6 +44,18 @@ class RoomWorkoutRepository(
         dao.observeEngineState()
             .map { entity -> entity?.let { codec.decodeEngineState(it.stateJson) } ?: WorkoutEngineState() }
             .distinctUntilChanged()
+
+    override suspend fun nextMutationSequence(
+        origin: WorkoutMutationOrigin,
+        originDeviceId: String
+    ): Long {
+        val latest = dao.getLatestOriginSequence(
+            origin = origin.name,
+            originDeviceId = originDeviceId
+        ) ?: return 0L
+        check(latest < Long.MAX_VALUE) { "Workout mutation sequence exhausted" }
+        return latest + 1L
+    }
 
     override suspend fun applyMutation(mutation: WorkoutMutation): WorkoutMutationApplyResult =
         database.withTransaction {

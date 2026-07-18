@@ -47,6 +47,8 @@ object TnyxDimens {
     val InputHeight = 56.dp
     val TabSwitcherHeight = 48.dp
     val HeaderGradientHeight = 96.dp
+    val ScreenHeaderHeight = 44.dp
+    val ScreenHeaderActionSize = 48.dp
 
     // Component Internals
     val TabIndicatorPadding = 4.dp

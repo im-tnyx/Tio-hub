@@ -52,7 +52,7 @@ fun TnyxTextField(
     val isFocused by interactionSource.collectIsFocusedAsState()
 
     val textColor = when {
-        !enabled -> tokens.textColor.copy(alpha = 0.38f)
+        !enabled -> tokens.disabledTextColor
         isError -> TnyxTheme.colors.error
         isFocused -> TnyxTheme.colors.textPrimary
         else -> TnyxTheme.colors.textSecondary
@@ -63,21 +63,21 @@ fun TnyxTextField(
     val colors = OutlinedTextFieldDefaults.colors(
         focusedContainerColor = tokens.containerColor,
         unfocusedContainerColor = tokens.containerColor,
-        disabledContainerColor = tokens.containerColor.copy(alpha = 0.38f),
+        disabledContainerColor = tokens.disabledContainerColor,
         errorContainerColor = tokens.containerColor,
         focusedBorderColor = indicatorColor,
         unfocusedBorderColor = if (isError) tokens.errorIndicatorColor else tokens.unfocusedIndicatorColor,
-        disabledBorderColor = tokens.unfocusedIndicatorColor.copy(alpha = 0.38f),
+        disabledBorderColor = tokens.disabledBorderColor,
         errorBorderColor = tokens.errorIndicatorColor,
         cursorColor = TnyxTheme.colors.primary,
         errorCursorColor = tokens.errorIndicatorColor,
         focusedTextColor = TnyxTheme.colors.textPrimary,
         unfocusedTextColor = TnyxTheme.colors.textPrimary,
-        disabledTextColor = TnyxTheme.colors.textPrimary.copy(alpha = 0.38f),
+        disabledTextColor = tokens.disabledTextColor,
         errorTextColor = TnyxTheme.colors.error,
         focusedPlaceholderColor = tokens.placeholderColor,
         unfocusedPlaceholderColor = tokens.placeholderColor,
-        disabledPlaceholderColor = tokens.placeholderColor.copy(alpha = 0.38f),
+        disabledPlaceholderColor = tokens.disabledPlaceholderColor,
         errorPlaceholderColor = tokens.placeholderColor,
         focusedLabelColor = TnyxTheme.colors.primary,
         unfocusedLabelColor = TnyxTheme.colors.textSecondary,

@@ -575,14 +575,14 @@ Current behavior:
 
 - `MainBottomNav` canonical 5 primary tabs render karta hai: `Home`, `Workout`, `Nutrition`, `Coach`, aur `Progress`.
 - Active tab route-derived `ShellUiState.selectedTab` se render hota hai.
-- Workout tab currently only opens the simple Workout placeholder graph.
+- Workout tab opens the feature-owned typed Home/History graph and Stage 3 offline slice.
 - Shell mein Workout-specific secondary nav, nested scroll hide/show, ya sub-tab state nahi hai.
 
 ### B. `TnyxShell.kt`
 
 - Shell app-level chrome own karta hai: content placement, optional top bar, and bottom nav.
 - Shell feature-specific cards, detail flows, repositories, ya Workout redesign logic own nahi karta.
-- Workout future screens `features/workout` ke graph mein add honge when product direction is ready.
+- Workout screens and their internal navigation remain owned by `features/workout`; Shell only selects the top-level tab.
 
 ### C. `ShellState.kt`
 
@@ -948,22 +948,26 @@ Rule: Feature-specific assets को common `res/` में dump न करे�
 
 ## 10. Workout Feature Structure (`:features:workout`)
 
-Workout feature abhi intentionally clean placeholder state mein hai. Koi secondary nav, cards, detail flow, ya production redesign runtime mein present nahi hai.
+Workout feature ka first repository-backed offline vertical slice runtime mein present hai. Full catalog, routine builder, advanced session engine UI, media, aur secondary navigation abhi present nahi hain.
 
 ```text
 features/workout
-└── navigation
-    └── WorkoutNavGraph.kt      # Simple Workout placeholder destination
+├── di                         # Coordinator/runtime bindings
+├── domain                     # WorkoutSessionCoordinator use-case boundary
+├── navigation                 # Typed Home and History destinations
+└── presentation               # Route, Screen, ViewModel, UiState, Action
 ```
 
 Current rule:
 
-- `WorkoutNavGraph` `MainRoute.WorkoutGraph` ko ek basic placeholder destination se wrap karta hai.
+- `WorkoutNavGraph` `MainRoute.WorkoutGraph` ke andar typed Home aur History destinations own karta hai.
+- `WorkoutViewModel` repository ko directly call nahi karta; commands aur combined recovery/history flow `WorkoutSessionCoordinator` se aate hain.
+- Compose screens `WorkoutUiState` render karti hain, `WorkoutAction` emit karti hain, aur existing `Tnyx*` components/theme tokens reuse karti hain.
 - Shell sirf top-level Workout tab select karta hai.
 - `WorkoutSubTab` / `WorkoutSubTabSelected` / Workout secondary nav runtime state nahi hai.
-- Future Workout redesign feature module ke andar add hoga after product direction is approved.
+- Starter `Bodyweight Squat` Stage 3 proof ke liye first-party feature-owned definition hai; yeh full exercise catalog ya third-party dataset claim nahi hai.
 
 *Maintained as Android architecture source guide for Tnyx.*
 
-**Last updated: 2026-07-16**
+**Last updated: 2026-07-18**
 

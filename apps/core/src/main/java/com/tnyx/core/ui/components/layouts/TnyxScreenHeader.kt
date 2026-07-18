@@ -10,9 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.tnyx.core.theme.TnyxTheme
 
 /**
@@ -24,18 +22,19 @@ fun TnyxScreenHeader(
     title: String,
     modifier: Modifier = Modifier,
     alpha: Float = 1f,
-    height: Dp = 44.dp,
+    height: Dp? = null,
     navigationIcon: ImageVector? = null,
     onNavigationClick: (() -> Unit)? = null,
     actions: @Composable (RowScope.() -> Unit)? = null
 ) {
+    val tokens = TnyxTheme.components.header
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(height)
+            .height(height ?: tokens.height)
             .graphicsLayer { this.alpha = alpha }
-            .background(TnyxTheme.colors.background)
-            .padding(horizontal = 8.dp), // Reduced padding for better alignment with icons
+            .background(tokens.containerColor)
+            .padding(horizontal = tokens.horizontalPadding),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -48,18 +47,17 @@ fun TnyxScreenHeader(
                     Icon(
                         imageVector = navigationIcon,
                         contentDescription = "Back",
-                        tint = TnyxTheme.colors.textPrimary
+                        tint = tokens.contentColor
                     )
                 }
             } else {
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(tokens.leadingSpacing))
             }
 
             Text(
                 text = title.uppercase(),
-                style = TnyxTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = TnyxTheme.colors.textPrimary
+                style = tokens.titleStyle,
+                color = tokens.contentColor
             )
         }
 
@@ -69,7 +67,7 @@ fun TnyxScreenHeader(
                 content = actions
             )
         } else {
-            Spacer(modifier = Modifier.size(48.dp))
+            Spacer(modifier = Modifier.size(tokens.actionPlaceholderSize))
         }
     }
 }

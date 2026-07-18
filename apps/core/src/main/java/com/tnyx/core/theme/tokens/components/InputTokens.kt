@@ -19,6 +19,10 @@ data class InputTokens(
     val errorIndicatorColor: Color,
     val textColor: Color,
     val placeholderColor: Color,
+    val disabledContainerColor: Color,
+    val disabledBorderColor: Color,
+    val disabledTextColor: Color,
+    val disabledPlaceholderColor: Color,
     val textStyle: TextStyle? = null
 )
 
@@ -31,5 +35,9 @@ val DefaultInputTokens = InputTokens(
     unfocusedIndicatorColor = TnyxPalette.Neutral200,
     errorIndicatorColor = TnyxPalette.Rose,
     textColor = TnyxPalette.Black,
-    placeholderColor = TnyxPalette.Neutral400
+    placeholderColor = TnyxPalette.Neutral400,
+    disabledContainerColor = TnyxPalette.Neutral100,
+    disabledBorderColor = TnyxPalette.Neutral200,
+    disabledTextColor = TnyxPalette.Neutral400,
+    disabledPlaceholderColor = TnyxPalette.Neutral400
 )

@@ -23,21 +23,21 @@ import com.tnyx.core.ui.shell.presentation.widgets.MainTopBar
 fun TnyxShell(
     state: ShellUiState,
     onAction: (ShellAction) -> Unit,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(TnyxTheme.colors.background)
+            .background(TnyxTheme.colors.background),
     ) {
         content()
 
         if (state.selectedTab == ShellTab.Home) {
             MainTopBar(
-                planTier = state.planTier,
+                avatar = state.avatar,
                 scrollOpacity = state.appBarOpacity,
                 onAction = onAction,
-                modifier = Modifier.align(Alignment.TopCenter)
+                modifier = Modifier.align(Alignment.TopCenter),
             )
         }
 
@@ -46,7 +46,7 @@ fun TnyxShell(
                 tabs = state.bottomTabs,
                 selectedTab = state.selectedTab,
                 onTabSelected = { onAction(ShellAction.TabSelected(it)) },
-                modifier = Modifier.align(Alignment.BottomCenter)
+                modifier = Modifier.align(Alignment.BottomCenter),
             )
         }
     }

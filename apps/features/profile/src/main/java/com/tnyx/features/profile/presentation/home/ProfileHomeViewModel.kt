@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class ProfileHomeViewModel @Inject constructor(
-    private val profileRepository: ProfileRepository
+    private val profileRepository: ProfileRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ProfileHomeUiState())
     val uiState = _uiState.asStateFlow()
@@ -35,6 +35,8 @@ class ProfileHomeViewModel @Inject constructor(
                                     formatStatus(profile.dob, profile.gender)
                                 },
                                 planLabel = profile.planLabel,
+                                avatarUrl = profile.avatarUrl,
+                                membershipTier = profile.membershipTier,
                                 streak = profile.streak,
                                 weight = profile.weight,
                                 bodyFat = profile.bodyFat,
@@ -45,7 +47,7 @@ class ProfileHomeViewModel @Inject constructor(
                                     name = profile.currentJourney.name,
                                     initialWeight = profile.currentJourney.initialWeight,
                                     targetWeight = profile.currentJourney.targetWeight,
-                                    progress = profile.currentJourney.progress
+                                    progress = profile.currentJourney.progress,
                                 ),
                                 progressPhotos = profile.progressPhotos,
                                 lastPhotoUpdateWeight = profile.lastPhotoUpdateWeight,
@@ -53,8 +55,8 @@ class ProfileHomeViewModel @Inject constructor(
                                 workoutChart = WorkoutChartState(
                                     durationMinutes = profile.workoutChart.durationMinutes,
                                     volumeKg = profile.workoutChart.volumeKg,
-                                    reps = profile.workoutChart.reps
-                                )
+                                    reps = profile.workoutChart.reps,
+                                ),
                             )
                         }
                     }

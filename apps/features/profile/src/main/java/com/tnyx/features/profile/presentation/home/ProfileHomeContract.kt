@@ -1,9 +1,13 @@
 package com.tnyx.features.profile.presentation.home
 
+import com.tnyx.shared.profile.domain.model.MembershipTier
+
 data class ProfileHomeUiState(
     val displayName: String = "",
     val status: String = "",
     val planLabel: String = "",
+    val avatarUrl: String? = null,
+    val membershipTier: MembershipTier = MembershipTier.Free,
     val streak: Int = 0,
     val weight: Double = 0.0,
     val bodyFat: Double = 0.0,
@@ -14,20 +18,20 @@ data class ProfileHomeUiState(
     val progressPhotos: List<String> = emptyList(),
     val lastPhotoUpdateWeight: String = "",
     val lastPhotoUpdateDate: String = "",
-    val workoutChart: WorkoutChartState = WorkoutChartState()
+    val workoutChart: WorkoutChartState = WorkoutChartState(),
 )
 
 data class CurrentJourneyState(
     val name: String = "",
     val initialWeight: Double = 0.0,
     val targetWeight: Double = 0.0,
-    val progress: Float = 0f
+    val progress: Float = 0f,
 )
 
 data class WorkoutChartState(
     val durationMinutes: List<Float> = emptyList(),
     val volumeKg: List<Float> = emptyList(),
-    val reps: List<Float> = emptyList()
+    val reps: List<Float> = emptyList(),
 )
 
 sealed interface ProfileHomeAction {

@@ -1,12 +1,13 @@
 package com.tnyx.features.settings.presentation.personal_info
 
 import com.tnyx.core.ui.components.inputs.Country
+import com.tnyx.shared.profile.domain.model.MembershipTier
 
 enum class DeleteAccountStep {
     Idle,
     Confirm,
     HoldToDelete,
-    Completed
+    Completed,
 }
 
 data class PersonalInfoUiState(
@@ -14,25 +15,22 @@ data class PersonalInfoUiState(
     val email: String = "",
     val phoneNumber: String = "",
     val selectedCountry: Country? = null,
-    val gender: String = "", // "Male" | "Female" | "Other"
+    val gender: String = "",
     val dobMillis: Long = 0L,
-    val heightUnit: String = "cm", // "cm" | "ft"
+    val heightUnit: String = "cm",
     val heightCm: String = "",
     val heightFeet: String = "5",
     val heightInches: String = "7",
     val avatarUrl: String? = null,
+    val membershipTier: MembershipTier = MembershipTier.Free,
     val isSaving: Boolean = false,
     val hasChanges: Boolean = false,
-    
-    // Overlays
     val showDobPicker: Boolean = false,
     val showHeightPopup: Boolean = false,
     val showCountryPicker: Boolean = false,
-    
-    // Delete Account Flow
     val deleteStep: DeleteAccountStep = DeleteAccountStep.Idle,
     val holdProgress: Float = 0f,
-    val remainingSeconds: Int = 5
+    val remainingSeconds: Int = 5,
 )
 
 sealed interface PersonalInfoAction {
@@ -53,8 +51,6 @@ sealed interface PersonalInfoAction {
     data class OnHeightInchesChange(val value: String) : PersonalInfoAction
     data object OnHeightEditClicked : PersonalInfoAction
     data object OnDismissOverlays : PersonalInfoAction
-    
-    // Delete Account Actions
     data object OnDeleteAccountClicked : PersonalInfoAction
     data object OnKeepAccountClicked : PersonalInfoAction
     data object OnConfirmDeleteClicked : PersonalInfoAction

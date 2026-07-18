@@ -35,6 +35,7 @@ fun MainScreen(
         TnyxNavigationActions(mainNavController)
     }
     val bottomTabs by viewModel.bottomTabs.collectAsState()
+    val avatar by viewModel.avatar.collectAsState()
 
     val navBackStackEntry by mainNavController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -70,6 +71,7 @@ fun MainScreen(
             selectedTab = selectedTab,
             bottomTabs = bottomTabs,
             isBottomNavVisible = isBottomNavVisible,
+            avatar = avatar,
         ),
         onAction = { action ->
             when (action) {

@@ -18,6 +18,6 @@ class TnyxUserAvatarTest {
     @Test
     fun `multiple names use first two initials`() {
         assertEquals("SJ", avatarInitials("Santosh Jangid"))
-        assertEquals("TS", avatarInitials("  tio   user  sample "))
+        assertEquals("TU", avatarInitials("  tio   user  sample "))
     }
 }

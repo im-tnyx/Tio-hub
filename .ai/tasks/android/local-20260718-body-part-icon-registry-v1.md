@@ -6,7 +6,7 @@ priority: high
 owner: android
 branch: codex/body-part-icon-registry-v1
 github_issue:
-github_pr:
+github_pr: 22
 platforms: [android]
 created: 2026-07-18
 updated: 2026-07-18

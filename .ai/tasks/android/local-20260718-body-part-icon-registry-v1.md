@@ -1,7 +1,7 @@
 ---
 task_id: local-20260718-body-part-icon-registry-v1
 title: Workout reusable body-part icon registry
-status: in_progress
+status: merged_review
 priority: high
 owner: android
 branch: codex/body-part-icon-registry-v1
@@ -97,7 +97,7 @@ release: body-part resource -> placeholder alias
 
 ## Next Action
 
-Run the focused Workout test/compile gate, then verify the editor header and all fourteen debug icons on light and dark Tio surfaces.
+PR #22 is merged. Carry the pending focused Workout compile/test gate and device light/dark preview into a dedicated validation follow-up.
 
 ## Canonical References
 

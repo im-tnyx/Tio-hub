@@ -27,6 +27,11 @@ android {
     buildFeatures {
         compose = true
     }
+    sourceSets {
+        getByName("debug") {
+            assets.srcDir("../../assets/final/musclemap")
+        }
+    }
 }
 
 dependencies {

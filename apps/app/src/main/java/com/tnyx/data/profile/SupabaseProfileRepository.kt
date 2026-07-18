@@ -6,10 +6,19 @@ import com.tnyx.shared.profile.domain.model.ProfileWorkoutChart
 import com.tnyx.shared.profile.domain.model.UserProfile
 import com.tnyx.shared.profile.domain.repository.ProfileRepository
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.storage.storage
+import io.ktor.http.ContentType
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
+
+private const val AVATAR_BUCKET = "profile-avatars"
+private const val AVATAR_FILE_NAME = "avatar.jpg"
 
 @Serializable
 data class ProfileDto(
@@ -42,12 +51,14 @@ class SupabaseProfileRepository(
     private val supabaseClient: SupabaseClient,
 ) : ProfileRepository {
 
-    override fun getCurrentProfile(): Flow<UserProfile> = flow {
-        val dto = supabaseClient.from("profiles").select {
-            limit(count = 1)
-        }.decodeSingle<ProfileDto>()
+    private val currentProfile = MutableStateFlow<UserProfile?>(null)
 
-        emit(dto.toDomain())
+    override fun getCurrentProfile(): Flow<UserProfile> = flow {
+        val currentUserId = currentUserId()
+        if (currentProfile.value?.id != currentUserId) {
+            currentProfile.value = getCurrentProfileDto(currentUserId).toDomain()
+        }
+        emitAll(currentProfile.filterNotNull())
     }
 
     override fun getProfile(userId: String): Flow<UserProfile> = flow {
@@ -61,6 +72,9 @@ class SupabaseProfileRepository(
     }
 
     override suspend fun updateProfile(profile: UserProfile) {
+        val currentUserId = currentUserId()
+        require(profile.id == currentUserId) { "Cannot update another user's profile" }
+
         supabaseClient.from("profiles").update(
             mapOf(
                 "display_name" to profile.displayName,
@@ -74,9 +88,80 @@ class SupabaseProfileRepository(
             ),
         ) {
             filter {
-                eq("id", profile.id)
+                eq("id", currentUserId)
             }
         }
+        currentProfile.value = profile
+    }
+
+    override suspend fun updateAvatar(jpegBytes: ByteArray): String {
+        require(jpegBytes.isNotEmpty()) { "Avatar image is empty" }
+
+        val currentUserId = currentUserId()
+        val profile = currentProfile.value
+            ?.takeIf { it.id == currentUserId }
+            ?: getCurrentProfileDto(currentUserId).toDomain()
+
+        val objectPath = avatarObjectPath(currentUserId)
+        val bucket = supabaseClient.storage.from(AVATAR_BUCKET)
+
+        bucket.upload(objectPath, jpegBytes) {
+            upsert = true
+            contentType = ContentType.Image.JPEG
+        }
+
+        val publicUrl = bucket.publicUrl(objectPath)
+        val cacheBustedUrl = "$publicUrl?v=${System.currentTimeMillis()}"
+
+        supabaseClient.from("profiles").update(
+            mapOf("avatar_url" to cacheBustedUrl),
+        ) {
+            filter {
+                eq("id", currentUserId)
+            }
+        }
+
+        currentProfile.value = profile.copy(avatarUrl = cacheBustedUrl)
+        return cacheBustedUrl
+    }
+
+    override suspend fun removeAvatar() {
+        val currentUserId = currentUserId()
+        val profile = currentProfile.value
+            ?.takeIf { it.id == currentUserId }
+            ?: getCurrentProfileDto(currentUserId).toDomain()
+
+        val objectPath = avatarObjectPath(currentUserId)
+        val bucket = supabaseClient.storage.from(AVATAR_BUCKET)
+
+        bucket.delete(objectPath)
+
+        supabaseClient.from("profiles").update(
+            mapOf<String, Any?>("avatar_url" to null),
+        ) {
+            filter {
+                eq("id", currentUserId)
+            }
+        }
+        currentProfile.value = profile.copy(avatarUrl = null)
+    }
+
+    private suspend fun getCurrentProfileDto(userId: String): ProfileDto {
+        return supabaseClient.from("profiles").select {
+            filter {
+                eq("id", userId)
+            }
+        }.decodeSingle()
+    }
+
+    private fun currentUserId(): String {
+        return requireNotNull(supabaseClient.auth.currentUserOrNull()?.id) {
+            "A signed-in user is required for profile access"
+        }
+    }
+
+    private fun avatarObjectPath(profileId: String): String {
+        return "$profileId/$AVATAR_FILE_NAME"
     }
 
     private fun ProfileDto.toDomain(): UserProfile {

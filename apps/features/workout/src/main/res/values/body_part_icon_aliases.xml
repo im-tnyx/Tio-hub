@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Release-safe aliases. Debug resources override these names with preview artwork. -->
+    <item name="tio_body_part_abs" type="drawable">@drawable/tio_body_part_placeholder</item>
+    <item name="tio_body_part_back" type="drawable">@drawable/tio_body_part_placeholder</item>
+    <item name="tio_body_part_biceps" type="drawable">@drawable/tio_body_part_placeholder</item>
+    <item name="tio_body_part_calves" type="drawable">@drawable/tio_body_part_placeholder</item>
+    <item name="tio_body_part_cardio" type="drawable">@drawable/tio_body_part_placeholder</item>
+    <item name="tio_body_part_chest" type="drawable">@drawable/tio_body_part_placeholder</item>
+    <item name="tio_body_part_forearms" type="drawable">@drawable/tio_body_part_placeholder</item>
+    <item name="tio_body_part_hamstrings" type="drawable">@drawable/tio_body_part_placeholder</item>
+    <item name="tio_body_part_hips" type="drawable">@drawable/tio_body_part_placeholder</item>
+    <item name="tio_body_part_neck" type="drawable">@drawable/tio_body_part_placeholder</item>
+    <item name="tio_body_part_quadriceps" type="drawable">@drawable/tio_body_part_placeholder</item>
+    <item name="tio_body_part_shoulders" type="drawable">@drawable/tio_body_part_placeholder</item>
+    <item name="tio_body_part_stretching" type="drawable">@drawable/tio_body_part_placeholder</item>
+    <item name="tio_body_part_triceps" type="drawable">@drawable/tio_body_part_placeholder</item>
+</resources>

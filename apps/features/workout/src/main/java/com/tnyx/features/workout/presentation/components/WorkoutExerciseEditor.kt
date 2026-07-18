@@ -18,7 +18,6 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.ExpandMore
-import androidx.compose.material.icons.rounded.FitnessCenter
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -39,6 +38,7 @@ import com.tnyx.features.workout.presentation.WorkoutExerciseUi
 import com.tnyx.features.workout.presentation.WorkoutMetricField
 import com.tnyx.features.workout.presentation.WorkoutMetricUi
 import com.tnyx.features.workout.presentation.WorkoutSetUi
+import com.tnyx.features.workout.presentation.components.bodypart.TioBodyPartIcon
 import com.tnyx.shared.workout.domain.model.ExerciseTrackingType
 import com.tnyx.shared.workout.domain.model.SetType
 
@@ -153,10 +153,10 @@ private fun ExerciseHeader(
             contentColor = TnyxTheme.colors.textSecondary,
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = Icons.Rounded.FitnessCenter,
+                TioBodyPartIcon(
+                    bodyPart = state.bodyPart,
                     contentDescription = null,
-                    modifier = Modifier.size(TnyxTheme.dimens.IconM),
+                    modifier = Modifier.size(TnyxTheme.dimens.IconL),
                 )
             }
         }

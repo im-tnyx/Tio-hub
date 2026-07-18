@@ -208,6 +208,7 @@ class WorkoutViewModel @Inject constructor(
 
     private fun WorkoutUiState.withDashboard(dashboard: WorkoutDashboard): WorkoutUiState {
         val activeSession = dashboard.engineState.session?.takeIf { it.isActive }
+        val exerciseDefinitionsById = dashboard.exerciseCatalog.associateBy { it.id }
         val mappedExercises = activeSession?.exercises.orEmpty().map { sessionExercise ->
             val currentExercise = exercises.firstOrNull { it.id == sessionExercise.id }
             val previousExercise = dashboard.history
@@ -228,6 +229,9 @@ class WorkoutViewModel @Inject constructor(
                 name = sessionExercise.exerciseNameSnapshot,
                 trackingType = sessionExercise.trackingTypeSnapshot,
                 restSeconds = sessionExercise.restSeconds,
+                bodyPart = exerciseDefinitionsById[sessionExercise.exerciseId]
+                    ?.primaryMuscleGroups
+                    ?.firstOrNull(),
                 sets = persistedSets.mapIndexed { index, persistedSet ->
                     val setNumber = persistedSet?.setNumber ?: index + 1
                     val existingSet = currentExercise?.sets?.firstOrNull { candidate ->

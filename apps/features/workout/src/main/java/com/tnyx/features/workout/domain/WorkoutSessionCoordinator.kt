@@ -2,6 +2,7 @@ package com.tnyx.features.workout.domain
 
 import com.tnyx.shared.workout.domain.logic.WorkoutMutationRejection
 import com.tnyx.shared.workout.domain.model.ExerciseAdded
+import com.tnyx.shared.workout.domain.model.ExerciseDefinition
 import com.tnyx.shared.workout.domain.model.ExerciseTrackingType
 import com.tnyx.shared.workout.domain.model.SessionFinished
 import com.tnyx.shared.workout.domain.model.SessionStarted
@@ -21,12 +22,14 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 data class WorkoutDashboard(
     val engineState: WorkoutEngineState,
     val history: List<WorkoutSession>,
+    val exerciseCatalog: List<ExerciseDefinition> = emptyList(),
 )
 
 enum class WorkoutInputError {
@@ -101,8 +104,18 @@ class DefaultWorkoutSessionCoordinator @Inject constructor(
     override fun observeDashboard(): Flow<WorkoutDashboard> = combine(
         repository.observeEngineState(),
         repository.observeSessionHistory(),
-    ) { engineState, history ->
-        WorkoutDashboard(engineState = engineState, history = history)
+        repository.observeExerciseCatalog().onStart { emit(emptyList()) },
+    ) { engineState, history, exerciseCatalog ->
+        val effectiveCatalog = if (exerciseCatalog.any { it.id == STARTER_EXERCISE_ID }) {
+            exerciseCatalog
+        } else {
+            listOf(STARTER_EXERCISE_DEFINITION) + exerciseCatalog
+        }
+        WorkoutDashboard(
+            engineState = engineState,
+            history = history,
+            exerciseCatalog = effectiveCatalog,
+        )
     }
 
     override suspend fun startBlankWorkout(): WorkoutCommandResult = mutationMutex.withLock {
@@ -326,6 +339,13 @@ class DefaultWorkoutSessionCoordinator @Inject constructor(
     companion object {
         const val STARTER_EXERCISE_ID = "tio.starter.bodyweight-squat.v1"
         const val STARTER_EXERCISE_NAME = "Bodyweight Squat"
+        private const val STARTER_PRIMARY_BODY_PART = "quadriceps"
+        private val STARTER_EXERCISE_DEFINITION = ExerciseDefinition(
+            id = STARTER_EXERCISE_ID,
+            name = STARTER_EXERCISE_NAME,
+            primaryMuscleGroups = listOf(STARTER_PRIMARY_BODY_PART),
+            trackingType = ExerciseTrackingType.BODYWEIGHT_REPS,
+        )
         private const val LOCAL_PHONE_ORIGIN_ID = "tio-local-phone"
         private const val SESSION_ID_PREFIX = "session"
         private const val EXERCISE_ENTRY_ID_PREFIX = "exercise-entry"

@@ -49,6 +49,7 @@ data class WorkoutExerciseUi(
     val trackingType: ExerciseTrackingType,
     val restSeconds: Int,
     val sets: List<WorkoutSetUi>,
+    val bodyPart: String? = null,
     val isExpanded: Boolean = true,
 )
 

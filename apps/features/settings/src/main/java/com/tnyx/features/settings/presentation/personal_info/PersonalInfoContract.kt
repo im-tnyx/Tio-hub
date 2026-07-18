@@ -40,6 +40,7 @@ sealed interface PersonalInfoAction {
     data object OnSaveClicked : PersonalInfoAction
     data object OnChangePhotoClicked : PersonalInfoAction
     data class OnAvatarBytesReady(val jpegBytes: ByteArray) : PersonalInfoAction
+    data object OnAvatarProcessingFailed : PersonalInfoAction
     data object OnRemovePhotoClicked : PersonalInfoAction
     data object OnDismissAvatarError : PersonalInfoAction
     data class OnFullNameChange(val name: String) : PersonalInfoAction

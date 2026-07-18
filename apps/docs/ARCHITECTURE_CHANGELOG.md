@@ -14,6 +14,9 @@ Do not use this file for ordinary feature changes, bug fixes, or copy edits.
 - Mapped completed Workout state to the semantic success color instead of the primary brand color.
 - Added additive `ExerciseTrackingType` and durable tracking snapshots so catalog, routine, and active-session presentation can select metric fields without branching on names or media.
 - Replaced the singular Workout presentation model with keyed exercise/set/metric UI state and a feature-owned `WorkoutExerciseEditor` supporting Active, Routine-edit, and Read-only policies; only Active mode is currently wired.
+- Replaced nested set cards with a dense tracking-type-aware table and kept the visual implementation feature-owned while reusing Tio theme tokens and core sheet/button primitives.
+- Derived `Previous` draft suggestions from completed Room history by stable exercise ID and set number; no duplicate previous-performance table or third-party dataset was introduced.
+- Reused the existing nullable set-level RPE contract for a 5-10 strength selector and kept duration/cardio layouts free of irrelevant RPE state.
 - Kept Workout editor semantics under `:features:workout`; it composes core Tnyx primitives rather than promoting domain components into `:core`.
 - Kept full catalog/media, routines, advanced workout execution, Wear runtime, remote outbox delivery, and cloud sync outside this slice.
 

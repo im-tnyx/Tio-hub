@@ -112,8 +112,9 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
 - [x] Coordinator and ViewModel tests cover ordered mutation sequencing across sessions, invalid input, restored UI state, and repeated-finish idempotency (7 tests, 0 failures).
 - [x] Workout and its reused core Button, Input, Card, and Header consumers resolve visual state through `TnyxTheme` component/semantic tokens without feature-local hardcoded colors, dimensions, alpha values, or typography overrides.
 - [x] Workout source now has additive exercise tracking types/snapshots and a feature-owned reusable exercise editor with keyed multiple-exercise, set, and metric UI state; Active mode is wired while Routine-edit and Read-only consumers remain future work.
+- [x] Active Workout now uses a dense full-width set table with tracking-type columns, add-set, latest completed-session `Previous` mapping/copy, and an RPE 5-10 selector for strength/reps exercises.
 - [ ] Corrected reusable-editor feature tests/compile and the full Phone/Wear gate remain pending because the local rerun was blocked by the Codex Gradle-cache usage limit.
-- [ ] Full Workout redesign, exercise catalog/media, routine builder, advanced active-session behavior, and device UX smoke are not implemented yet.
+- [ ] Exercise catalog/media, routine builder, notes, live rest timer, advanced set types, reordering, and device UX smoke are not implemented yet.
 
 Boundary note: shared contracts, Phone persistence/recovery, and the first repository-backed Phone UI slice are implemented. Approved media catalog integration, routine building, advanced session UX, Settings UI, remote outbox delivery, and real Wear sync remain unimplemented. The blueprint allows a Tio-owned visual UI while preserving the approved Lyfta-derived core UX behavior.
 
@@ -246,4 +247,4 @@ Known warning:
 ---
 
 **Last Updated:** 2026-07-18
-**Current Focus:** Workout Stage 3 code and local automated gates pass. Complete a device/emulator force-stop/relaunch UX smoke, then review the thin slice before Stage 4 exercise catalog and approved media work begins.
+**Current Focus:** Re-prove the dense Stage 3 editor compile/tests, then complete device smoke for RPE, add-set, Previous copy, history, and force-stop recovery before Stage 4 exercise catalog and approved media work begins.

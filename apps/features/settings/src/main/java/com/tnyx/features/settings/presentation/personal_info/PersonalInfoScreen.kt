@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.tnyx.core.theme.TnyxTheme
+import com.tnyx.core.ui.components.avatar.TnyxAvatarSize
+import com.tnyx.core.ui.components.avatar.TnyxUserAvatar
 import com.tnyx.core.ui.components.buttons.TnyxPrimaryButton
 import com.tnyx.core.ui.components.inputs.*
 import com.tnyx.core.ui.components.navigation.TnyxTabItem
@@ -38,7 +40,7 @@ import java.time.ZoneId
 fun PersonalInfoScreen(
     state: PersonalInfoUiState,
     onAction: (PersonalInfoAction) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val scrollState = rememberScrollState()
     var isSexExpanded by remember { mutableStateOf(false) }
@@ -51,26 +53,23 @@ fun PersonalInfoScreen(
                     .fillMaxWidth()
                     .statusBarsPadding(),
                 color = TnyxTheme.colors.background,
-                tonalElevation = 0.dp
+                tonalElevation = 0.dp,
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
                         .padding(horizontal = TnyxTheme.dimens.SpaceM),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-
-                    // 1. यहाँ से Surface और Border हटा दिया गया है
-                    // सिर्फ IconButton का इस्तेमाल किया गया है
                     IconButton(
-                        onClick = { onAction(PersonalInfoAction.OnBackClicked) }
+                        onClick = { onAction(PersonalInfoAction.OnBackClicked) },
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
                             tint = TnyxTheme.colors.textPrimary,
-                            modifier = Modifier.size(24.dp) // साइज़ 24.dp कर दिया है ताकि सही दिखे
+                            modifier = Modifier.size(24.dp),
                         )
                     }
 
@@ -78,27 +77,21 @@ fun PersonalInfoScreen(
 
                     Text(
                         text = "Personal Information",
-                        style = TnyxTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 20.sp),
+                        style = TnyxTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp,
+                        ),
                         color = TnyxTheme.colors.textPrimary,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
 
-                    // दाईं ओर वाला प्रोफाइल आइकन (इसे वैसे ही रखा है)
-                    Surface(
-                        modifier = Modifier.size(40.dp),
-                        shape = CircleShape,
-                        color = TnyxTheme.colors.surfaceVariant,
-                        border = BorderStroke(0.5.dp, TnyxTheme.colors.textPrimary.copy(alpha = 0.1f))
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null,
-                                tint = TnyxTheme.colors.textPrimary,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                    }
+                    TnyxUserAvatar(
+                        imageUrl = state.avatarUrl,
+                        displayName = state.fullName,
+                        membershipTier = state.membershipTier,
+                        size = TnyxAvatarSize.Small,
+                        onClick = { onAction(PersonalInfoAction.OnChangePhotoClicked) },
+                    )
                 }
             }
         },
@@ -109,13 +102,13 @@ fun PersonalInfoScreen(
                     .background(TnyxTheme.colors.background)
                     .navigationBarsPadding()
                     .padding(TnyxTheme.dimens.SpaceM),
-                verticalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceS)
+                verticalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceS),
             ) {
                 TnyxPrimaryButton(
                     text = if (state.isSaving) "Saving..." else "Save Changes",
                     onPressed = { onAction(PersonalInfoAction.OnSaveClicked) },
                     enabled = !state.isSaving && state.hasChanges,
-                    expand = true
+                    expand = true,
                 )
 
                 Button(
@@ -125,19 +118,19 @@ fun PersonalInfoScreen(
                         .height(TnyxTheme.components.button.height),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = TnyxTheme.colors.error.copy(alpha = 0.1f),
-                        contentColor = TnyxTheme.colors.error
+                        contentColor = TnyxTheme.colors.error,
                     ),
                     shape = TnyxTheme.shapes.Material.medium,
-                    border = BorderStroke(1.dp, TnyxTheme.colors.error.copy(alpha = 0.2f))
+                    border = BorderStroke(1.dp, TnyxTheme.colors.error.copy(alpha = 0.2f)),
                 ) {
                     Text(
                         text = "Delete Account",
-                        style = TnyxTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                        style = TnyxTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
                     )
                 }
             }
         },
-        containerColor = TnyxTheme.colors.background
+        containerColor = TnyxTheme.colors.background,
     ) { innerPadding ->
         Column(
             modifier = modifier
@@ -145,7 +138,7 @@ fun PersonalInfoScreen(
                 .padding(innerPadding)
                 .verticalScroll(scrollState)
                 .padding(horizontal = TnyxTheme.dimens.SpaceM),
-            verticalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceXL)
+            verticalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceXL),
         ) {
             Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
 
@@ -153,13 +146,13 @@ fun PersonalInfoScreen(
                 label = "FULL NAME",
                 value = state.fullName,
                 onValueChange = { onAction(PersonalInfoAction.OnFullNameChange(it)) },
-                icon = Icons.Default.Person
+                icon = Icons.Default.Person,
             )
 
             ReadOnlyField(
                 label = "EMAIL",
                 value = state.email.ifBlank { "Not provided" },
-                icon = Icons.Default.Email
+                icon = Icons.Default.Email,
             )
 
             Column {
@@ -167,12 +160,12 @@ fun PersonalInfoScreen(
                     text = "MOBILE NUMBER",
                     style = TnyxTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
-                    color = TnyxTheme.colors.textMuted
+                    color = TnyxTheme.colors.textMuted,
                 )
                 Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     state.selectedCountry?.let { country ->
                         Box(
@@ -180,7 +173,7 @@ fun PersonalInfoScreen(
                                 .height(TnyxTheme.components.input.height)
                                 .clickable { onAction(PersonalInfoAction.OnCountryPickerClicked) }
                                 .padding(end = TnyxTheme.dimens.SpaceS),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(text = country.flag, fontSize = 22.sp)
@@ -189,7 +182,7 @@ fun PersonalInfoScreen(
                                     text = country.code,
                                     style = TnyxTheme.typography.bodyLarge,
                                     color = TnyxTheme.colors.textPrimary,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.SemiBold,
                                 )
                             }
                         }
@@ -201,7 +194,7 @@ fun PersonalInfoScreen(
                         placeholder = { Text("Enter phone number") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                         singleLine = true,
-                        label = null
+                        label = null,
                     )
                 }
             }
@@ -210,7 +203,7 @@ fun PersonalInfoScreen(
                 label = "DATE OF BIRTH",
                 value = state.dobMillis.toDisplayDate().ifBlank { "Select Date" },
                 icon = Icons.Default.CalendarMonth,
-                onClick = { onAction(PersonalInfoAction.OnDobClicked) }
+                onClick = { onAction(PersonalInfoAction.OnDobClicked) },
             )
 
             Column {
@@ -218,7 +211,7 @@ fun PersonalInfoScreen(
                     text = "BIOLOGICAL SEX",
                     style = TnyxTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
-                    color = TnyxTheme.colors.textMuted
+                    color = TnyxTheme.colors.textMuted,
                 )
                 Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
                 Box(modifier = Modifier.fillMaxWidth()) {
@@ -226,25 +219,38 @@ fun PersonalInfoScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(TnyxTheme.shapes.Material.medium)
-                            .background(TnyxTheme.colors.surfaceVariant) // Alpha हटाया
+                            .background(TnyxTheme.colors.surfaceVariant)
                             .clickable { isSexExpanded = true }
                             .padding(TnyxTheme.dimens.SpaceM),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Icon(Icons.Default.Person, null, tint = TnyxTheme.colors.textMuted, modifier = Modifier.size(20.dp))
+                        Icon(
+                            Icons.Default.Person,
+                            null,
+                            tint = TnyxTheme.colors.textMuted,
+                            modifier = Modifier.size(20.dp),
+                        )
                         Spacer(modifier = Modifier.width(TnyxTheme.dimens.SpaceM))
                         Text(
                             text = state.gender.ifBlank { "Select Gender" },
-                            color = if (state.gender.isBlank()) TnyxTheme.colors.textMuted else TnyxTheme.colors.textPrimary,
+                            color = if (state.gender.isBlank()) {
+                                TnyxTheme.colors.textMuted
+                            } else {
+                                TnyxTheme.colors.textPrimary
+                            },
                             style = TnyxTheme.typography.bodyLarge,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
                         )
-                        Icon(Icons.Default.ArrowDropDown, null, tint = TnyxTheme.colors.textMuted)
+                        Icon(
+                            Icons.Default.ArrowDropDown,
+                            null,
+                            tint = TnyxTheme.colors.textMuted,
+                        )
                     }
                     DropdownMenu(
                         expanded = isSexExpanded,
                         onDismissRequest = { isSexExpanded = false },
-                        modifier = Modifier.background(TnyxTheme.colors.surfaceRaised) // ड्रॉपडाउन के लिए surfaceRaised
+                        modifier = Modifier.background(TnyxTheme.colors.surfaceRaised),
                     ) {
                         sexOptions.forEach { option ->
                             DropdownMenuItem(
@@ -252,7 +258,7 @@ fun PersonalInfoScreen(
                                 onClick = {
                                     onAction(PersonalInfoAction.OnGenderChange(option))
                                     isSexExpanded = false
-                                }
+                                },
                             )
                         }
                     }
@@ -265,14 +271,13 @@ fun PersonalInfoScreen(
                 heightFeetText = state.heightFeet,
                 heightInchesText = state.heightInches,
                 onUnitToggle = { onAction(PersonalInfoAction.OnHeightUnitChange(it)) },
-                onEditClick = { onAction(PersonalInfoAction.OnHeightEditClicked) }
+                onEditClick = { onAction(PersonalInfoAction.OnHeightEditClicked) },
             )
 
             Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceXL))
         }
     }
 
-    // --- Overlays ---
     DeleteAccountOverlays(state = state, onAction = onAction)
 
     if (state.showDobPicker) {
@@ -290,10 +295,13 @@ fun PersonalInfoScreen(
             initialDate = initialDate,
             onDismiss = { onAction(PersonalInfoAction.OnDismissOverlays) },
             onConfirm = { selectedDate ->
-                val millis = selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                val millis = selectedDate
+                    .atStartOfDay(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
                 onAction(PersonalInfoAction.OnDobChange(millis))
                 onAction(PersonalInfoAction.OnDismissOverlays)
-            }
+            },
         )
     }
 
@@ -308,14 +316,14 @@ fun PersonalInfoScreen(
             onHeightFeetChange = { onAction(PersonalInfoAction.OnHeightFeetChange(it)) },
             onHeightInchesChange = { onAction(PersonalInfoAction.OnHeightInchesChange(it)) },
             onDismiss = { onAction(PersonalInfoAction.OnDismissOverlays) },
-            onSave = { onAction(PersonalInfoAction.OnDismissOverlays) }
+            onSave = { onAction(PersonalInfoAction.OnDismissOverlays) },
         )
     }
 
     if (state.showCountryPicker) {
         TnyxCountryPickerSheet(
             onDismiss = { onAction(PersonalInfoAction.OnDismissOverlays) },
-            onCountrySelected = { onAction(PersonalInfoAction.OnCountrySelected(it)) }
+            onCountrySelected = { onAction(PersonalInfoAction.OnCountrySelected(it)) },
         )
     }
 }
@@ -327,40 +335,44 @@ private fun HeightSection(
     heightFeetText: String,
     heightInchesText: String,
     onUnitToggle: (String) -> Unit,
-    onEditClick: () -> Unit
+    onEditClick: () -> Unit,
 ) {
     Column {
         Text(
             text = "HEIGHT",
             style = TnyxTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
-            color = TnyxTheme.colors.textMuted
+            color = TnyxTheme.colors.textMuted,
         )
         Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
         val heightTabs = remember {
             listOf(
                 TnyxTabItem("cm", Icons.Default.Straighten, "cm"),
-                TnyxTabItem("ft", Icons.Default.Height, "ft")
+                TnyxTabItem("ft", Icons.Default.Height, "ft"),
             )
         }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceM)
+            horizontalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceM),
         ) {
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .clip(TnyxTheme.shapes.Material.medium)
-                    .background(TnyxTheme.colors.surfaceVariant) // Alpha हटाया
+                    .background(TnyxTheme.colors.surfaceVariant)
                     .clickable { onEditClick() }
-                    .padding(TnyxTheme.dimens.SpaceM)
+                    .padding(TnyxTheme.dimens.SpaceM),
             ) {
                 Text(
-                    text = if (heightUnit == "cm") heightCmText.ifBlank { "---" } else formatFeetInches(heightFeetText, heightInchesText),
+                    text = if (heightUnit == "cm") {
+                        heightCmText.ifBlank { "---" }
+                    } else {
+                        formatFeetInches(heightFeetText, heightInchesText)
+                    },
                     color = TnyxTheme.colors.textPrimary,
-                    style = TnyxTheme.typography.bodyLarge
+                    style = TnyxTheme.typography.bodyLarge,
                 )
             }
 
@@ -368,13 +380,12 @@ private fun HeightSection(
                 tabs = heightTabs,
                 selectedValue = heightUnit,
                 onTabSelected = onUnitToggle,
-                modifier = Modifier.width(140.dp)
+                modifier = Modifier.width(140.dp),
             )
         }
     }
 }
 
-// 🛠️ यहाँ मुख्य सुधार किया गया है (कीबोर्ड और नेविगेशन बार के लिए)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HeightEditPopup(
@@ -387,31 +398,29 @@ private fun HeightEditPopup(
     onHeightFeetChange: (String) -> Unit,
     onHeightInchesChange: (String) -> Unit,
     onDismiss: () -> Unit,
-    onSave: () -> Unit
+    onSave: () -> Unit,
 ) {
-    // यह बॉटम शीट की स्टेट को मैनेज करेगा और इसे आधी खुली रहने से रोकेगा
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = TnyxTheme.colors.surfaceRaised, // बैकग्राउंड कलर
+        containerColor = TnyxTheme.colors.surfaceRaised,
         shape = TnyxTheme.shapes.Material.large,
-        // BottomSheet डिफ़ॉल्ट रूप से सिस्टम बार्स को काफी अच्छे से हैंडल करता है
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = TnyxTheme.dimens.SpaceM)
                 .padding(bottom = TnyxTheme.dimens.SpaceXL)
-                .navigationBarsPadding() // नेविगेशन बटन से बचाएगा
-                .imePadding() // कीबोर्ड के साथ एकदम परफेक्ट तरीके से ऊपर जाएगा
+                .navigationBarsPadding()
+                .imePadding(),
         ) {
             Text(
                 text = "Edit Height",
                 style = TnyxTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = TnyxTheme.colors.textPrimary
+                color = TnyxTheme.colors.textPrimary,
             )
 
             Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceXL))
@@ -421,86 +430,163 @@ private fun HeightEditPopup(
                     value = heightCmText,
                     onValueChange = onHeightCmChange,
                     label = null,
-                    trailingIcon = { Text("cm", style = TnyxTheme.typography.bodyMedium, color = TnyxTheme.colors.textSecondary) },
+                    trailingIcon = {
+                        Text(
+                            "cm",
+                            style = TnyxTheme.typography.bodyMedium,
+                            color = TnyxTheme.colors.textSecondary,
+                        )
+                    },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             } else {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceM)
+                    horizontalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceM),
                 ) {
                     TnyxTextField(
                         value = heightFeetText,
                         onValueChange = onHeightFeetChange,
                         label = null,
-                        trailingIcon = { Text("ft", style = TnyxTheme.typography.bodyMedium, color = TnyxTheme.colors.textSecondary) },
+                        trailingIcon = {
+                            Text(
+                                "ft",
+                                style = TnyxTheme.typography.bodyMedium,
+                                color = TnyxTheme.colors.textSecondary,
+                            )
+                        },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                     TnyxTextField(
                         value = heightInchesText,
                         onValueChange = onHeightInchesChange,
                         label = null,
-                        trailingIcon = { Text("in", style = TnyxTheme.typography.bodyMedium, color = TnyxTheme.colors.textSecondary) },
+                        trailingIcon = {
+                            Text(
+                                "in",
+                                style = TnyxTheme.typography.bodyMedium,
+                                color = TnyxTheme.colors.textSecondary,
+                            )
+                        },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceXL))
 
-            TnyxPrimaryButton(text = "Confirm", onPressed = onSave, expand = true)
+            TnyxPrimaryButton(
+                text = "Confirm",
+                onPressed = onSave,
+                expand = true,
+                enabled = !isSaving,
+            )
         }
-    }
-}
-@Composable
-private fun PersonalInfoField(label: String, value: String, onValueChange: (String) -> Unit, icon: ImageVector) {
-    Column {
-        Text(label, style = TnyxTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = TnyxTheme.colors.textMuted)
-        Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
-        TnyxTextField(value, onValueChange, leadingIcon = { Icon(icon, null, modifier = Modifier.size(20.dp)) }, modifier = Modifier.fillMaxWidth(), label = null)
     }
 }
 
 @Composable
-private fun ReadOnlyField(label: String, value: String, icon: ImageVector) {
+private fun PersonalInfoField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    icon: ImageVector,
+) {
     Column {
-        Text(label, style = TnyxTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = TnyxTheme.colors.textMuted)
+        Text(
+            label,
+            style = TnyxTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = TnyxTheme.colors.textMuted,
+        )
+        Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
+        TnyxTextField(
+            value,
+            onValueChange,
+            leadingIcon = { Icon(icon, null, modifier = Modifier.size(20.dp)) },
+            modifier = Modifier.fillMaxWidth(),
+            label = null,
+        )
+    }
+}
+
+@Composable
+private fun ReadOnlyField(
+    label: String,
+    value: String,
+    icon: ImageVector,
+) {
+    Column {
+        Text(
+            label,
+            style = TnyxTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = TnyxTheme.colors.textMuted,
+        )
         Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(TnyxTheme.shapes.Material.medium)
-                .background(TnyxTheme.colors.surfaceVariant) // Alpha हटाया
+                .background(TnyxTheme.colors.surfaceVariant)
                 .padding(TnyxTheme.dimens.SpaceM),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(icon, null, tint = TnyxTheme.colors.textMuted, modifier = Modifier.size(20.dp))
+            Icon(
+                icon,
+                null,
+                tint = TnyxTheme.colors.textMuted,
+                modifier = Modifier.size(20.dp),
+            )
             Spacer(modifier = Modifier.width(TnyxTheme.dimens.SpaceM))
-            Text(value, style = TnyxTheme.typography.bodyLarge, color = TnyxTheme.colors.textMuted)
+            Text(
+                value,
+                style = TnyxTheme.typography.bodyLarge,
+                color = TnyxTheme.colors.textMuted,
+            )
         }
     }
 }
 
 @Composable
-private fun ClickableField(label: String, value: String, icon: ImageVector, onClick: () -> Unit) {
+private fun ClickableField(
+    label: String,
+    value: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+) {
     Column {
-        Text(label, style = TnyxTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = TnyxTheme.colors.textMuted)
+        Text(
+            label,
+            style = TnyxTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = TnyxTheme.colors.textMuted,
+        )
         Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(TnyxTheme.shapes.Material.medium)
-                .background(TnyxTheme.colors.surfaceVariant) // Alpha हटाया
+                .background(TnyxTheme.colors.surfaceVariant)
                 .clickable(onClick = onClick)
                 .padding(TnyxTheme.dimens.SpaceM),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(icon, null, tint = TnyxTheme.colors.textMuted, modifier = Modifier.size(20.dp))
+            Icon(
+                icon,
+                null,
+                tint = TnyxTheme.colors.textMuted,
+                modifier = Modifier.size(20.dp),
+            )
             Spacer(modifier = Modifier.width(TnyxTheme.dimens.SpaceM))
-            Text(value, style = TnyxTheme.typography.bodyLarge, color = TnyxTheme.colors.textPrimary)
+            Text(
+                value,
+                style = TnyxTheme.typography.bodyLarge,
+                color = TnyxTheme.colors.textPrimary,
+            )
         }
     }
 }

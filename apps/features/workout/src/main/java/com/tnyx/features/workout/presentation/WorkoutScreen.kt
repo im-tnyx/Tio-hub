@@ -31,6 +31,7 @@ import com.tnyx.core.ui.components.cards.TnyxCardVariant
 import com.tnyx.core.ui.components.layouts.TnyxScreenHeader
 import com.tnyx.features.workout.presentation.components.ExerciseEditorMode
 import com.tnyx.features.workout.presentation.components.WorkoutExerciseEditor
+import com.tnyx.features.workout.presentation.components.WorkoutRpeBottomSheet
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -90,6 +91,12 @@ fun WorkoutScreen(
             }
         }
     }
+
+    WorkoutRpeBottomSheet(
+        state = state.rpePicker,
+        onDismiss = { onAction(WorkoutAction.RpeDismissed) },
+        onSelected = { onAction(WorkoutAction.RpeSelected(it)) },
+    )
 }
 
 @Composable
@@ -245,6 +252,22 @@ private fun ActiveWorkoutContent(
                     ),
                 )
             },
+            onPreviousSet = { setId ->
+                onAction(
+                    WorkoutAction.PreviousSetClicked(
+                        exerciseEntryId = exercise.id,
+                        setId = setId,
+                    ),
+                )
+            },
+            onRpeClick = { setId ->
+                onAction(
+                    WorkoutAction.RpeClicked(
+                        exerciseEntryId = exercise.id,
+                        setId = setId,
+                    ),
+                )
+            },
             onCompleteSet = { setId ->
                 onAction(
                     WorkoutAction.CompleteSetClicked(
@@ -253,7 +276,9 @@ private fun ActiveWorkoutContent(
                     ),
                 )
             },
-            errorMessage = state.errorMessage,
+            onAddSet = {
+                onAction(WorkoutAction.AddSetClicked(exercise.id))
+            },
         )
     }
 

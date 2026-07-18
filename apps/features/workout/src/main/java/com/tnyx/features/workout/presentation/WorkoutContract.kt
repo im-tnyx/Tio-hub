@@ -10,6 +10,7 @@ enum class WorkoutMetricField {
     DURATION,
     DISTANCE,
     STEPS,
+    RPE,
 }
 
 @Immutable
@@ -26,8 +27,19 @@ data class WorkoutSetUi(
     val setNumber: Int,
     val type: SetType,
     val metrics: List<WorkoutMetricUi>,
+    val rpeValue: String = "",
+    val previousRpe: String? = null,
+    val previousSummary: String? = null,
     val isCompleted: Boolean,
     val completedSummary: String? = null,
+)
+
+@Immutable
+data class WorkoutRpePickerUi(
+    val exerciseEntryId: String,
+    val setId: String?,
+    val setNumber: Int,
+    val selectedRpe: Int?,
 )
 
 @Immutable
@@ -58,6 +70,7 @@ data class WorkoutUiState(
     val activeStartedAtMs: Long? = null,
     val exercises: List<WorkoutExerciseUi> = emptyList(),
     val history: List<WorkoutHistoryItemUi> = emptyList(),
+    val rpePicker: WorkoutRpePickerUi? = null,
     val errorMessage: String? = null,
 ) {
     val hasActiveSession: Boolean
@@ -74,6 +87,7 @@ data class WorkoutUiState(
 sealed interface WorkoutAction {
     data object StartBlankWorkoutClicked : WorkoutAction
     data object AddStarterExerciseClicked : WorkoutAction
+    data class AddSetClicked(val exerciseEntryId: String) : WorkoutAction
     data class ExerciseExpandedChanged(
         val exerciseEntryId: String,
         val isExpanded: Boolean,
@@ -90,6 +104,19 @@ sealed interface WorkoutAction {
         val exerciseEntryId: String,
         val setId: String?,
     ) : WorkoutAction
+
+    data class PreviousSetClicked(
+        val exerciseEntryId: String,
+        val setId: String?,
+    ) : WorkoutAction
+
+    data class RpeClicked(
+        val exerciseEntryId: String,
+        val setId: String?,
+    ) : WorkoutAction
+
+    data class RpeSelected(val value: Int) : WorkoutAction
+    data object RpeDismissed : WorkoutAction
 
     data object FinishWorkoutClicked : WorkoutAction
     data object HistoryClicked : WorkoutAction

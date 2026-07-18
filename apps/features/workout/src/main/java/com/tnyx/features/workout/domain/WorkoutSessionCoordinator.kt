@@ -31,6 +31,7 @@ data class WorkoutDashboard(
 
 enum class WorkoutInputError {
     REPS_OUT_OF_RANGE,
+    RPE_OUT_OF_RANGE,
     COMPLETE_A_SET_FIRST,
 }
 
@@ -60,11 +61,21 @@ interface WorkoutSessionCoordinator {
 
     suspend fun addStarterExercise(): WorkoutCommandResult
 
+    suspend fun addSet(exerciseEntryId: String): WorkoutCommandResult =
+        error("Adding sets is not supported by this coordinator.")
+
     suspend fun completeSet(
         exerciseEntryId: String,
         setId: String?,
         reps: Int,
     ): WorkoutCommandResult
+
+    suspend fun completeSet(
+        exerciseEntryId: String,
+        setId: String?,
+        reps: Int,
+        rpe: Int?,
+    ): WorkoutCommandResult = completeSet(exerciseEntryId, setId, reps)
 
     suspend fun finishWorkout(): WorkoutCommandResult
 }
@@ -138,16 +149,63 @@ class DefaultWorkoutSessionCoordinator @Inject constructor(
         )
     }
 
+    override suspend fun addSet(exerciseEntryId: String): WorkoutCommandResult = mutationMutex.withLock {
+        val state = repository.observeEngineState().first()
+        val session = state.activeSessionOrNull()
+            ?: return@withLock WorkoutCommandResult.Rejected(
+                state = state,
+                reason = WorkoutMutationRejection.NO_ACTIVE_SESSION,
+            )
+        val exercise = session.exercises.firstOrNull { it.id == exerciseEntryId }
+            ?: return@withLock WorkoutCommandResult.Rejected(
+                state = state,
+                reason = WorkoutMutationRejection.EXERCISE_NOT_FOUND,
+            )
+        val nextSetNumber = (exercise.sets.maxOfOrNull(WorkoutSet::setNumber) ?: 0) + 1
+        val occurredAtMs = runtimeValues.nowMs().coerceAtLeast(session.startedAtMs)
+        applyMutation(
+            state = state,
+            sessionId = session.id,
+            occurredAtMs = occurredAtMs,
+            payload = SetUpserted(
+                exerciseEntryId = exercise.id,
+                set = WorkoutSet(
+                    id = runtimeValues.newId(SET_ID_PREFIX),
+                    exerciseEntryId = exercise.id,
+                    setNumber = nextSetNumber,
+                ),
+            ),
+        )
+    }
+
     override suspend fun completeSet(
         exerciseEntryId: String,
         setId: String?,
         reps: Int,
+    ): WorkoutCommandResult = completeSet(
+        exerciseEntryId = exerciseEntryId,
+        setId = setId,
+        reps = reps,
+        rpe = null,
+    )
+
+    override suspend fun completeSet(
+        exerciseEntryId: String,
+        setId: String?,
+        reps: Int,
+        rpe: Int?,
     ): WorkoutCommandResult = mutationMutex.withLock {
         val state = repository.observeEngineState().first()
         if (reps !in MIN_REPS..MAX_REPS) {
             return@withLock WorkoutCommandResult.InvalidInput(
                 state = state,
                 error = WorkoutInputError.REPS_OUT_OF_RANGE,
+            )
+        }
+        if (rpe != null && rpe !in MIN_RPE..MAX_RPE) {
+            return@withLock WorkoutCommandResult.InvalidInput(
+                state = state,
+                error = WorkoutInputError.RPE_OUT_OF_RANGE,
             )
         }
         val session = state.activeSessionOrNull()
@@ -190,6 +248,7 @@ class DefaultWorkoutSessionCoordinator @Inject constructor(
                     exerciseEntryId = exercise.id,
                     setNumber = existingSet?.setNumber ?: 1,
                     reps = reps,
+                    rpe = rpe,
                     isCompleted = true,
                     completedAtMs = completedAtMs,
                 ),
@@ -274,5 +333,7 @@ class DefaultWorkoutSessionCoordinator @Inject constructor(
         private const val MUTATION_ID_PREFIX = "mutation"
         private const val MIN_REPS = 1
         private const val MAX_REPS = 999
+        private const val MIN_RPE = 5
+        private const val MAX_RPE = 10
     }
 }

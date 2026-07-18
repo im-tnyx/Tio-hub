@@ -7,4 +7,6 @@ interface ProfileRepository {
     fun getCurrentProfile(): Flow<UserProfile>
     fun getProfile(userId: String): Flow<UserProfile>
     suspend fun updateProfile(profile: UserProfile)
+    suspend fun updateAvatar(jpegBytes: ByteArray): String
+    suspend fun removeAvatar()
 }

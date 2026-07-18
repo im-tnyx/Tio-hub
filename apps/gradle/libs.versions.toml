@@ -16,7 +16,7 @@ navigation = "2.8.5"
 hiltNavigationCompose = "1.2.0"
 wear = "1.4.0"
 wearWatchface = "1.2.1"
-playServicesWearable = "18.2.0"
+playServicesWearable = "18.2.1"
 horologist = "0.6.17"
 healthConnect = "1.1.0-alpha07"
 coroutines = "1.9.0"
@@ -34,6 +34,7 @@ robolectric = "4.14.1"
 supabase-bom = { group = "io.github.jan-tennert.supabase", name = "bom", version.ref = "supabase" }
 supabase-postgrest = { group = "io.github.jan-tennert.supabase", name = "postgrest-kt" }
 supabase-auth = { group = "io.github.jan-tennert.supabase", name = "auth-kt" }
+supabase-storage = { group = "io.github.jan-tennert.supabase", name = "storage-kt" }
 ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { group = "io.ktor", name = "ktor-client-okhttp", version.ref = "ktor" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -69,18 +70,17 @@ robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "
 androidx-wear-compose-material = { group = "androidx.wear.compose", name = "compose-material", version.ref = "wear" }
 androidx-wear-compose-foundation = { group = "androidx.wear.compose", name = "compose-foundation", version.ref = "wear" }
 androidx-wear-compose-navigation = { group = "androidx.wear.compose", name = "compose-navigation", version.ref = "wear" }
-androidx-wear-tiles = { group = "androidx.wear.tiles", name = "tiles", version.ref = "wear" }
-androidx-wear-tiles-material = { group = "androidx.wear.tiles", name = "tiles-material", version.ref = "wear" }
+androidx-wear-tiles = { group = "androidx.wear", name = "wear-tiles", version.ref = "wear" }
+androidx-wear-tiles-material = { group = "androidx.wear", name = "wear-tiles-material", version.ref = "wear" }
 androidx-wear-watchface-complications-data-source = { group = "androidx.wear.watchface", name = "watchface-complications-data-source", version.ref = "wearWatchface" }
 play-services-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "playServicesWearable" }
 horologist-compose-layout = { group = "com.google.android.horologist", name = "horologist-compose-layout", version.ref = "horologist" }
 androidx-health-connect-client = { group = "androidx.health.connect", name = "connect-client", version.ref = "healthConnect" }
 
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
-kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "coroutines-test", version.ref = "coroutines" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlin" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
-
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

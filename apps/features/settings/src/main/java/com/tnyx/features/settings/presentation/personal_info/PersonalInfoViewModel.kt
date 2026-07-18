@@ -52,6 +52,10 @@ class PersonalInfoViewModel @Inject constructor(
                         }
                     }
                 }
+            }.onFailure {
+                update { state ->
+                    state.copy(avatarError = "Profile could not be loaded")
+                }
             }
         }
     }
@@ -90,6 +94,9 @@ class PersonalInfoViewModel @Inject constructor(
             PersonalInfoAction.OnSaveClicked -> save()
             PersonalInfoAction.OnBackClicked -> Unit
             PersonalInfoAction.OnChangePhotoClicked -> Unit
+            is PersonalInfoAction.OnAvatarBytesReady -> uploadAvatar(action.jpegBytes)
+            PersonalInfoAction.OnRemovePhotoClicked -> removeAvatar()
+            PersonalInfoAction.OnDismissAvatarError -> update { it.copy(avatarError = null) }
             PersonalInfoAction.OnDeleteAccountClicked -> update { it.copy(deleteStep = DeleteAccountStep.Confirm) }
             PersonalInfoAction.OnKeepAccountClicked -> {
                 countdownJob?.cancel()
@@ -105,6 +112,68 @@ class PersonalInfoViewModel @Inject constructor(
             PersonalInfoAction.OnHoldStarted -> startDeleteCountdown()
             PersonalInfoAction.OnHoldReleased -> stopDeleteCountdown()
             PersonalInfoAction.OnDeleteCompletedShown -> update { it.copy(deleteStep = DeleteAccountStep.Idle) }
+        }
+    }
+
+    private fun uploadAvatar(jpegBytes: ByteArray) {
+        if (jpegBytes.isEmpty() || _uiState.value.isAvatarUploading) return
+
+        viewModelScope.launch {
+            update {
+                it.copy(
+                    isAvatarUploading = true,
+                    avatarError = null,
+                )
+            }
+
+            runCatching {
+                profileRepository.updateAvatar(jpegBytes)
+            }.onSuccess { avatarUrl ->
+                update {
+                    it.copy(
+                        avatarUrl = avatarUrl,
+                        isAvatarUploading = false,
+                    )
+                }
+            }.onFailure {
+                update {
+                    it.copy(
+                        isAvatarUploading = false,
+                        avatarError = "Profile photo could not be uploaded. Try again.",
+                    )
+                }
+            }
+        }
+    }
+
+    private fun removeAvatar() {
+        if (_uiState.value.isAvatarUploading || _uiState.value.avatarUrl.isNullOrBlank()) return
+
+        viewModelScope.launch {
+            update {
+                it.copy(
+                    isAvatarUploading = true,
+                    avatarError = null,
+                )
+            }
+
+            runCatching {
+                profileRepository.removeAvatar()
+            }.onSuccess {
+                update {
+                    it.copy(
+                        avatarUrl = null,
+                        isAvatarUploading = false,
+                    )
+                }
+            }.onFailure {
+                update {
+                    it.copy(
+                        isAvatarUploading = false,
+                        avatarError = "Profile photo could not be removed. Try again.",
+                    )
+                }
+            }
         }
     }
 

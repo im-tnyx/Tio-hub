@@ -54,8 +54,9 @@ class SupabaseProfileRepository(
     private val currentProfile = MutableStateFlow<UserProfile?>(null)
 
     override fun getCurrentProfile(): Flow<UserProfile> = flow {
-        if (currentProfile.value == null) {
-            currentProfile.value = getCurrentProfileDto().toDomain()
+        val currentUserId = currentUserId()
+        if (currentProfile.value?.id != currentUserId) {
+            currentProfile.value = getCurrentProfileDto(currentUserId).toDomain()
         }
         emitAll(currentProfile.filterNotNull())
     }
@@ -97,8 +98,9 @@ class SupabaseProfileRepository(
         require(jpegBytes.isNotEmpty()) { "Avatar image is empty" }
 
         val currentUserId = currentUserId()
-        val profile = currentProfile.value ?: getCurrentProfileDto().toDomain()
-        require(profile.id == currentUserId) { "Current profile does not match the signed-in user" }
+        val profile = currentProfile.value
+            ?.takeIf { it.id == currentUserId }
+            ?: getCurrentProfileDto(currentUserId).toDomain()
 
         val objectPath = avatarObjectPath(currentUserId)
         val bucket = supabaseClient.storage.from(AVATAR_BUCKET)
@@ -125,15 +127,14 @@ class SupabaseProfileRepository(
 
     override suspend fun removeAvatar() {
         val currentUserId = currentUserId()
-        val profile = currentProfile.value ?: getCurrentProfileDto().toDomain()
-        require(profile.id == currentUserId) { "Current profile does not match the signed-in user" }
+        val profile = currentProfile.value
+            ?.takeIf { it.id == currentUserId }
+            ?: getCurrentProfileDto(currentUserId).toDomain()
 
         val objectPath = avatarObjectPath(currentUserId)
         val bucket = supabaseClient.storage.from(AVATAR_BUCKET)
 
-        runCatching {
-            bucket.delete(objectPath)
-        }
+        bucket.delete(objectPath)
 
         supabaseClient.from("profiles").update(
             mapOf<String, Any?>("avatar_url" to null),
@@ -145,11 +146,10 @@ class SupabaseProfileRepository(
         currentProfile.value = profile.copy(avatarUrl = null)
     }
 
-    private suspend fun getCurrentProfileDto(): ProfileDto {
-        val currentUserId = currentUserId()
+    private suspend fun getCurrentProfileDto(userId: String): ProfileDto {
         return supabaseClient.from("profiles").select {
             filter {
-                eq("id", currentUserId)
+                eq("id", userId)
             }
         }.decodeSingle()
     }

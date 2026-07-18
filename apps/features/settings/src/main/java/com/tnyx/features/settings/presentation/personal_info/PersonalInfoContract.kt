@@ -23,6 +23,8 @@ data class PersonalInfoUiState(
     val heightInches: String = "7",
     val avatarUrl: String? = null,
     val membershipTier: MembershipTier = MembershipTier.Free,
+    val isAvatarUploading: Boolean = false,
+    val avatarError: String? = null,
     val isSaving: Boolean = false,
     val hasChanges: Boolean = false,
     val showDobPicker: Boolean = false,
@@ -37,6 +39,9 @@ sealed interface PersonalInfoAction {
     data object OnBackClicked : PersonalInfoAction
     data object OnSaveClicked : PersonalInfoAction
     data object OnChangePhotoClicked : PersonalInfoAction
+    data class OnAvatarBytesReady(val jpegBytes: ByteArray) : PersonalInfoAction
+    data object OnRemovePhotoClicked : PersonalInfoAction
+    data object OnDismissAvatarError : PersonalInfoAction
     data class OnFullNameChange(val name: String) : PersonalInfoAction
     data class OnEmailChange(val email: String) : PersonalInfoAction
     data class OnMobileChange(val value: String) : PersonalInfoAction

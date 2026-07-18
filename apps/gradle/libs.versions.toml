@@ -16,7 +16,7 @@ navigation = "2.8.5"
 hiltNavigationCompose = "1.2.0"
 wear = "1.4.0"
 wearWatchface = "1.2.1"
-playServicesWearable = "18.2.1"
+playServicesWearable = "18.2.0"
 horologist = "0.6.17"
 healthConnect = "1.1.0-alpha07"
 coroutines = "1.9.0"
@@ -69,7 +69,7 @@ robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "
 # Wear OS
 androidx-wear-compose-material = { group = "androidx.wear.compose", name = "compose-material", version.ref = "wear" }
 androidx-wear-compose-foundation = { group = "androidx.wear.compose", name = "compose-foundation", version.ref = "wear" }
-androidx-wear-compose-navigation = { group = "androidx.wear.compose", name = "compose-navigation", version.ref = "wear" }
+androidx-wear-compose-navigation = { group = "androidx.wear.compose", name = "navigation-compose", version.ref = "wear" }
 androidx-wear-tiles = { group = "androidx.wear", name = "wear-tiles", version.ref = "wear" }
 androidx-wear-tiles-material = { group = "androidx.wear", name = "wear-tiles-material", version.ref = "wear" }
 androidx-wear-watchface-complications-data-source = { group = "androidx.wear.watchface", name = "watchface-complications-data-source", version.ref = "wearWatchface" }

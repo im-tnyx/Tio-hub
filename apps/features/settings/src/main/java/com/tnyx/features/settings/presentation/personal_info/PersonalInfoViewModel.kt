@@ -2,8 +2,13 @@ package com.tnyx.features.settings.presentation.personal_info
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tnyx.core.ui.components.inputs.*
+import com.tnyx.core.ui.components.inputs.Country
+import com.tnyx.core.ui.components.inputs.cmToFeetInches
+import com.tnyx.core.ui.components.inputs.countryForMobile
+import com.tnyx.core.ui.components.inputs.feetInchesToCm
+import com.tnyx.shared.profile.domain.repository.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,10 +16,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @HiltViewModel
-class PersonalInfoViewModel @Inject constructor() : ViewModel() {
+class PersonalInfoViewModel @Inject constructor(
+    private val profileRepository: ProfileRepository,
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PersonalInfoUiState())
     val uiState: StateFlow<PersonalInfoUiState> = _uiState.asStateFlow()
@@ -24,16 +30,35 @@ class PersonalInfoViewModel @Inject constructor() : ViewModel() {
     init {
         val defaultCountry = countryForMobile("")
         update { it.copy(selectedCountry = defaultCountry) }
+        loadProfileHeader()
     }
 
-    /**
-     * Initialize state from external view models (provided by user snippet)
-     * Note: Types like OnboardingViewModel/AuthViewModel should be imported if available.
-     */
+    private fun loadProfileHeader() {
+        viewModelScope.launch {
+            runCatching {
+                profileRepository.getCurrentProfile().collect { profile ->
+                    update { state ->
+                        if (state.hasChanges) {
+                            state.copy(
+                                avatarUrl = profile.avatarUrl,
+                                membershipTier = profile.membershipTier,
+                            )
+                        } else {
+                            state.copy(
+                                fullName = profile.displayName,
+                                avatarUrl = profile.avatarUrl,
+                                membershipTier = profile.membershipTier,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fun init(onboardingState: Any?, authCurrentUser: Any?, authProfile: Any?) {
-        // This is a placeholder adaptation of the user's provided logic
-        // because the actual ViewModel classes might reside in different modules/packages.
-        // In a real scenario, you would pass the specific State or Data classes.
+        // Reserved for the remaining account fields until typed contracts replace
+        // the legacy placeholder inputs.
     }
 
     fun onAction(action: PersonalInfoAction) {
@@ -53,19 +78,30 @@ class PersonalInfoViewModel @Inject constructor() : ViewModel() {
             PersonalInfoAction.OnDobClicked -> update { it.copy(showDobPicker = true) }
             PersonalInfoAction.OnDismissOverlays -> {
                 countdownJob?.cancel()
-                update { it.copy(showDobPicker = false, showHeightPopup = false, showCountryPicker = false, deleteStep = DeleteAccountStep.Idle) }
+                update {
+                    it.copy(
+                        showDobPicker = false,
+                        showHeightPopup = false,
+                        showCountryPicker = false,
+                        deleteStep = DeleteAccountStep.Idle,
+                    )
+                }
             }
             PersonalInfoAction.OnSaveClicked -> save()
-            PersonalInfoAction.OnBackClicked -> { /* Handled by route */ }
-            PersonalInfoAction.OnChangePhotoClicked -> { /* TODO */ }
-            
-            // Delete Account Flow
+            PersonalInfoAction.OnBackClicked -> Unit
+            PersonalInfoAction.OnChangePhotoClicked -> Unit
             PersonalInfoAction.OnDeleteAccountClicked -> update { it.copy(deleteStep = DeleteAccountStep.Confirm) }
             PersonalInfoAction.OnKeepAccountClicked -> {
                 countdownJob?.cancel()
                 update { it.copy(deleteStep = DeleteAccountStep.Idle) }
             }
-            PersonalInfoAction.OnConfirmDeleteClicked -> update { it.copy(deleteStep = DeleteAccountStep.HoldToDelete, remainingSeconds = 5, holdProgress = 0f) }
+            PersonalInfoAction.OnConfirmDeleteClicked -> update {
+                it.copy(
+                    deleteStep = DeleteAccountStep.HoldToDelete,
+                    remainingSeconds = 5,
+                    holdProgress = 0f,
+                )
+            }
             PersonalInfoAction.OnHoldStarted -> startDeleteCountdown()
             PersonalInfoAction.OnHoldReleased -> stopDeleteCountdown()
             PersonalInfoAction.OnDeleteCompletedShown -> update { it.copy(deleteStep = DeleteAccountStep.Idle) }
@@ -75,15 +111,26 @@ class PersonalInfoViewModel @Inject constructor() : ViewModel() {
     private fun toggleHeightUnit(newUnit: String) {
         update { state ->
             if (state.heightUnit == newUnit) return@update state
-            
+
             if (newUnit == "ft") {
                 val cm = state.heightCm.toFloatOrNull() ?: 0f
                 val (ft, inch) = cmToFeetInches(cm)
-                state.copy(heightUnit = newUnit, heightFeet = ft.toString(), heightInches = inch.toString(), hasChanges = true)
+                state.copy(
+                    heightUnit = newUnit,
+                    heightFeet = ft.toString(),
+                    heightInches = inch.toString(),
+                    hasChanges = true,
+                )
             } else {
                 val cm = feetInchesToCm(state.heightFeet, state.heightInches)
-                val cmText = cm?.let { if (it % 1f == 0f) it.toInt().toString() else it.toString() }.orEmpty()
-                state.copy(heightUnit = newUnit, heightCm = cmText, hasChanges = true)
+                val cmText = cm?.let {
+                    if (it % 1f == 0f) it.toInt().toString() else it.toString()
+                }.orEmpty()
+                state.copy(
+                    heightUnit = newUnit,
+                    heightCm = cmText,
+                    hasChanges = true,
+                )
             }
         }
     }
@@ -101,11 +148,10 @@ class PersonalInfoViewModel @Inject constructor() : ViewModel() {
 
                 val progress = currentMillis.toFloat() / totalMillis
                 val remaining = ((totalMillis - currentMillis) / 1000).toInt() + 1
-
                 update {
                     it.copy(
                         holdProgress = progress,
-                        remainingSeconds = remaining.coerceAtLeast(0)
+                        remainingSeconds = remaining.coerceAtLeast(0),
                     )
                 }
             }
@@ -114,7 +160,7 @@ class PersonalInfoViewModel @Inject constructor() : ViewModel() {
                 it.copy(
                     deleteStep = DeleteAccountStep.Completed,
                     remainingSeconds = 0,
-                    holdProgress = 1f
+                    holdProgress = 1f,
                 )
             }
         }
@@ -125,7 +171,7 @@ class PersonalInfoViewModel @Inject constructor() : ViewModel() {
         update {
             it.copy(
                 remainingSeconds = 5,
-                holdProgress = 0f
+                holdProgress = 0f,
             )
         }
     }
@@ -133,7 +179,7 @@ class PersonalInfoViewModel @Inject constructor() : ViewModel() {
     private fun save() {
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }
-            delay(1000) // Simulate
+            delay(1000)
             _uiState.update { it.copy(isSaving = false, hasChanges = false) }
         }
     }

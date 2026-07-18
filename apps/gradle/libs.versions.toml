@@ -64,7 +64,7 @@ androidx-room-compiler = { group = "androidx.room", name = "room-compiler", vers
 androidx-room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 androidx-test-core-ktx = { group = "androidx.test", name = "core-ktx", version.ref = "androidxTestCore" }
-robolectric = { group = "org.rolectric", name = "robolectric", version.ref = "robolectric" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 
 # Wear OS
 androidx-wear-compose-material = { group = "androidx.wear.compose", name = "compose-material", version.ref = "wear" }

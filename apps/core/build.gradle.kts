@@ -32,6 +32,12 @@ android {
     buildFeatures {
         compose = true
     }
+
+    sourceSets {
+        getByName("main") {
+            res.srcDirs("src/main/res", "src/main/res_chips")
+        }
+    }
 }
 
 kotlin {

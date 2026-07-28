@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Release-safe aliases. Debug resources override these names with preview artwork. -->
-    <item name="tio_body_part_abs" type="drawable">@drawable/tio_body_part_placeholder</item>
-    <item name="tio_body_part_back" type="drawable">@drawable/tio_body_part_placeholder</item>
-    <item name="tio_body_part_biceps" type="drawable">@drawable/tio_body_part_placeholder</item>
-    <item name="tio_body_part_calves" type="drawable">@drawable/tio_body_part_placeholder</item>
-    <item name="tio_body_part_cardio" type="drawable">@drawable/tio_body_part_placeholder</item>
-    <item name="tio_body_part_chest" type="drawable">@drawable/tio_body_part_placeholder</item>
-    <item name="tio_body_part_forearms" type="drawable">@drawable/tio_body_part_placeholder</item>
-    <item name="tio_body_part_hamstrings" type="drawable">@drawable/tio_body_part_placeholder</item>
-    <item name="tio_body_part_hips" type="drawable">@drawable/tio_body_part_placeholder</item>
-    <item name="tio_body_part_neck" type="drawable">@drawable/tio_body_part_placeholder</item>
-    <item name="tio_body_part_quadriceps" type="drawable">@drawable/tio_body_part_placeholder</item>
-    <item name="tio_body_part_shoulders" type="drawable">@drawable/tio_body_part_placeholder</item>
-    <item name="tio_body_part_stretching" type="drawable">@drawable/tio_body_part_placeholder</item>
-    <item name="tio_body_part_triceps" type="drawable">@drawable/tio_body_part_placeholder</item>
+    <!-- अब ये एलियास (Aliases) सीधे नए रंगीन आइकन्स को पॉइंट करेंगे -->
+    <item name="tio_body_part_abs" type="drawable">@drawable/chip_abs</item>
+    <item name="tio_body_part_back" type="drawable">@drawable/chip_back</item>
+    <item name="tio_body_part_biceps" type="drawable">@drawable/chip_biceps</item>
+    <item name="tio_body_part_calves" type="drawable">@drawable/chip_calves</item>
+    <item name="tio_body_part_cardio" type="drawable">@drawable/ic_chip_cardio</item>
+    <item name="tio_body_part_chest" type="drawable">@drawable/chip_chest</item>
+    <item name="tio_body_part_forearms" type="drawable">@drawable/chip_forearms</item>
+    <item name="tio_body_part_hamstrings" type="drawable">@drawable/chip_hamstrings</item>
+    <item name="tio_body_part_hips" type="drawable">@drawable/chip_hips</item>
+    <item name="tio_body_part_neck" type="drawable">@drawable/chip_neck</item>
+    <item name="tio_body_part_quadriceps" type="drawable">@drawable/chip_quadriceps</item>
+    <item name="tio_body_part_shoulders" type="drawable">@drawable/chip_shoulders</item>
+    <item name="tio_body_part_stretching" type="drawable">@drawable/ic_chip_streatching</item>
+    <item name="tio_body_part_triceps" type="drawable">@drawable/chip_triceps</item>
 </resources>

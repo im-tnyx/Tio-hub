@@ -2,7 +2,7 @@
 
 > एक premium Android health, fitness, nutrition, recovery, workout, coaching, और Wear-ready app — Jetpack Compose, Clean Architecture, और Type-Safe Navigation के साथ built।
 
-**Last updated: 2026-06-27**
+**Last updated: 2026-07-29**
 
 ---
 
@@ -69,12 +69,19 @@ Tnyx/
     ├── auth/                         # Authentication/session entry
     ├── workout/                      # Workout tracking and navigation
     ├── nutrition/                    # Nutrition diary and macro tracking
+    ├── home/                         # Main dashboard composition
     ├── profile/                      # Fitness Hub + Account Launcher skeleton
     ├── settings/                     # App Config skeleton
     └── progress/                     # Progress tab skeleton
 ```
 
-Canonical target ownership for future work:
+Checked-in placeholder folders also exist under `features/coach`, `features/health`, `features/recovery`, `features/billing`, `features/rewards`, `features/referrals`, and `features/learn`. These reserve ownership only and are not Gradle-wired yet.
+
+Home-owned assets stay inside `features/home/src/main/res-icons/drawable` and
+`features/home/src/main/res-images/drawable`. Both directories are registered
+as Android resource roots by `:features:home`.
+
+Canonical feature ownership:
 
 ```text
 features/
@@ -89,6 +96,7 @@ features/
 ├── recovery/      # Future: Sleep, HRV, readiness, recovery score
 ├── billing/       # Future: subscription UI and entitlement/business logic
 ├── rewards/       # Future: rewards, badges, gamification
+├── referrals/     # Future: invite links, attribution, qualification status
 └── learn/         # Future: resources, education, guides
 ```
 
@@ -121,21 +129,28 @@ TNYX navigation 100+ screens के लिए graph-owned और feature-owned �
 | Onboarding | `OnboardingGraph` | Initial data collection and resume flow |
 | Main Shell | `MainScreen.kt` / `MainGraph` | Bottom nav shell, tab state from back-stack |
 | Feature | `<Feature>NavGraph.kt` | Feature-owned internal screen routing |
-| Profile | `ProfileGraph` | Avatar-launched Fitness Hub + Account Launcher |
+| Profile | `MainRoute.You` / `ProfileGraph` | Bottom-nav You destination with avatar fallback |
 | Settings | `SettingsGraph` | Gear-launched App Config surfaces |
 | Modal | `ModalGraph` | App-wide dialogs, sheets, permission prompts, media flows |
 
-Main Graph contains only primary tabs:
+Main Graph supports this top-level destination catalog:
 
 ```text
 Home
-Workout
 Nutrition
-Coach
+Meal Plan
+Tio
+Workout
+Library
 Progress
+You
 ```
 
-Profile is launched from avatar. Settings is launched from gear icon. Cross-feature navigation must use public route contracts.
+Settings can persist 3-6 visible tabs; Home remains pinned and the default
+set is Home, Nutrition, Tio, Workout, and Progress. When You is enabled, the
+avatar selects You; otherwise it launches the standalone `ProfileGraph`
+fallback. Settings is launched from the gear icon. Cross-feature navigation
+must use public route contracts.
 
 > 📄 विस्तृत navigation के लिए देखें: [docs/NAVIGATION_GUIDE.md](docs/NAVIGATION_GUIDE.md)
 
@@ -181,7 +196,7 @@ Ownership note:
 | Widget | Visibility | Description |
 |---|---|---|
 | `MainTopBar` | MainChrome destinations where needed | Dynamic top bar with user/account entry points |
-| `MainBottomNav` | `MainChrome` destinations | 5-tab bottom navigation: Home, Workout, Nutrition, Coach, Progress |
+| `MainBottomNav` | `MainChrome` destinations | Settings-backed 3-6 tab navigation from the supported destination catalog |
 
 ### Chrome Policy
 

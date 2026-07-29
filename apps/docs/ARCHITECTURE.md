@@ -10,13 +10,14 @@ Last audited against:
 - `:features:workout` (workout navigation & logic)
 - `:features:nutrition` (nutrition diary & logic)
 - `:features:auth` (authentication & login logic)
+- `:features:home` (main dashboard composition)
 - `:features:profile` (Fitness Hub + Account Launcher skeleton)
 - `:features:settings` (App Config skeleton)
 - `:features:progress` (Progress tab skeleton)
 - `:wear` (Wear OS watch app module)
 - `:app` (Main entry point, DI graph, AppNavHost)
 
-Last updated: 2026-06-27
+Last updated: 2026-07-29
 
 Canonical ownership source: [PROFILE_SETTINGS_GUIDE.md](PROFILE_SETTINGS_GUIDE.md). Current source may not yet contain every future module, but new implementation must follow that ownership freeze.
 
@@ -41,17 +42,27 @@ Canonical ownership source: [PROFILE_SETTINGS_GUIDE.md](PROFILE_SETTINGS_GUIDE.m
 
 TNYX is expected to scale beyond 100 screens. The canonical ownership model is defined in `PROFILE_SETTINGS_GUIDE.md`; this section summarizes the architecture rules that affect all Android modules.
 
-Primary bottom navigation is frozen as:
+The supported top-level destination catalog is:
 
 ```text
 Home
-Workout
 Nutrition
-Coach
+Meal Plan
+Tio
+Workout
+Library
 Progress
+You
 ```
 
-Profile is not a bottom-nav tab. Profile is launched from the avatar and acts as **Fitness Hub + Account Launcher**. It owns user identity summary, current plan summary, personal information UI, and launcher cards only.
+Settings persists 3-6 visible destinations. Home is pinned, and the default
+set is Home, Nutrition, Tio, Workout, and Progress.
+
+Profile surfaces are available through the `You` destination. When You is
+enabled, the avatar selects it; otherwise the avatar launches the standalone
+`ProfileGraph` fallback. Profile remains a **Fitness Hub + Account Launcher**
+and owns user identity summary, current plan summary, personal information UI,
+and launcher cards only.
 
 Settings is not a bottom-nav tab. Settings is launched from the gear icon and owns app configuration, account controls, notification preferences, units, theme, language, export data, and legal entry points.
 
@@ -66,6 +77,7 @@ Ownership freeze:
 | Sleep, HRV, Readiness, Recovery Score | future `:features:recovery` |
 | Subscription, plan state, entitlement checks, feature access | future `:features:billing` / Entitlement |
 | Rewards, badges, gamification | future `:features:rewards` |
+| Invite links, referral attribution, qualification status, referral history | future `:features:referrals` |
 | Resources, education, guides | future `:features:learn` |
 | Personal Information source of truth | `:features:profile` domain/repository |
 
@@ -573,7 +585,9 @@ Expected behavior:
 
 Current behavior:
 
-- `MainBottomNav` canonical 5 primary tabs render karta hai: `Home`, `Workout`, `Nutrition`, `Coach`, aur `Progress`.
+- `MainBottomNav` persisted Settings preference se 3-6 validated tabs render karta hai.
+- Supported catalog: `Home`, `Nutrition`, `MealPlan`, `Ai`, `Workout`, `WorkoutLibrary`, `Progress`, aur `You`.
+- `Home` pinned hai; default tabs `Home`, `Nutrition`, `Ai`, `Workout`, aur `Progress` hain.
 - Active tab route-derived `ShellUiState.selectedTab` se render hota hai.
 - Workout tab opens the feature-owned typed Home/History graph and Stage 3 offline slice.
 - Shell mein Workout-specific secondary nav, nested scroll hide/show, ya sub-tab state nahi hai.
@@ -588,15 +602,15 @@ Current behavior:
 
 Current enums:
 
-- `ShellTab`: `Home`, `Workout`, `Nutrition`, `Coach`, `Progress`
-- `ShellPlanTier`: `Free`, `Plus`, `Premium`
+- `ShellTab`: `Home`, `Nutrition`, `MealPlan`, `Ai`, `Workout`, `WorkoutLibrary`, `Progress`, `You`
 
 `ShellUiState` fields:
 
 - `selectedTab: ShellTab`
+- `bottomTabs: List<ShellTab>`
 - `isBottomNavVisible: Boolean`
 - `appBarOpacity: Float`
-- `planTier: ShellPlanTier`
+- `avatar: ShellAvatarState`
 
 ### D. `ShellAction.kt`
 
@@ -606,7 +620,7 @@ Current actions:
 - `ScrollChanged(offset: Float)`: scroll offset change.
 - `PremiumClicked`: premium upgrade trigger.
 - `StreakClicked`: streak details trigger.
-- `ProfileClicked`: avatar se `ProfileGraph` launch trigger. Profile launcher hai, business domain nahi.
+- `ProfileClicked`: You enabled ho to `MainRoute.You` select karta hai; warna standalone `ProfileGraph` fallback launch karta hai.
 
 Rule: Shell actions business logic nahi rakhte. Navigation decisions `MainScreen` mein hote hain.
 
@@ -824,7 +838,25 @@ Rules:
 - Profile can launch `ProgressRoute.ProgressPhotos`, but Progress owns photo workflow. Shared media primitives can live in `core/media` later.
 - Settings can launch `NutritionRoute.Targets` or `WorkoutRoute.Settings`, but Nutrition/Workout own save logic.
 - Subscription business logic belongs to Billing / Entitlement, with Settings as UI entry and Profile current-plan card as optional shortcut.
-### C. Nested Screen Groups
+
+### D. Home Ownership Pattern
+
+Home owns dashboard composition only:
+
+```text
+features/home
+├── presentation/home
+│   ├── HomeRoute.kt
+│   └── HomeScreen.kt
+├── res-icons/drawable
+└── res-images/drawable
+```
+
+`HomeRoute` is the public composition entry used by `MainGraph`. Home may
+summarize public state from enabled domains, but detailed actions, repositories,
+validation, and persistence remain inside their owning features.
+
+### E. Nested Screen Groups
 
 अगर किसी workflow में multiple screens हैं, तो उस workflow के अंदर screen-level folders बना सकते हैं। Example:
 
@@ -850,7 +882,7 @@ features/nutrition/presentation/recipe
     └── widgets
 ```
 
-### D. Required Presentation Roles
+### F. Required Presentation Roles
 
 - `Route`: navigation boundary, ViewModel collection, effect handling.
 - `Screen`: dumb UI. केवल `UiState` render करे और `Action` callbacks emit करे.
@@ -872,7 +904,7 @@ For large features, prefer:
 
 Separate `state/` और `action/` folders small existing features में acceptable हैं, लेकिन large features में ये folders जल्दी overcrowded हो जाते हैं।
 
-### E. Dumb UI Contract
+### G. Dumb UI Contract
 
 यह contract हर screen पर लागू होगा:
 
@@ -889,7 +921,7 @@ Separate `state/` और `action/` folders small existing features में acc
 - `ViewModel` ही `Action` handle करेगा, `UiState` mutate करेगा और `Effect` emit करेगा।
 - `UiState` immutable data holder रहेगा; इसमें callback, `Context`, `NavController`, repository या mutable collection नहीं होगा।
 
-### F. Widget Placement Rules
+### H. Widget Placement Rules
 
 - Screen-specific widgets उसी screen/workflow के `widgets` folder में रखें।
 - Workflow-specific widgets उसी workflow के `widgets` folder में रखें।
@@ -952,15 +984,40 @@ Workout feature ka first repository-backed offline vertical slice runtime mein p
 
 ```text
 features/workout
-├── di                         # Coordinator/runtime bindings
-├── domain                     # WorkoutSessionCoordinator use-case boundary
-├── navigation                 # Typed Home and History destinations
-└── presentation               # Route, Screen, ViewModel, UiState, Action
+├── di                              # Coordinator/runtime bindings
+├── domain                          # WorkoutSessionCoordinator boundary
+├── navigation                      # Typed Workout destinations
+├── presentation
+│   ├── home                        # Workout landing workflow
+│   ├── library
+│   │   ├── exercises               # Exercise catalog and details
+│   │   ├── favorites               # Favorite exercise state/UI
+│   │   ├── folders                 # User-created exercise collections
+│   │   ├── filters                 # Library filter bottom sheet
+│   │   └── createexercise          # Custom exercise creation
+│   ├── routines
+│   │   ├── builder                 # Routine creation/editing
+│   │   └── templates               # Saved/program templates
+│   ├── activesession               # Live workout execution
+│   ├── history                     # Completed workout history
+│   ├── calendar                    # Scheduled/completed workout calendar
+│   ├── settings                    # Workout-only preferences
+│   └── shared                      # Cross-workflow feature widgets
+├── res-icons/drawable              # Workout-owned vector icons
+├── res-images/drawable             # Approved Workout images
+├── res_chips                       # Existing body-part chip resources
+└── res                             # Standard Android resources
 ```
 
 Current rule:
 
+- `:features:workout` remains one Gradle module. Workflow folders are internal
+  ownership boundaries, not separate feature modules.
+- Empty workflow folders are tracked as scaffolding; runtime classes are added
+  only with the corresponding tested vertical slice.
 - `WorkoutNavGraph` `MainRoute.WorkoutGraph` ke andar typed Home aur History destinations own karta hai.
+- `MainRoute.WorkoutLibrary` ka current app-owned foundation temporary hai;
+  real Library navigation aur UI `features:workout` own karega.
 - `WorkoutViewModel` repository ko directly call nahi karta; commands aur combined recovery/history flow `WorkoutSessionCoordinator` se aate hain.
 - Compose screens `WorkoutUiState` render karti hain, `WorkoutAction` emit karti hain, aur existing `Tnyx*` components/theme tokens reuse karti hain.
 - Shell sirf top-level Workout tab select karta hai.
@@ -969,5 +1026,5 @@ Current rule:
 
 *Maintained as Android architecture source guide for Tnyx.*
 
-**Last updated: 2026-07-18**
+**Last updated: 2026-07-29**
 

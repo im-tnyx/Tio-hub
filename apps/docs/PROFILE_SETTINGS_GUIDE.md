@@ -2,7 +2,7 @@
 
 यह दस्तावेज़ Tnyx ऐप में **Profile (Fitness Hub + Account Launcher)**, **Settings (App Config)**, और उनसे जुड़े feature ownership rules को परिभाषित करता है। यह guide 100+ screens, Wear OS, future iOS, AI Coach, Health integrations, Recovery, Subscription, और Offline Mode को ध्यान में रखकर बनाया गया canonical architecture reference है।
 
-**Last Updated:** 2026-06-27  
+**Last Updated:** 2026-07-29
 **Status:** Canonical Architecture Reference
 
 ---
@@ -108,7 +108,13 @@ features/progress/
     └── shared/widgets/
 ```
 
-### D. Future Feature Modules
+### D. Home Module (`:features:home`)
+
+Home owns the main dashboard composition. It may summarize data from other
+features through public contracts, but detailed actions and business logic
+remain inside their owning feature modules.
+
+### E. Future Feature Modules
 
 ये modules अभी full implementation के लिए जरूरी नहीं हैं, लेकिन ownership अभी से freeze रहेगी:
 
@@ -117,9 +123,12 @@ features/health/                # Health Connections, Health Connect, Garmin, Fi
 features/recovery/              # Sleep, HRV, Readiness, Recovery Score
 features/billing/               # Subscription UI, plan management, purchase restore
 features/rewards/               # Rewards, badges, streak rewards, gamification
+features/referrals/             # Invite links, attribution, qualification status, referral history
 features/learn/                 # Resources, education, articles, guides
 features/coach/                 # AI Coach chat and coaching experiences
 ```
+
+These folders may be checked in as ownership placeholders before implementation, but they should not be added to Gradle wiring until runtime work starts.
 
 ---
 
@@ -206,6 +215,20 @@ Optional shortcut:
 
 Subscription state किसी auth/session layer में own नहीं होगा। Auth सिर्फ user identity/session का owner है; feature access Billing / Entitlement से आएगा।
 
+### Referrals Domain (future `:features:referrals`)
+
+Referrals owns:
+- Invite codes and referral links.
+- Android Share Sheet entry.
+- Referral attribution, status, and history.
+- Qualifying-conversion and eligibility presentation.
+- Referral terms and reward progress.
+
+Referral attribution, anti-fraud checks, qualification, and idempotency require
+backend verification. A client-side share action must never grant an
+entitlement directly. Billing owns the resulting 7/15-day plan entitlement;
+Rewards may display the earned benefit.
+
 ### Personal Information
 
 Personal Information Profile domain का हिस्सा है।
@@ -252,17 +275,25 @@ Cross-feature navigation हमेशा public route contracts से होग
 
 ### Main Information Architecture
 
-Primary bottom navigation freeze:
+Supported top-level destination catalog:
 
 ```text
 Home
-Workout
 Nutrition
-Coach
+Meal Plan
+Tio
+Workout
+Library
 Progress
+You
 ```
 
-Profile bottom nav tab नहीं होगा। Profile top-right avatar से खुलेगा।
+Settings 3-6 visible destinations persist कर सकता है। Home pinned रहेगा और
+default set Home, Nutrition, Tio, Workout, और Progress है।
+
+Profile UI `You` destination से उपलब्ध है। You enabled होने पर avatar उसी tab
+को select करेगा; You disabled होने पर avatar standalone `ProfileGraph` fallback
+launch करेगा।
 
 Settings bottom nav tab नहीं होगा। Settings gear icon से खुलेगा।
 
@@ -308,6 +339,7 @@ Settings को feature-specific business settings duplicate नहीं कर
 | Nutrition Targets | Nutrition | Nutrition; Profile/Settings can launch | Nutrition | Nutrition |
 | Health Connections | Health | Health; Profile/Settings can launch | Health | Health |
 | Subscription | Billing UI or Settings entry | Billing; Settings/Profile can launch | Billing / Entitlement | Billing |
+| Referrals / Invite Rewards | Referrals | Referrals; Profile/Rewards can launch | Referrals policy + Billing entitlement | Referrals/backend + Billing |
 | Resources | Learn | Learn; Profile/Settings can launch | Learn / Content | Learn / Content |
 | Rewards | Rewards | Rewards; Profile can launch | Rewards | Rewards |
 | Personal Information | Profile | Profile; Settings/Onboarding can launch | Profile | Profile |
@@ -326,11 +358,14 @@ RootGraph
 ├── AuthGraph
 ├── OnboardingGraph
 ├── MainGraph
-│   ├── HomeGraph
-│   ├── WorkoutGraph
+│   ├── Home
 │   ├── NutritionGraph
-│   ├── CoachGraph
-│   └── ProgressGraph
+│   ├── MealPlan
+│   ├── AiCoach
+│   ├── WorkoutGraph
+│   ├── WorkoutLibrary
+│   ├── ProgressGraph
+│   └── You
 ├── ProfileGraph
 ├── SettingsGraph
 └── ModalGraph
@@ -359,16 +394,22 @@ Onboarding Graph initial data collection और resume flow own करेगा�
 
 Main Graph shell tabs contain करेगा:
 - Home.
-- Workout.
 - Nutrition.
-- Coach.
+- Meal Plan.
+- Tio.
+- Workout.
+- Library.
 - Progress.
+- You.
 
-Main Graph का काम shell और tab navigation है। यह feature business rules own नहीं करेगा।
+Main Graph supported routes host करता है; Settings preference केवल 3-6 tabs की
+visibility और order बदलती है। Main Graph feature business rules own नहीं करेगा।
 
 ### Profile Graph
 
-Profile Graph avatar से launch होगा। यह profile home, personal information, और account launcher surfaces own करेगा।
+`MainRoute.You` persistent-shell Profile entry है। Standalone `ProfileGraph`
+avatar fallback और root-level profile flows के लिए रहेगा। दोनों profile home,
+personal information, और account launcher surfaces Profile ownership में रखते हैं।
 
 ### Settings Graph
 

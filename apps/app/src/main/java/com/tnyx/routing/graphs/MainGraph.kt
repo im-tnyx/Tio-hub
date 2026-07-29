@@ -30,9 +30,9 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.tnyx.core.theme.TnyxTheme
-import com.tnyx.core.ui.shell.domain.model.HomeExperienceMode
 import com.tnyx.core.ui.shell.domain.model.ShellTab
 import com.tnyx.core.ui.shell.domain.model.deriveHomeExperienceMode
+import com.tnyx.features.home.presentation.home.HomeRoute
 import com.tnyx.features.nutrition.navigation.nutritionGraph
 import com.tnyx.features.profile.presentation.home.ProfileHomeRoute
 import com.tnyx.features.progress.navigation.progressGraph
@@ -48,7 +48,7 @@ fun NavGraphBuilder.mainGraph(
     onOpenSettings: () -> Unit,
 ) {
     composable<MainRoute.Home> {
-        AdaptiveHomeFoundation(
+        HomeRoute(
             mode = deriveHomeExperienceMode(enabledTabs),
         )
     }
@@ -161,21 +161,6 @@ private fun YouHeader(
             )
         }
     }
-}
-
-@Composable
-private fun AdaptiveHomeFoundation(mode: HomeExperienceMode) {
-    val focus = when (mode) {
-        HomeExperienceMode.Nutrition -> "Nutrition-focused summary"
-        HomeExperienceMode.Workout -> "Workout-focused summary"
-        HomeExperienceMode.Balanced -> "Balanced coaching summary"
-        HomeExperienceMode.Custom -> "Custom summary"
-    }
-
-    TopLevelFoundationScreen(
-        title = "Home",
-        description = "$focus. Detailed actions remain inside their owning tabs.",
-    )
 }
 
 @Composable

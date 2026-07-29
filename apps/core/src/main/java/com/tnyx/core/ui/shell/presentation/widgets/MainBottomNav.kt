@@ -21,9 +21,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material.icons.rounded.DateRange
-import androidx.compose.material.icons.rounded.MenuBook
-import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -64,7 +61,8 @@ private val NAV_TABS = listOf(
     BottomNavTab(
         tab = ShellTab.MealPlan,
         label = "Meal Plan",
-        imageVector = Icons.Rounded.DateRange,
+        selectedIconRes = R.drawable.ic_nav_meal_plan_filled,
+        unselectedIconRes = R.drawable.ic_nav_meal_plan_outlined,
     ),
     BottomNavTab(
         tab = ShellTab.Ai,
@@ -80,7 +78,8 @@ private val NAV_TABS = listOf(
     BottomNavTab(
         tab = ShellTab.WorkoutLibrary,
         label = "Library",
-        imageVector = Icons.Rounded.MenuBook,
+        selectedIconRes = R.drawable.ic_nav_library_filled,
+        unselectedIconRes = R.drawable.ic_nav_library_outlined,
     ),
     BottomNavTab(
         tab = ShellTab.Progress,
@@ -91,7 +90,8 @@ private val NAV_TABS = listOf(
     BottomNavTab(
         tab = ShellTab.You,
         label = "You",
-        imageVector = Icons.Rounded.Person,
+        selectedIconRes = R.drawable.ic_user_fill,
+        unselectedIconRes = R.drawable.ic_user__outline,
     ),
 )
 

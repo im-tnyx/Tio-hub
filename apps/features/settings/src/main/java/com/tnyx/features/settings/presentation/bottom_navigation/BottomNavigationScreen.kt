@@ -20,16 +20,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.DateRange
-import androidx.compose.material.icons.rounded.FitnessCenter
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.Insights
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.MenuBook
-import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -46,9 +39,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.tnyx.core.R
 import com.tnyx.core.theme.TnyxTheme
 import com.tnyx.core.ui.components.cards.TnyxCard
 import com.tnyx.core.ui.components.cards.TnyxCardVariant
@@ -461,22 +455,32 @@ private fun TabIcon(
     tab: ShellTab,
     modifier: Modifier = Modifier,
 ) {
-    val icon: ImageVector = when (tab) {
-        ShellTab.Home -> Icons.Rounded.Home
-        ShellTab.Nutrition -> Icons.Rounded.Restaurant
-        ShellTab.MealPlan -> Icons.Rounded.DateRange
-        ShellTab.Ai -> Icons.Outlined.AutoAwesome
-        ShellTab.Workout -> Icons.Rounded.FitnessCenter
-        ShellTab.WorkoutLibrary -> Icons.Rounded.MenuBook
-        ShellTab.Progress -> Icons.Rounded.Insights
-        ShellTab.You -> Icons.Rounded.Person
+    val outlineIconRes: Int? = when (tab) {
+        ShellTab.Home -> R.drawable.ic_nav_home_outlined
+        ShellTab.Nutrition -> R.drawable.ic_nav_nutrition_outlined
+        ShellTab.MealPlan -> R.drawable.ic_nav_meal_plan_outlined
+        ShellTab.Ai -> null
+        ShellTab.Workout -> R.drawable.ic_nav_workout_outlined
+        ShellTab.WorkoutLibrary -> R.drawable.ic_nav_library_outlined
+        ShellTab.Progress -> R.drawable.ic_nav_progress_outlined
+        ShellTab.You -> R.drawable.ic_user__outline
     }
-    Icon(
-        imageVector = icon,
-        contentDescription = null,
-        tint = if (tab == ShellTab.Ai) TnyxTheme.colors.ai else TnyxTheme.colors.textSecondary,
-        modifier = modifier,
-    )
+
+    if (outlineIconRes != null) {
+        Icon(
+            painter = painterResource(id = outlineIconRes),
+            contentDescription = null,
+            tint = TnyxTheme.colors.textSecondary,
+            modifier = modifier,
+        )
+    } else {
+        Icon(
+            imageVector = Icons.Outlined.AutoAwesome,
+            contentDescription = null,
+            tint = TnyxTheme.colors.ai,
+            modifier = modifier,
+        )
+    }
 }
 
 private fun ShellTab.displayLabel(): String = when (this) {

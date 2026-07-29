@@ -29,7 +29,12 @@ android {
     }
     sourceSets {
         getByName("main") {
-            res.srcDirs("src/main/res", "src/main/res_chips")
+            res.srcDirs(
+                "src/main/res",
+                "src/main/res_chips",
+                "src/main/res-icons",
+                "src/main/res-images",
+            )
         }
         getByName("debug") {
             assets.srcDir("../../assets/final/musclemap")

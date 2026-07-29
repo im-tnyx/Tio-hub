@@ -98,6 +98,10 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
 
 - [x] Onboarding docs and flow reference exist.
 - [x] Splash and welcome foundation exist.
+- [x] Versioned section/step domain contracts define the simple
+  Profile -> Body Goal -> Workout -> Review flow with stable string IDs.
+- [x] Flow tests cover ordering, cross-section navigation, serialization,
+  insertion-safe positions, and invalid definitions.
 - [ ] Full modular onboarding runtime is not yet wired into the new app architecture.
 - [ ] Onboarding persistence is not yet repository-backed.
 - [ ] Resume manager is not yet backend repository-backed.
@@ -258,6 +262,16 @@ Rule: Future module folders may exist as checked-in ownership placeholders, but 
 ---
 
 ## ✅ Latest Validation
+
+### 2026-07-29: Stable Onboarding flow contracts
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :features:onboarding:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL.
+- [x] Scope: stable section/step IDs, versioned default flow, deterministic
+  next/previous positions, serialization, and insertion-safe progress identity.
+- [x] No onboarding UI, draft persistence, backend synchronization, remote
+  config, analytics, or finalization was added.
 
 ### 2026-07-29: Persistent Fake Auth session and Splash gate
 

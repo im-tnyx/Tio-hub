@@ -1,6 +1,6 @@
 # Backend-Mediated Profile Boundary
 
-Status: In Progress
+Status: Complete
 Updated: 2026-07-29
 
 ## Objective
@@ -46,3 +46,9 @@ repository boundary for a future backend-mediated Auth/Profile implementation.
   token, and identity mapping decisions are approved.
 - Keep email/mobile writes and remote Profile/avatar synchronization deferred
   until their authoritative backend contracts exist.
+
+## Closure
+
+- Merged through PR #25 as merge commit `20ee350`.
+- Follow-up backend/API work remains deferred and is not part of this closed
+  local Android checkpoint.

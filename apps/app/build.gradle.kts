@@ -117,6 +117,7 @@ dependencies {
     implementation(project(":features:profile"))
     implementation(project(":features:settings"))
     implementation(project(":features:progress"))
+    implementation(project(":features:home"))
 
     testImplementation(libs.junit)
     testImplementation(libs.androidx.room.testing)

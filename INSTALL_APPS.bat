@@ -9,6 +9,9 @@ set "APPS_DIR=%ROOT_DIR%apps"
 set "GRADLEW=%APPS_DIR%\gradlew.bat"
 set "DEFAULT_JBR=C:\Program Files\Android\Android Studio\jbr"
 set "DEFAULT_ADB_DIR=%LOCALAPPDATA%\Android\Sdk\platform-tools"
+set "APK_EXPORT_DIR=C:\Users\SANTOSH\OneDrive\Apps"
+set "MOBILE_APK_SOURCE=%APPS_DIR%\app\build\outputs\apk\debug\app-debug.apk"
+set "MOBILE_APK_NAME=tio-hub-mobile-debug.apk"
 
 if exist "%DEFAULT_ADB_DIR%\adb.exe" (
     set "PATH=%DEFAULT_ADB_DIR%;%PATH%"
@@ -60,6 +63,7 @@ echo   2. Watch app only       ^(:wear:installDebug^)
 echo   3. Mobile + Watch       ^(:app:installDebug then :wear:installDebug^)
 echo   4. Build only           ^(:app:assembleDebug + :wear:assembleDebug^)
 echo   5. Clean mobile install ^(uninstall com.tnyx, then install^)
+echo   6. Export mobile APK    ^(build and save to %APK_EXPORT_DIR%^)
 echo   0. Exit
 echo.
 set /p "CHOICE=Enter choice: "
@@ -73,6 +77,8 @@ if /I "%CHOICE%"=="both" set "CHOICE=3"
 if /I "%CHOICE%"=="all" set "CHOICE=3"
 if /I "%CHOICE%"=="build" set "CHOICE=4"
 if /I "%CHOICE%"=="clean-mobile" set "CHOICE=5"
+if /I "%CHOICE%"=="apk" set "CHOICE=6"
+if /I "%CHOICE%"=="export-apk" set "CHOICE=6"
 
 if "%CHOICE%"=="1" (
     call :install_mobile
@@ -98,6 +104,11 @@ if "%CHOICE%"=="4" (
 
 if "%CHOICE%"=="5" (
     call :clean_install_mobile
+    call :exit_with_msg !ERRORLEVEL!
+)
+
+if "%CHOICE%"=="6" (
+    call :export_mobile_apk
     call :exit_with_msg !ERRORLEVEL!
 )
 
@@ -147,6 +158,37 @@ if !ERRORLEVEL! EQU 0 (
     call :adb shell am start -n com.tnyx.wear/com.tnyx.wear.MainActivity
 )
 exit /b !ERRORLEVEL!
+
+:export_mobile_apk
+echo.
+echo === Exporting mobile APK ===
+call :gradle :app:assembleDebug
+if errorlevel 1 exit /b 1
+
+if not exist "%MOBILE_APK_SOURCE%" (
+    echo.
+    echo ERROR: APK not found at:
+    echo %MOBILE_APK_SOURCE%
+    exit /b 1
+)
+
+if not exist "%APK_EXPORT_DIR%" (
+    echo Creating export folder:
+    echo %APK_EXPORT_DIR%
+    mkdir "%APK_EXPORT_DIR%" >nul 2>nul
+)
+
+copy /Y "%MOBILE_APK_SOURCE%" "%APK_EXPORT_DIR%\%MOBILE_APK_NAME%" >nul
+if errorlevel 1 (
+    echo.
+    echo ERROR: Failed to copy APK to:
+    echo %APK_EXPORT_DIR%\%MOBILE_APK_NAME%
+    exit /b 1
+)
+
+echo APK saved to:
+echo %APK_EXPORT_DIR%\%MOBILE_APK_NAME%
+exit /b 0
 
 :ask_serial
 echo.
@@ -198,6 +240,7 @@ echo   INSTALL_APPS.bat watch
 echo   INSTALL_APPS.bat both
 echo   INSTALL_APPS.bat build
 echo   INSTALL_APPS.bat clean-mobile
+echo   INSTALL_APPS.bat apk
 exit /b 0
 
 :print_devices

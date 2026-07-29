@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- मांसपेशियों के चिप्स के लिए बेस कलर (Base muscle color) -->
+    <color name="chip_muscle_base">#E0E0E0</color>
+
+    <!-- हाईलाइटेड मांसपेशियों के लिए कलर (Active/Highlighted muscle color) -->
+    <color name="chip_muscle_highlight">#E74C3C</color>
+</resources>

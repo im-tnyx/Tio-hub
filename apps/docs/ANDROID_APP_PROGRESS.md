@@ -40,16 +40,18 @@ Truth boundary:
 - [x] **Profile Module Skeleton:** `:features:profile` create हो चुका है।
 - [x] **Settings Module Skeleton:** `:features:settings` create हो चुका है।
 - [x] **Progress Module Skeleton:** `:features:progress` create हो चुका है।
+- [x] **Home Module:** `:features:home` main dashboard UI own करता है और `:app` से wired है।
 - [x] **Public Route Contracts:** `ProfileRoute`, `SettingsRoute`, और `ProgressRoute` add हो चुके हैं।
 - [x] **Progress Tab Wiring:** Bottom nav का `Progress` tab अब `MainRoute.ProgressGraph` और `ProgressNavGraph` से wired है।
-- [x] **Gradle Wiring:** `settings.gradle.kts` और `:app` dependencies में `profile`, `settings`, और `progress` modules include हैं।
+- [x] **Gradle Wiring:** `settings.gradle.kts` और `:app` dependencies में `home`, `profile`, `settings`, और `progress` modules include हैं।
 
-Current skeleton modules:
+Current Gradle feature modules:
 
 ```text
 features/
 ├── auth/
 ├── onboarding/
+├── home/
 ├── workout/
 ├── nutrition/
 ├── profile/
@@ -62,6 +64,13 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
 ---
 
 ## 🟡 Phase 4: Current Runtime Feature Status (IN PROGRESS)
+
+### Home
+
+- [x] Home module exists and is Gradle-wired into `:app`.
+- [x] `MainRoute.Home` renders the feature-owned `HomeRoute` and `HomeScreen`.
+- [x] Home icon and image resource roots are separated under `res-icons` and `res-images`.
+- [ ] Home currently renders an adaptive foundation summary; repository-backed dashboard sections are not implemented.
 
 ### Auth
 
@@ -123,7 +132,7 @@ Boundary note: shared contracts, Phone persistence/recovery, and the first repos
 - [x] Profile module exists.
 - [x] Profile public routes exist.
 - [x] Profile home skeleton exists.
-- [ ] Profile graph is not yet launched from avatar in root navigation.
+- [x] Avatar entry selects You when enabled and launches standalone `ProfileGraph` as fallback.
 - [ ] Personal Information repository source of truth is not implemented yet.
 - [ ] Profile launcher cards are not production UI yet.
 
@@ -132,7 +141,7 @@ Boundary note: shared contracts, Phone persistence/recovery, and the first repos
 - [x] Settings module exists.
 - [x] Settings public routes exist.
 - [x] Settings home skeleton exists.
-- [ ] Settings graph is not yet launched from gear icon in root navigation.
+- [x] Settings graph is launched from the You/Profile gear entry.
 - [ ] App preferences, notifications, units, account, export, and about screens are placeholders/folders only.
 - [ ] Subscription UI entry is not wired to Billing / Entitlement yet.
 
@@ -153,10 +162,10 @@ Boundary note: shared contracts, Phone persistence/recovery, and the first repos
 
 Recommended next order:
 
-1. **Profile/Settings navigation wiring**
-   - Launch `ProfileGraph` from avatar.
-   - Launch `SettingsGraph` from gear icon.
-   - Keep Profile as launcher only.
+1. **Home dashboard vertical slice**
+   - Replace the adaptive foundation copy with the first real summary section.
+   - Consume only public feature contracts; keep domain repositories in their owners.
+   - Keep Home as composition and launcher UI, not a cross-domain business owner.
 
 2. **Nutrition repository vertical slice**
    - Add `NutritionRepository` contract.
@@ -180,22 +189,24 @@ Recommended next order:
 
 ---
 
-## ⚪ Phase 6: Future Modules (PLANNED, DO NOT CREATE YET)
+## ⚪ Phase 6: Future Modules (OWNERSHIP PLACEHOLDERS)
 
-These modules are ownership-frozen in docs but should not be created until first real screen/repository is needed:
+These modules are ownership-frozen and have placeholder folders only. Their
+Gradle modules should not be created until the first real screen or repository is needed:
 
 - [ ] `:features:health`
 - [ ] `:features:recovery`
 - [ ] `:features:billing`
 - [ ] `:features:rewards`
+- [ ] `:features:referrals`
 - [ ] `:features:learn`
 - [ ] `:features:coach`
 
-Rule: Future module folders should be created only when runtime code needs them.
+Rule: Future module folders may exist as checked-in ownership placeholders, but Gradle modules should be added only when runtime code needs them.
 
 ---
 
-## 📂 Current File Structure (As of 2026-06-27)
+## 📂 Current File Structure (As of 2026-07-29)
 
 - `apps/app`: Android app entry, routing, DI composition.
 - `apps/core`: theme, UI components, shell, route contracts.
@@ -207,6 +218,14 @@ Rule: Future module folders should be created only when runtime code needs them.
 - `apps/features/profile`: Profile launcher skeleton.
 - `apps/features/settings`: Settings config skeleton.
 - `apps/features/progress`: Progress graph and skeleton screens.
+- `apps/features/home`: Main dashboard UI owner, Gradle-wired.
+- `apps/features/coach`: Ownership placeholder only, not Gradle-wired.
+- `apps/features/health`: Ownership placeholder only, not Gradle-wired.
+- `apps/features/recovery`: Ownership placeholder only, not Gradle-wired.
+- `apps/features/billing`: Ownership placeholder only, not Gradle-wired.
+- `apps/features/rewards`: Ownership placeholder only, not Gradle-wired.
+- `apps/features/referrals`: Referral/invite ownership placeholder with an icon resource directory, not Gradle-wired.
+- `apps/features/learn`: Ownership placeholder only, not Gradle-wired.
 - `apps/docs/ANDROID_APP_PROGRESS.md`: This tracking file.
 
 ---
@@ -246,5 +265,5 @@ Known warning:
 
 ---
 
-**Last Updated:** 2026-07-18
+**Last Updated:** 2026-07-29
 **Current Focus:** Re-prove the dense Stage 3 editor compile/tests, then complete device smoke for RPE, add-set, Previous copy, history, and force-stop recovery before Stage 4 exercise catalog and approved media work begins.

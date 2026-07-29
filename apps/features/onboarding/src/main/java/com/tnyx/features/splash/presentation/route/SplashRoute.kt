@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun SplashRoute(
     onNavigateToWelcome: () -> Unit,
+    onNavigateToMain: () -> Unit,
     viewModel: SplashViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -26,6 +27,7 @@ fun SplashRoute(
         viewModel.effect.collectLatest { effect ->
             when (effect) {
                 is SplashEffect.NavigateToWelcome -> onNavigateToWelcome()
+                is SplashEffect.NavigateToMain -> onNavigateToMain()
             }
         }
     }

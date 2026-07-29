@@ -17,12 +17,13 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
 
-private const val AVATAR_BUCKET = "profile-avatars"
+private const val AVATAR_BUCKET = "tio-profile"
 private const val AVATAR_FILE_NAME = "avatar.jpg"
 
 @Serializable
 data class ProfileDto(
     val id: String,
+    val username: String? = null,
     val display_name: String? = null,
     val dob: String? = null,
     val gender: String? = null,
@@ -62,7 +63,7 @@ class SupabaseProfileRepository(
     }
 
     override fun getProfile(userId: String): Flow<UserProfile> = flow {
-        val dto = supabaseClient.from("profiles").select {
+        val dto = supabaseClient.from("profile_overview").select {
             filter {
                 eq("id", userId)
             }
@@ -77,19 +78,32 @@ class SupabaseProfileRepository(
 
         supabaseClient.from("profiles").update(
             mapOf(
+                "username" to profile.username
+                    .trim()
+                    .removePrefix("@")
+                    .lowercase()
+                    .takeIf(String::isNotBlank),
                 "display_name" to profile.displayName,
                 "dob" to profile.dob,
                 "gender" to profile.gender,
                 "plan_label" to profile.planLabel,
-                "weight" to profile.weight,
-                "height" to profile.height,
-                "bmi" to profile.bmi,
-                "bmr" to profile.bmr,
             ),
         ) {
             filter {
                 eq("id", currentUserId)
             }
+        }
+
+        supabaseClient.from("user_nutrition_profiles").upsert(
+            mapOf(
+                "user_id" to currentUserId,
+                "current_weight_kg" to profile.weight.takeIf { it > 0.0 },
+                "height_cm" to profile.height.takeIf { it > 0 },
+                "body_fat_percentage" to profile.bodyFat.takeIf { it > 0.0 },
+                "target_weight_kg" to profile.currentJourney.targetWeight.takeIf { it > 0.0 },
+            ),
+        ) {
+            onConflict = "user_id"
         }
         currentProfile.value = profile
     }
@@ -147,7 +161,7 @@ class SupabaseProfileRepository(
     }
 
     private suspend fun getCurrentProfileDto(userId: String): ProfileDto {
-        return supabaseClient.from("profiles").select {
+        return supabaseClient.from("profile_overview").select {
             filter {
                 eq("id", userId)
             }
@@ -194,6 +208,7 @@ class SupabaseProfileRepository(
             ),
             avatarUrl = avatar_url?.takeIf(String::isNotBlank),
             membershipTier = MembershipTier.fromPlanLabel(plan_label),
+            username = username.orEmpty(),
         )
     }
 }

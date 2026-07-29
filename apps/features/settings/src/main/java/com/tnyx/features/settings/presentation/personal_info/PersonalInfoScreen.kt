@@ -147,6 +147,16 @@ fun PersonalInfoScreen(
                 value = state.fullName,
                 onValueChange = { onAction(PersonalInfoAction.OnFullNameChange(it)) },
                 icon = Icons.Default.Person,
+                errorMessage = state.fullNameError,
+            )
+
+            PersonalInfoField(
+                label = "USERNAME",
+                value = state.username,
+                onValueChange = { onAction(PersonalInfoAction.OnUsernameChange(it)) },
+                icon = Icons.Default.AlternateEmail,
+                errorMessage = state.usernameError,
+                helperMessage = "3-30 lowercase letters, numbers, or underscores",
             )
 
             ReadOnlyField(
@@ -154,6 +164,14 @@ fun PersonalInfoScreen(
                 value = state.email.ifBlank { "Not provided" },
                 icon = Icons.Default.Email,
             )
+
+            state.saveError?.let { message ->
+                Text(
+                    text = message,
+                    style = TnyxTheme.typography.labelSmall,
+                    color = TnyxTheme.colors.error,
+                )
+            }
 
             Column {
                 Text(
@@ -494,6 +512,8 @@ private fun PersonalInfoField(
     value: String,
     onValueChange: (String) -> Unit,
     icon: ImageVector,
+    errorMessage: String? = null,
+    helperMessage: String? = null,
 ) {
     Column {
         Text(
@@ -509,6 +529,9 @@ private fun PersonalInfoField(
             leadingIcon = { Icon(icon, null, modifier = Modifier.size(20.dp)) },
             modifier = Modifier.fillMaxWidth(),
             label = null,
+            isError = errorMessage != null,
+            errorMessage = errorMessage,
+            helperMessage = helperMessage,
         )
     }
 }

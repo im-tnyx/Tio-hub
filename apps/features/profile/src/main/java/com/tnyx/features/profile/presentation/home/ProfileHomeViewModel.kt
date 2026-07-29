@@ -30,6 +30,10 @@ class ProfileHomeViewModel @Inject constructor(
                     .collect { profile ->
                         _uiState.update { state ->
                             state.copy(
+                                username = resolveProfileUsername(
+                                    username = profile.username,
+                                    displayName = profile.displayName,
+                                ),
                                 displayName = profile.displayName,
                                 status = profile.statusLabel.ifBlank {
                                     formatStatus(profile.dob, profile.gender)
@@ -83,4 +87,23 @@ class ProfileHomeViewModel @Inject constructor(
             Period.between(birthDate, currentDate).years
         }.getOrNull()
     }
+}
+
+internal fun resolveProfileUsername(
+    username: String,
+    displayName: String,
+): String {
+    val persistedUsername = username
+        .trim()
+        .removePrefix("@")
+        .lowercase()
+    if (persistedUsername.isNotBlank()) return persistedUsername
+
+    return displayName
+        .trim()
+        .lowercase()
+        .replace(Regex("[^a-z0-9]+"), "_")
+        .trim('_')
+        .take(30)
+        .ifBlank { "username" }
 }

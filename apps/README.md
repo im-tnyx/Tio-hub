@@ -271,7 +271,8 @@ app/src/main/
 10. **Repository interfaces `:shared` में** — Shared contracts `:shared` में रखें; implementation platform/data layer में होगी
 11. **Feature launchers thin रखें** — Profile, Settings, Home, और Coach दूसरे feature की business logic या repositories own नहीं करेंगे
 12. **Ownership matrix wins** — ambiguity हो तो [docs/PROFILE_SETTINGS_GUIDE.md](docs/PROFILE_SETTINGS_GUIDE.md) follow करें
-13. **Hardcoded data temporary रखें** — Supabase Incremental Setup Plan is the source for replacing sample data with repositories, seed data, RLS, and future TypeScript/Turborepo contracts
+13. **Hardcoded data temporary रखें** — local fake/in-memory repositories current
+    scaffolding हैं; real persistence future backend repositories से आएगी
 
 ---
 
@@ -291,7 +292,8 @@ app/src/main/
 | [docs/PROFILE_SETTINGS_GUIDE.md](docs/PROFILE_SETTINGS_GUIDE.md) | Canonical Profile, Settings, Progress, Billing, Health, Recovery ownership reference |
 | [docs/ONBOARDING_FLOW_DETAILED.md](docs/ONBOARDING_FLOW_DETAILED.md) | Complete onboarding runtime flow reference |
 | [docs/TNYX_MODULAR_ONBOARDING.md](docs/TNYX_MODULAR_ONBOARDING.md) | Modular onboarding implementation guide |
-| [docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md](docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md) | Plan for replacing hardcoded data with Supabase-backed slices, RLS, seed data, and future TypeScript/Turborepo boundaries |
+| [docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md](docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md) | Verified Supabase schema/RLS foundations for future backend-owned feature slices |
+| [docs/BACKEND_TRANSITION_PLAN.md](docs/BACKEND_TRANSITION_PLAN.md) | Backend-mediated client data boundary and future Auth/Profile backend entry slice |
 | [docs/TESTING_GUIDE.md](docs/TESTING_GUIDE.md) | Testing strategy and guidelines |
 | [docs/ANDROID_APP_PROGRESS.md](docs/ANDROID_APP_PROGRESS.md) | Android mobile app implementation progress tracking |
 | [docs/WEAR_OS_PLAN.md](docs/WEAR_OS_PLAN.md) | Wear OS feature plan — Workout + Nutrition watch app |

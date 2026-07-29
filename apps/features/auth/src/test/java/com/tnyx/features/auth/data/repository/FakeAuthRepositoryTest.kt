@@ -1,13 +1,16 @@
 package com.tnyx.features.auth.data.repository
 
+import com.tnyx.features.auth.data.session.InMemoryAuthSessionStore
 import com.tnyx.features.auth.domain.model.AuthResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FakeAuthRepositoryTest {
-    private val repository = FakeAuthRepository()
+    private val sessionStore = InMemoryAuthSessionStore()
+    private val repository = FakeAuthRepository(sessionStore)
 
     @Test
     fun signIn_withValidCredentials_returnsAuthenticated() = runTest {
@@ -16,9 +19,21 @@ class FakeAuthRepositoryTest {
         assertTrue(result is AuthResult.Authenticated)
         val session = (result as AuthResult.Authenticated).session
         assertEquals(email, session.email)
-        assertEquals("fake-user-${email.hashCode()}", session.userId)
         assertEquals("Test", session.displayName)
         assertEquals(false, session.isDemo)
+        assertEquals(session, sessionStore.currentSession())
+    }
+
+    @Test
+    fun signIn_normalizesEmailToStableUserIdentity() = runTest {
+        val first = repository.signIn(" Test@Example.com ", "password123")
+            as AuthResult.Authenticated
+        repository.signOut()
+        val second = repository.signIn("test@example.com", "password123")
+            as AuthResult.Authenticated
+
+        assertEquals("test@example.com", first.session.email)
+        assertEquals(first.session.userId, second.session.userId)
     }
 
     @Test
@@ -45,6 +60,7 @@ class FakeAuthRepositoryTest {
         val result = repository.signUp("New User", email, "securepass")
         assertTrue(result is AuthResult.VerificationRequired)
         assertEquals(email, (result as AuthResult.VerificationRequired).email)
+        assertNull(sessionStore.currentSession())
     }
 
     @Test
@@ -68,9 +84,20 @@ class FakeAuthRepositoryTest {
         assertTrue(result is AuthResult.Authenticated)
         val session = (result as AuthResult.Authenticated).session
         assertEquals(email, session.email)
-        assertEquals("verified-user-${email.hashCode()}", session.userId)
         assertEquals("Verify", session.displayName)
         assertEquals(false, session.isDemo)
+        assertEquals(session, sessionStore.currentSession())
+    }
+
+    @Test
+    fun verifyOtp_afterSignUp_preservesSubmittedDisplayName() = runTest {
+        repository.signUp("Santosh Kumar", "SANTOSH@example.com", "securepass")
+
+        val result = repository.verifyOtp("santosh@example.com", "123456")
+            as AuthResult.Authenticated
+
+        assertEquals("santosh@example.com", result.session.email)
+        assertEquals("Santosh Kumar", result.session.displayName)
     }
 
     @Test
@@ -86,5 +113,14 @@ class FakeAuthRepositoryTest {
         val result = repository.resendOtp(email)
         assertTrue(result is AuthResult.VerificationRequired)
         assertEquals(email, (result as AuthResult.VerificationRequired).email)
+    }
+
+    @Test
+    fun signOut_clearsActiveSession() = runTest {
+        repository.signInWithDemoAccount()
+
+        repository.signOut()
+
+        assertNull(sessionStore.currentSession())
     }
 }

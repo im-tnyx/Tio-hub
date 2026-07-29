@@ -1,5 +1,7 @@
 package com.tnyx.features.auth.domain.model
 
+import com.tnyx.shared.auth.domain.model.AuthSession
+
 sealed interface AuthResult {
     data class Authenticated(val session: AuthSession) : AuthResult
     data class VerificationRequired(val email: String) : AuthResult

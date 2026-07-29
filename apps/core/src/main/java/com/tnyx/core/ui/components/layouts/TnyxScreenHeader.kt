@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import com.tnyx.core.theme.TnyxTheme
 
@@ -25,6 +26,8 @@ fun TnyxScreenHeader(
     height: Dp? = null,
     navigationIcon: ImageVector? = null,
     onNavigationClick: (() -> Unit)? = null,
+    uppercaseTitle: Boolean = true,
+    reserveNavigationSpace: Boolean = true,
     actions: @Composable (RowScope.() -> Unit)? = null
 ) {
     val tokens = TnyxTheme.components.header
@@ -50,14 +53,16 @@ fun TnyxScreenHeader(
                         tint = tokens.contentColor
                     )
                 }
-            } else {
+            } else if (reserveNavigationSpace) {
                 Spacer(modifier = Modifier.width(tokens.leadingSpacing))
             }
 
             Text(
-                text = title.uppercase(),
+                text = if (uppercaseTitle) title.uppercase() else title,
                 style = tokens.titleStyle,
-                color = tokens.contentColor
+                color = tokens.contentColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
 

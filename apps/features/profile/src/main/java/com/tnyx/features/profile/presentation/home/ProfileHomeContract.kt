@@ -3,6 +3,7 @@ package com.tnyx.features.profile.presentation.home
 import com.tnyx.shared.profile.domain.model.MembershipTier
 
 data class ProfileHomeUiState(
+    val username: String = "",
     val displayName: String = "",
     val status: String = "",
     val planLabel: String = "",
@@ -36,6 +37,7 @@ data class WorkoutChartState(
 
 sealed interface ProfileHomeAction {
     data object BackClicked : ProfileHomeAction
+    data object EditProfileClicked : ProfileHomeAction
     data object SupportClicked : ProfileHomeAction
     data object SettingsClicked : ProfileHomeAction
     data object ViewAllProgressClicked : ProfileHomeAction

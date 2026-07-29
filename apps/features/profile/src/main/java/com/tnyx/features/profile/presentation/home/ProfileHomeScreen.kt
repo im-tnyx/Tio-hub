@@ -1,14 +1,12 @@
 package com.tnyx.features.profile.presentation.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.MonitorWeight
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Star
@@ -19,36 +17,24 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextAlign
 import com.tnyx.core.theme.TnyxTheme
 import com.tnyx.core.ui.components.avatar.TnyxAvatarSize
 import com.tnyx.core.ui.components.avatar.TnyxUserAvatar
-import com.tnyx.core.ui.components.cards.TnyxCard
-import com.tnyx.core.ui.components.cards.TnyxCardVariant
+import com.tnyx.core.ui.components.layouts.TnyxScreenHeader
 
 @Composable
 fun ProfileHomeScreen(
     uiState: ProfileHomeUiState,
+    showBackButton: Boolean,
     onAction: (ProfileHomeAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val scrollState = rememberLazyListState()
-    val headerHeight = 56.dp
-    val showUsernameInHeader by remember {
-        derivedStateOf {
-            scrollState.firstVisibleItemIndex > 1 ||
-                (scrollState.firstVisibleItemIndex == 1 && scrollState.firstVisibleItemScrollOffset > 100)
-        }
-    }
+    val usernameLabel = "@${uiState.username.ifBlank { "username" }}"
+    val headerHeight = TnyxTheme.components.header.height
 
     Box(
         modifier = modifier
@@ -56,12 +42,9 @@ fun ProfileHomeScreen(
             .background(TnyxTheme.colors.background),
     ) {
         LazyColumn(
-            state = scrollState,
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                top = 16.dp,
-                bottom = 48.dp,
-            ),
+            contentPadding = PaddingValues(bottom = TnyxTheme.dimens.SpaceXXL),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             item {
                 Spacer(modifier = Modifier.statusBarsPadding())
@@ -69,279 +52,201 @@ fun ProfileHomeScreen(
             }
 
             item {
-                Box(modifier = Modifier.padding(horizontal = TnyxTheme.dimens.SpaceS)) {
-                    UserProfileCard(
-                        state = uiState,
-                        onEditPhoto = { /* TODO: Wire profile photo editing. */ },
-                        onClick = { /* TODO: Wire personal information. */ },
-                    )
-                }
+                ProfileIdentity(
+                    state = uiState,
+                    usernameLabel = usernameLabel,
+                    onEditProfile = { onAction(ProfileHomeAction.EditProfileClicked) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = TnyxTheme.dimens.SpaceL),
+                )
             }
         }
 
-        Box(
+        TnyxScreenHeader(
+            title = usernameLabel,
             modifier = Modifier
-                .fillMaxWidth()
-                .background(TnyxTheme.colors.surfaceRaised)
+                .align(Alignment.TopCenter)
                 .statusBarsPadding(),
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(headerHeight)
-                    .padding(horizontal = TnyxTheme.dimens.SpaceS),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                IconButton(
-                    onClick = { onAction(ProfileHomeAction.BackClicked) },
-                ) {
+            navigationIcon = if (showBackButton) {
+                Icons.AutoMirrored.Rounded.ArrowBack
+            } else {
+                null
+            },
+            onNavigationClick = if (showBackButton) {
+                { onAction(ProfileHomeAction.BackClicked) }
+            } else {
+                null
+            },
+            uppercaseTitle = false,
+            reserveNavigationSpace = false,
+            actions = {
+                IconButton(onClick = { onAction(ProfileHomeAction.EditProfileClicked) }) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                        contentDescription = "Back",
-                        tint = TnyxTheme.colors.textPrimary,
+                        imageVector = Icons.Rounded.Edit,
+                        contentDescription = "Edit profile",
+                        tint = TnyxTheme.components.header.contentColor,
                     )
                 }
-                Text(
-                    text = if (showUsernameInHeader) uiState.displayName else "Profile",
-                    style = TnyxTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                    ),
-                    color = TnyxTheme.colors.textPrimary,
-                    modifier = Modifier
-                        .padding(start = 16.dp)
-                        .weight(1f),
-                )
-                IconButton(
-                    onClick = { onAction(ProfileHomeAction.SettingsClicked) },
-                ) {
+                IconButton(onClick = { onAction(ProfileHomeAction.SettingsClicked) }) {
                     Icon(
                         imageVector = Icons.Rounded.Settings,
                         contentDescription = "Settings",
-                        tint = TnyxTheme.colors.textPrimary,
+                        tint = TnyxTheme.components.header.contentColor,
                     )
                 }
-            }
-        }
+            },
+        )
     }
 }
 
 @Composable
-private fun UserProfileCard(
+private fun ProfileIdentity(
     state: ProfileHomeUiState,
-    onEditPhoto: () -> Unit,
-    onClick: () -> Unit,
+    usernameLabel: String,
+    onEditProfile: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    TnyxCard(
-        variant = TnyxCardVariant.Normal,
-        padding = 0.dp,
-        onClick = onClick,
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                TnyxUserAvatar(
-                    imageUrl = state.avatarUrl,
-                    displayName = state.displayName,
-                    membershipTier = state.membershipTier,
-                    size = TnyxAvatarSize.Large,
-                    onClick = onClick,
-                    showEditBadge = true,
-                    onEditClick = onEditPhoto,
-                )
+        Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceL))
 
-                Spacer(modifier = Modifier.width(16.dp))
+        TnyxUserAvatar(
+            imageUrl = state.avatarUrl,
+            displayName = state.displayName,
+            membershipTier = state.membershipTier,
+            size = TnyxAvatarSize.Large,
+            onClick = onEditProfile,
+        )
 
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = state.displayName,
-                            style = TnyxTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = TnyxTheme.colors.textPrimary,
-                        )
-                        if (state.planLabel.isNotEmpty()) {
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Icon(
-                                imageVector = Icons.Rounded.CheckCircle,
-                                contentDescription = "Verified Premium",
-                                tint = Color(0xFF1DA1F2),
-                                modifier = Modifier.size(18.dp),
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = state.status,
-                        style = TnyxTheme.typography.bodyMedium,
-                        color = TnyxTheme.colors.textSecondary,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Box(
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .border(
-                                width = 0.5.dp,
-                                color = TnyxTheme.colors.warning.copy(alpha = 0.4f),
-                                shape = CircleShape,
-                            )
-                            .background(TnyxTheme.colors.warning.copy(alpha = 0.1f))
-                            .padding(horizontal = 12.dp, vertical = 4.dp),
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Rounded.Star,
-                                contentDescription = null,
-                                tint = TnyxTheme.colors.warning,
-                                modifier = Modifier.size(12.dp),
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = state.planLabel.uppercase(),
-                                style = TnyxTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 10.sp,
-                                    letterSpacing = 0.5.sp,
-                                ),
-                                color = TnyxTheme.colors.warning,
-                            )
-                        }
-                    }
-                }
+        Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceSM))
 
-                Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = state.displayName.ifBlank { "Your profile" },
+            style = TnyxTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = TnyxTheme.colors.textPrimary,
+            textAlign = TextAlign.Center,
+        )
 
-                Column(
-                    horizontalAlignment = Alignment.End,
-                    modifier = Modifier
-                        .align(Alignment.Top)
-                        .padding(start = 8.dp),
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "BMI: ",
-                            style = TnyxTheme.typography.bodySmall,
-                            color = TnyxTheme.colors.textSecondary,
-                        )
-                        Text(
-                            text = if (state.bmi > 0.0) state.bmi.toString() else "-",
-                            style = TnyxTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                            color = TnyxTheme.colors.textPrimary,
-                        )
-                    }
+        Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceXS))
 
-                    val (bmiStatus, bmiColor) = remember(state.bmi) {
-                        when {
-                            state.bmi <= 0.0 -> Pair("", Color.Transparent)
-                            state.bmi < 18.5 -> Pair("Underweight", Color(0xFF03A9F4))
-                            state.bmi < 25.0 -> Pair("Healthy", Color(0xFF4CAF50))
-                            state.bmi < 30.0 -> Pair("Overweight", Color(0xFFFF9800))
-                            else -> Pair("Obese", Color(0xFFF44336))
-                        }
-                    }
+        Text(
+            text = usernameLabel,
+            style = TnyxTheme.typography.bodyMedium,
+            color = TnyxTheme.colors.textSecondary,
+            textAlign = TextAlign.Center,
+        )
 
-                    if (bmiStatus.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = bmiStatus,
-                            style = TnyxTheme.typography.labelSmall.copy(
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                            ),
-                            color = bmiColor,
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            HorizontalDivider(
-                thickness = 0.5.dp,
-                color = TnyxTheme.colors.textPrimary.copy(alpha = 0.2f),
+        if (state.status.isNotBlank()) {
+            Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
+            Text(
+                text = state.status,
+                style = TnyxTheme.typography.bodyMedium,
+                color = TnyxTheme.colors.textSecondary,
+                textAlign = TextAlign.Center,
             )
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
+        if (state.planLabel.isNotBlank()) {
+            Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceSM))
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .background(
+                        color = TnyxTheme.colors.surfaceVariant,
+                        shape = CircleShape,
+                    )
+                    .padding(
+                        horizontal = TnyxTheme.dimens.SpaceSM,
+                        vertical = TnyxTheme.dimens.SpaceXS,
+                    ),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                ProfileMetric(
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Rounded.MonitorWeight,
-                            contentDescription = null,
-                            tint = TnyxTheme.colors.textPrimary,
-                            modifier = Modifier.size(20.dp),
-                        )
-                    },
-                    label = "WEIGHT",
-                    value = if (state.weight > 0.0) "${state.weight} kg" else "--",
-                    modifier = Modifier.weight(1f),
+                Icon(
+                    imageVector = Icons.Rounded.Star,
+                    contentDescription = null,
+                    tint = TnyxTheme.colors.warning,
+                    modifier = Modifier.size(TnyxTheme.dimens.IconXXS),
                 )
-                ProfileMetric(
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Rounded.Straighten,
-                            contentDescription = null,
-                            tint = TnyxTheme.colors.textPrimary,
-                            modifier = Modifier.size(20.dp),
-                        )
-                    },
-                    label = "HEIGHT",
-                    value = if (state.height > 0) "${state.height} cm" else "--",
-                    modifier = Modifier.weight(1f),
-                )
-                ProfileMetric(
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Rounded.Whatshot,
-                            contentDescription = null,
-                            tint = TnyxTheme.colors.textPrimary,
-                            modifier = Modifier.size(20.dp),
-                        )
-                    },
-                    label = "BMR",
-                    value = if (state.bmr > 0) "${state.bmr} kcal" else "--",
-                    modifier = Modifier.weight(1f),
+                Spacer(modifier = Modifier.width(TnyxTheme.dimens.SpaceXS))
+                Text(
+                    text = state.planLabel.uppercase(),
+                    style = TnyxTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = TnyxTheme.colors.warning,
                 )
             }
+        }
+
+        Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceL))
+
+        HorizontalDivider(
+            thickness = TnyxTheme.dimens.BorderSubtle,
+            color = TnyxTheme.colors.surfaceVariant,
+        )
+
+        Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceM))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ProfileMetric(
+                icon = Icons.Rounded.MonitorWeight,
+                label = "WEIGHT",
+                value = if (state.weight > 0.0) "${state.weight} kg" else "--",
+                modifier = Modifier.weight(1f),
+            )
+            ProfileMetric(
+                icon = Icons.Rounded.Straighten,
+                label = "HEIGHT",
+                value = if (state.height > 0) "${state.height} cm" else "--",
+                modifier = Modifier.weight(1f),
+            )
+            ProfileMetric(
+                icon = Icons.Rounded.Whatshot,
+                label = "BMR",
+                value = if (state.bmr > 0) "${state.bmr} kcal" else "--",
+                modifier = Modifier.weight(1f),
+            )
         }
     }
 }
 
 @Composable
 private fun ProfileMetric(
-    icon: @Composable () -> Unit,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     value: String,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
+    Column(
         modifier = modifier,
-        horizontalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        icon()
-        Spacer(modifier = Modifier.width(8.dp))
-        Column {
-            Text(
-                text = label,
-                style = TnyxTheme.typography.labelSmall.copy(
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.SemiBold,
-                ),
-                color = TnyxTheme.colors.textMuted,
-            )
-            Text(
-                text = value,
-                style = TnyxTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                color = TnyxTheme.colors.textPrimary,
-            )
-        }
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = TnyxTheme.colors.textPrimary,
+            modifier = Modifier.size(TnyxTheme.dimens.IconS),
+        )
+        Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
+        Text(
+            text = label,
+            style = TnyxTheme.typography.labelSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = TnyxTheme.colors.textMuted,
+        )
+        Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceXXS))
+        Text(
+            text = value,
+            style = TnyxTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = TnyxTheme.colors.textPrimary,
+            textAlign = TextAlign.Center,
+        )
     }
 }

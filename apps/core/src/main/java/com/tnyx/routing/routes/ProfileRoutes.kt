@@ -14,7 +14,4 @@ sealed interface ProfileRoute {
 
     @Serializable
     data object Home : ProfileRoute
-
-    @Serializable
-    data object PersonalInfo : ProfileRoute
 }

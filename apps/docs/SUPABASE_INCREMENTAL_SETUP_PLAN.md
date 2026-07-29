@@ -1,8 +1,11 @@
 # Supabase Incremental Setup Plan
 
-Last updated: 2026-06-27
+Last updated: 2026-07-29
 
-This document is the memory anchor for moving TNYX away from hardcoded demo data and toward a Supabase-backed app, one feature slice at a time. It also defines how this Android/Wear checkout should evolve toward a future TypeScript/Turborepo backend without leaking database assumptions into clients.
+This document is the memory anchor for moving TNYX away from hardcoded demo data
+toward verified Supabase schema foundations that a future backend can consume,
+one feature slice at a time. Android/Wear client data access follows the
+backend-mediated boundary in `BACKEND_TRANSITION_PLAN.md`.
 
 
 ## Why This Document Exists
@@ -12,7 +15,7 @@ This plan exists to stop hardcoded data from becoming product architecture.
 Hardcoded/demo values are allowed only as temporary UI scaffolding while a slice is not wired yet. They are not the source of truth. Each feature should graduate to:
 
 - a repository contract
-- a Supabase or backend-backed implementation
+- a local development implementation or future backend-backed implementation
 - local/dev seed data
 - RLS validation
 - app integration tests or manual read/write validation
@@ -36,6 +39,27 @@ Current checkout is Android/Wear focused:
 - `apps/docs`: current checked-in documentation location.
 
 The root `.env` exists locally, but env values must never be documented or committed.
+
+## Current Live Baseline
+
+The connected Tio-hub Supabase project now has an initial Profile vertical-slice
+baseline:
+
+- `profiles`
+- `user_nutrition_profiles`
+- `user_workout_profiles`
+- locked `auth_identities`
+- security-invoker `profile_overview`
+- `tio-profile` storage bucket
+
+This baseline does not make Auth, Nutrition Diary, Workout cloud sync, or the
+full Profile flow complete. The verified object inventory, applied migration
+versions, current security state, and future table backlog are maintained in
+[SUPABASE_SCHEMA_STATUS.md](SUPABASE_SCHEMA_STATUS.md).
+
+The current Android Profile binding is non-persistent and in-memory. Live
+Supabase objects are not an active Android synchronization path.
+
 ## Future Turborepo / TypeScript Boundary
 
 This checkout is Android/Wear focused today, but TNYX is expected to move toward a larger TypeScript/Turborepo monorepo later.
@@ -68,7 +92,8 @@ Rules for the future TypeScript repo:
 - A feature table is created only when a runtime slice needs it.
 - Supabase RLS and grants are part of the slice, not a later cleanup task.
 
-This means the Android repository contract built today should be easy to swap from direct Supabase access to backend API access later, without rewriting Screens.
+This means Android repository contracts built today must accept a backend API
+implementation later without rewriting Screens.
 
 
 ## Source Of Truth Rules
@@ -104,7 +129,8 @@ This keeps the schema easy to reason about and prevents stale tables that no run
 
 Use these rules for every Supabase slice:
 
-- Mobile clients only get `SUPABASE_URL` and a publishable or anon client key.
+- Production mobile business-data flows call backend APIs rather than protected
+  Supabase tables or storage directly.
 - `SUPABASE_SERVICE_ROLE_KEY` is server/local tooling only.
 - Every `public` table must have RLS enabled.
 - User-owned rows must include a stable owner column, normally `user_id uuid references auth.users(id)`.
@@ -125,10 +151,14 @@ Use this workflow for each feature.
 4. Create the migration with Supabase CLI or MCP tooling.
 5. Add local/dev seed data.
 6. Add repository interfaces under `apps/shared` when the model must be shared by phone and watch.
-7. Add Supabase or backend repository implementation in the platform-owned layer.
+7. Add a local fake/in-memory implementation until the approved backend
+   repository exists.
 8. Update ViewModels to consume repositories instead of hardcoded state.
 9. Keep Screens dumb: render `UiState`, emit `Action`.
-10. Validate with compile checks and at least one manual Supabase read/write test.
+10. Validate app contracts with compile/tests and validate schema/RLS through
+    approved database tooling; do not add direct client reads to prove a table.
+11. Update `SUPABASE_SCHEMA_STATUS.md` with only the objects actually applied
+    and verified.
 
 
 ## Contract Boundary
@@ -165,9 +195,9 @@ Nutrition can be first if the immediate goal is removing current hardcoded meal 
 
 Purpose:
 
-- Prove Supabase Auth session flow.
-- Create user-owned profile data.
-- Establish RLS pattern for the rest of the app.
+- Define the future backend Auth/Profile contract and identity mapping.
+- Keep local Profile UI testable behind the stable repository contract.
+- Establish the database ownership/RLS pattern the backend will enforce.
 
 Likely tables:
 
@@ -175,26 +205,26 @@ Likely tables:
 
 Demo data:
 
-- One local/dev test user.
-- One profile row for that user.
+- Optional local fake profile state in Android.
+- No live demo user or profile row is required.
 
 Validation:
 
-- Signed-out users cannot read profiles.
-- A signed-in user can read and update only their own profile.
-- Android auth route can reach a logged-in session.
+- Database policies prevent cross-user Profile access.
+- Android Profile UI reads and updates through `ProfileRepository`.
+- Future backend contract defines token verification and internal user mapping.
 
 Done when:
 
 - Auth screen is not a TODO destination.
-- Profile data comes from Supabase-backed repository.
+- Profile data comes from the approved backend repository in production.
 - No service key is present in client code.
 
 ## Slice 2: Nutrition
 
 Purpose:
 
-- Replace hardcoded nutrition ViewModel data with Supabase-backed data.
+- Replace hardcoded nutrition ViewModel data with repository-backed data.
 - Provide demo meals for local/dev testing.
 
 Likely tables:
@@ -332,30 +362,38 @@ Use these ownership boundaries:
 
 ## Open Decisions
 
-Before first implementation, decide:
+Resolved decisions:
 
-- Will Android use Supabase directly, or call a backend API for writes?
+- Android/Wear protected business data will use backend APIs.
+- Live Supabase objects remain server-side database/storage foundations.
+- Fake/in-memory repositories do not claim persistence or synchronization.
+
+Open decisions before backend implementation:
+
 - Will local Supabase be the default dev workflow?
 - Which auth method ships first: email/password, phone OTP, or magic link?
 - Where will migration files live: `supabase/migrations` or `database/migrations`?
 - What is the canonical repo name for this checkout: `Tio-hub` or `tnyx-hub`?
 - Which package owns shared TypeScript contracts after Turborepo migration?
-- Will backend APIs become the only write path for mobile/web/admin clients?
+- Which backend runtime, hosting, token, and identity mapping strategy will be
+  authoritative?
 
 ## First Practical Task
 
 Recommended first task:
 
-Nutrition read-only vertical slice.
+Profile backend contract packet, while retaining the local in-memory runtime.
 
 Why:
 
-- Current nutrition ViewModels already contain hardcoded sample meals.
-- A small schema can prove the migration, seed, repository, RLS, and UI flow.
-- It gives the app realistic data without waiting for the whole backend.
+- Profile already has a stable Android repository contract and verified schema.
+- Defining auth headers, identity mapping, DTOs, and error behavior first avoids
+  coupling future clients to Supabase.
+- Backend runtime can remain deferred until hosting and auth decisions are
+  approved.
 
 Minimum outcome:
 
-- local/dev Supabase has nutrition tables and demo data.
-- Android nutrition diary reads from repository.
-- hardcoded meals are no longer the permanent source of truth.
+- Android Profile remains usable through `InMemoryProfileRepository`.
+- Future backend Profile endpoints and identity boundary are documented.
+- Live Supabase Profile objects remain backend foundations, not client sync.

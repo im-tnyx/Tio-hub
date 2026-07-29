@@ -83,7 +83,16 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
 - [x] AuthRepository contract exists.
 - [x] FakeAuthRepository backs the minimum auth flow for app testing.
 - [x] Unit tests cover FakeAuthRepository and Auth ViewModels (Login, Signup, OTP).
-- [ ] Supabase/Firebase auth source of truth is finalized.
+- [x] Fake Auth publishes a shared in-memory `AuthSession` with normalized,
+  stable per-email user IDs.
+- [x] Signup display name survives OTP verification and seeds the local Profile.
+- [x] Settings Logout clears the active session and returns to `AuthGraph`
+  after removing the authenticated main back stack.
+- [x] Android owns `DataStoreAuthSessionStore`; Fake Auth session identity
+  survives process restart and no password is persisted.
+- [x] Splash resolves the persisted session before routing: signed-in sessions
+  open `MainGraph`, signed-out state opens Welcome.
+- [ ] Backend auth/token/identity source of truth is finalized.
 
 ### Onboarding
 
@@ -91,7 +100,7 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
 - [x] Splash and welcome foundation exist.
 - [ ] Full modular onboarding runtime is not yet wired into the new app architecture.
 - [ ] Onboarding persistence is not yet repository-backed.
-- [ ] Resume manager is not yet Supabase-backed.
+- [ ] Resume manager is not yet backend repository-backed.
 
 ### Nutrition
 
@@ -99,7 +108,7 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
 - [x] Nutrition graph exists.
 - [x] Meal Diary, Meal Editor, and Meal Item Editor screens exist.
 - [x] Bottom nav visibility is hidden for meal edit/item edit flows.
-- [ ] Nutrition data is still not fully repository/Supabase-backed.
+- [ ] Nutrition data is still not fully local/backend repository-backed.
 - [ ] Hardcoded sample meal data is still not fully removed.
 - [ ] Nutrition targets table/repository slice is not implemented yet.
 
@@ -131,10 +140,28 @@ Boundary note: shared contracts, Phone persistence/recovery, and the first repos
 
 - [x] Profile module exists.
 - [x] Profile public routes exist.
-- [x] Profile home skeleton exists.
+- [x] Profile home uses a card-less identity layout with reusable large avatar,
+  `@username`, membership summary, and plain Weight/Height/BMR metrics.
+- [x] Profile top bar exposes Edit and Settings; standalone Profile shows Back
+  while the persistent You tab does not.
+- [x] Edit and avatar actions open the real Settings Personal Information route.
 - [x] Avatar entry selects You when enabled and launches standalone `ProfileGraph` as fallback.
-- [ ] Personal Information repository source of truth is not implemented yet.
-- [ ] Profile launcher cards are not production UI yet.
+- [x] Shared Profile model and Supabase repository DTO expose additive username data.
+- [x] Active Profile Hilt binding uses a local persistent
+  `RoomProfileRepository`; authenticated profiles are keyed by active fake
+  user ID and signed-out state resolves to a clean guest profile.
+- [x] Local Profile changes remain isolated across account switches and persist
+  through app process/database recreation.
+- [x] Personal Information reads active name, username, email, and avatar;
+  Save updates normalized name/username and avatar actions update the active
+  local Room profile.
+- [x] Direct `SupabaseProfileRepository` is not the active Android Profile
+  runtime source.
+- [x] `bootstrap_user_profiles` और `deny_direct_auth_identity_access` migrations
+  connected Tio-hub Supabase project पर applied और verified हैं।
+- [ ] Personal Information email and mobile writes remain deferred; remote
+  Profile/avatar synchronization is not implemented.
+- [ ] Remaining Profile launchers are intentionally absent until their owning feature slices exist.
 
 ### Settings
 
@@ -174,7 +201,7 @@ Recommended next order:
    - Then add Supabase tables/seed/RLS when implementation begins.
 
 3. **Auth real session source slice**
-   - Replace `FakeAuthRepository` with Supabase/Firebase or backend-backed implementation.
+   - Replace `FakeAuthRepository` with the approved backend auth implementation.
    - Keep ViewModels behind the stable `AuthRepository` contract.
 
 4. **Progress real screens**
@@ -231,6 +258,81 @@ Rule: Future module folders may exist as checked-in ownership placeholders, but 
 ---
 
 ## ✅ Latest Validation
+
+### 2026-07-29: Persistent Fake Auth session and Splash gate
+
+- [x] First focused run compiled onboarding/Auth/app and passed
+  onboarding/Auth tests.
+- [x] App Kotlin and Hilt compilation succeeded with the app-owned
+  `DataStoreAuthSessionStore` binding.
+- [x] Root cause of the two app test failures was test-only:
+  `ApplicationProvider` lacked `RobolectricTestRunner`.
+- [x] `DataStoreAuthSessionStoreTest` now declares the required Robolectric
+  runner.
+- [x] Post-fix `:app:testDebugUnitTest` rerun passes with the Robolectric
+  runner.
+- [x] No password, backend runtime, Supabase apply/push, or remote data
+  synchronization was added.
+
+### 2026-07-29: Room-backed local Profile persistence
+
+- [x] `./gradlew.bat :shared:test :features:auth:testDebugUnitTest
+  :features:onboarding:testDebugUnitTest :features:profile:testDebugUnitTest
+  :features:settings:testDebugUnitTest :app:testDebugUnitTest
+  :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL.
+- [x] Active Profile binding persists per-user Profile JSON in Room and avatar
+  JPEGs in app-internal storage.
+- [x] Focused Robolectric coverage verifies database recreation and local avatar
+  update/removal behavior.
+- [x] No backend runtime or remote Supabase Profile/avatar synchronization was
+  added.
+
+### 2026-07-29: Fake Auth and per-user local Profile integration
+
+- [x] `./gradlew.bat :shared:test :features:auth:testDebugUnitTest :features:profile:testDebugUnitTest :features:settings:compileDebugKotlin :app:testDebugUnitTest :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL
+- [x] Shared result: 21 tests, 0 failures, 0 errors, 0 skipped.
+- [x] Auth result: 44 tests, 0 failures, 0 errors, 0 skipped.
+- [x] Profile result: 3 tests, 0 failures, 0 errors, 0 skipped.
+- [x] App result: 18 tests, 0 failures, 0 errors, 0 skipped.
+- [x] Follow-up `:features:settings:testDebugUnitTest` result: 9 tests,
+  0 failures, 0 errors, 0 skipped.
+- [x] Scope: shared session contract, stable Fake Auth identity, per-user
+  in-memory Profile isolation, Settings logout, and local name/username/avatar
+  editing.
+- [x] No backend runtime, live Supabase change, remote account, or app-restart
+  persistence was added.
+
+### 2026-07-29: Backend-mediated Profile runtime boundary
+
+- [x] `./gradlew.bat :app:testDebugUnitTest :features:profile:testDebugUnitTest :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL
+- [x] App result: 15 tests, 0 failures, 0 errors, 0 skipped.
+- [x] Profile result: 3 tests, 0 failures, 0 errors, 0 skipped.
+- [x] Scope: active `InMemoryProfileRepository` binding, empty local defaults,
+  update/identity/avatar behavior tests, and backend-mediated architecture docs.
+- [x] No backend runtime, Supabase apply/push, or remote data synchronization
+  changed in this slice.
+
+### 2026-07-29: Card-less Profile and username contract
+
+- [x] `./gradlew.bat :features:profile:testDebugUnitTest :app:compileDebugKotlin :shared:test --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL
+- [x] Profile result: 3 tests, 0 failures, 0 errors, 0 skipped.
+- [x] Scope: reusable Profile header, card-less identity UI, Edit/Settings routing,
+  username fallback behavior, additive username model/DTO mapping, and shared compatibility.
+- [x] Live Supabase verification: `profiles`, `user_nutrition_profiles`,
+  `user_workout_profiles`, locked `auth_identities`, security-invoker
+  `profile_overview`, और `tio-profile` bucket मौजूद हैं।
+- [x] RLS/grants verification: Profile/Nutrition/Workout owner policies मौजूद हैं;
+  `auth_identities` direct authenticated access explicitly denies; Security Advisor
+  returned zero findings.
+- [x] Data safety verification: no demo user or profile row seeded.
+- [x] Durable live-schema inventory and future table backlog are tracked in
+  `SUPABASE_SCHEMA_STATUS.md`.
+- [x] Backend-mediated client data access is accepted in ADR-0006; live schema
+  existence is no longer described as active Android synchronization.
 
 ### 2026-07-16: Workout shared contract v2
 

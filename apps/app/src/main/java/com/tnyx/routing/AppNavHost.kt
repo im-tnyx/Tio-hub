@@ -1,7 +1,9 @@
 package com.tnyx.routing
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -21,8 +23,22 @@ import com.tnyx.routing.routes.SettingsRoute
 @Composable
 fun AppNavHost(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    sessionViewModel: AppSessionViewModel = hiltViewModel(),
 ) {
+    LaunchedEffect(sessionViewModel) {
+        sessionViewModel.effect.collect { effect ->
+            when (effect) {
+                AppSessionEffect.SignedOut -> {
+                    navController.navigate(RootRoute.AuthGraph) {
+                        popUpTo(RootRoute.MainGraph) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            }
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = RootRoute.Splash,
@@ -34,7 +50,12 @@ fun AppNavHost(
                     navController.navigate(RootRoute.Welcome) {
                         popUpTo(RootRoute.Splash) { inclusive = true }
                     }
-                }
+                },
+                onNavigateToMain = {
+                    navController.navigate(RootRoute.MainGraph) {
+                        popUpTo(RootRoute.Splash) { inclusive = true }
+                    }
+                },
             )
         }
 
@@ -66,14 +87,11 @@ fun AppNavHost(
         )
 
         profileGraph(
-            navController = navController,
             onOpenSettings = {
                 navController.navigate(SettingsRoute.Graph)
             },
-            onOpenProgress = {
-                navController.navigate(RootRoute.MainGraph) {
-                    popUpTo(RootRoute.MainGraph) { inclusive = false }
-                }
+            onOpenPersonalInfo = {
+                navController.navigate(SettingsRoute.PersonalInfo)
             },
             onNavigateBack = {
                 navController.popBackStack()
@@ -90,7 +108,8 @@ fun AppNavHost(
             },
             onOpenAppPreferences = {
                 navController.navigate(SettingsRoute.AppPreferences)
-            }
+            },
+            onLogout = sessionViewModel::signOut,
         )
 
         composable<NutritionRoute.Targets> {

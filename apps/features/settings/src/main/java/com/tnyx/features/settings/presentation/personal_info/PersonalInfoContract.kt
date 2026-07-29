@@ -12,6 +12,7 @@ enum class DeleteAccountStep {
 
 data class PersonalInfoUiState(
     val fullName: String = "",
+    val username: String = "",
     val email: String = "",
     val phoneNumber: String = "",
     val selectedCountry: Country? = null,
@@ -25,6 +26,9 @@ data class PersonalInfoUiState(
     val membershipTier: MembershipTier = MembershipTier.Free,
     val isAvatarUploading: Boolean = false,
     val avatarError: String? = null,
+    val fullNameError: String? = null,
+    val usernameError: String? = null,
+    val saveError: String? = null,
     val isSaving: Boolean = false,
     val hasChanges: Boolean = false,
     val showDobPicker: Boolean = false,
@@ -44,6 +48,7 @@ sealed interface PersonalInfoAction {
     data object OnRemovePhotoClicked : PersonalInfoAction
     data object OnDismissAvatarError : PersonalInfoAction
     data class OnFullNameChange(val name: String) : PersonalInfoAction
+    data class OnUsernameChange(val username: String) : PersonalInfoAction
     data class OnEmailChange(val email: String) : PersonalInfoAction
     data class OnMobileChange(val value: String) : PersonalInfoAction
     data class OnCountrySelected(val country: Country) : PersonalInfoAction

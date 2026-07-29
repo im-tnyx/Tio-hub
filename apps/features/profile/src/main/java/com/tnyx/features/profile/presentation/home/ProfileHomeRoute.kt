@@ -8,21 +8,24 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun ProfileHomeRoute(
     onOpenSettings: () -> Unit,
-    onOpenProgress: () -> Unit,
+    onOpenEditProfile: () -> Unit,
     onNavigateBack: () -> Unit,
+    showBackButton: Boolean,
     viewModel: ProfileHomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     ProfileHomeScreen(
         uiState = uiState,
+        showBackButton = showBackButton,
         onAction = { action ->
             when (action) {
-                ProfileHomeAction.JourneyHistoryClicked -> { /* TODO: Navigate to history */ }
-                ProfileHomeAction.ProgressPhotosClicked -> onOpenProgress()
+                ProfileHomeAction.EditProfileClicked -> onOpenEditProfile()
                 ProfileHomeAction.AddProgressPhotosClicked -> { /* TODO: Navigate to add photos */ }
                 ProfileHomeAction.SettingsClicked -> onOpenSettings()
                 ProfileHomeAction.BackClicked -> onNavigateBack()
+                ProfileHomeAction.JourneyHistoryClicked -> { /* TODO: Navigate to history */ }
+                ProfileHomeAction.ProgressPhotosClicked -> { /* TODO: Navigate to progress */ }
                 ProfileHomeAction.SupportClicked -> { /* TODO: Navigate to support */ }
                 ProfileHomeAction.ViewAllProgressClicked -> { /* TODO: Navigate to progress */ }
                 ProfileHomeAction.HealthConnectionsClicked -> { /* TODO: Navigate to health connections */ }

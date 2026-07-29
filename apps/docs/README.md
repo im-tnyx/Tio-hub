@@ -44,6 +44,8 @@ Use this path for a new contributor, AI assistant, or future maintainer:
 | [PROFILE_SETTINGS_GUIDE.md](PROFILE_SETTINGS_GUIDE.md) | Canonical ownership reference for Profile, Settings, Progress, Subscription entry, Personal Information, Health, Recovery, Resources, and Rewards |
 | [WORKOUT_PRODUCT_BLUEPRINT.md](WORKOUT_PRODUCT_BLUEPRINT.md) | Planned Workout product and UX target, Lyfta reference boundary, gender-aware exercise media contract, architecture gates, and 90-day delivery order |
 | [SUPABASE_INCREMENTAL_SETUP_PLAN.md](SUPABASE_INCREMENTAL_SETUP_PLAN.md) | Plan for replacing hardcoded data with repository-backed Supabase slices, RLS, seed data, and future TypeScript/Turborepo boundaries |
+| [SUPABASE_SCHEMA_STATUS.md](SUPABASE_SCHEMA_STATUS.md) | Verified live Supabase object and migration inventory, runtime integration status, future table backlog, and table-addition gate |
+| [BACKEND_TRANSITION_PLAN.md](BACKEND_TRANSITION_PLAN.md) | Binding backend-mediated client data boundary, current fake/in-memory runtime limitation, and future minimum backend slice |
 | [ANDROID_APP_PROGRESS.md](ANDROID_APP_PROGRESS.md) | Current Android implementation status: completed foundation, skeletons, placeholders, known validation, and next recommended slices |
 | [NUTRITION.md](NUTRITION.md) | Nutrition runtime behavior, Meal Diary/Editor flow, UI/data boundary, hardcoded-data status, and persistence roadmap |
 | [ONBOARDING_FLOW_DETAILED.md](ONBOARDING_FLOW_DETAILED.md) | Full onboarding reference, section order, data collection, resume expectations, and future integration direction |
@@ -67,6 +69,7 @@ Current ADRs:
 - [ADR-0003: Type-Safe Navigation And Chrome Policy](adr/0003-type-safe-navigation-and-chrome-policy.md)
 - [ADR-0004: Incremental Supabase Setup](adr/0004-incremental-supabase-setup.md)
 - [ADR-0005: User-Configurable Bottom Navigation](adr/0005-user-configurable-bottom-navigation.md)
+- [ADR-0006: Backend-Mediated Client Data Access](adr/0006-backend-mediated-client-data-access.md)
 
 Add or update an ADR when a change affects:
 
@@ -192,6 +195,9 @@ Do not let hardcoded sample data become the source of truth.
 
 For details, use [SUPABASE_INCREMENTAL_SETUP_PLAN.md](SUPABASE_INCREMENTAL_SETUP_PLAN.md).
 
+Check [SUPABASE_SCHEMA_STATUS.md](SUPABASE_SCHEMA_STATUS.md) before proposing a
+new table so existing live objects are not duplicated.
+
 ## Reading Paths By Task
 
 ### If You Are Adding A New Screen
@@ -246,6 +252,7 @@ Hard rule:
 Read:
 
 - [SUPABASE_INCREMENTAL_SETUP_PLAN.md](SUPABASE_INCREMENTAL_SETUP_PLAN.md)
+- [SUPABASE_SCHEMA_STATUS.md](SUPABASE_SCHEMA_STATUS.md)
 - the feature-specific doc, such as [NUTRITION.md](NUTRITION.md)
 - [ENGINEERING_GUIDELINES.md](ENGINEERING_GUIDELINES.md)
 
@@ -322,6 +329,9 @@ Update docs when a change affects:
 - or long-term roadmap boundaries.
 
 Update [ANDROID_APP_PROGRESS.md](ANDROID_APP_PROGRESS.md) when implementation status changes.
+
+Update [SUPABASE_SCHEMA_STATUS.md](SUPABASE_SCHEMA_STATUS.md) after every applied
+or removed migration, table, view, function, RLS/grant policy, or storage object.
 
 Update [ARCHITECTURE_CHANGELOG.md](ARCHITECTURE_CHANGELOG.md) when project structure, data flow, module boundaries, navigation policy, or engineering practice changes.
 

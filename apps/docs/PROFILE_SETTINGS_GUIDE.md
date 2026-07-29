@@ -242,6 +242,29 @@ Single Source of Truth:
 - Onboarding, Profile, और Settings तीनों same repository use करेंगे।
 - Onboarding initial data collect कर सकता है, लेकिन final persisted identity data Profile repository से आएगा।
 - Settings personal info edit screen खोल सकता है, लेकिन ownership Profile की रहेगी।
+- Public `username` `profiles.username` से आएगा, database में `@` के बिना
+  lowercase handle के रूप में store होगा, और Profile repository इसे UI तक
+  expose करेगा।
+- Username format `3-30` lowercase letters, numbers, और underscore है।
+  Case-insensitive uniqueness database index enforce करेगा।
+- Supabase identity baseline `profiles.id = auth.users.id` रखता है।
+- `user_nutrition_profiles` current one-to-one body, nutrition-target, diet,
+  activity, और onboarding sleep-time snapshot store करता है। `bed_time` और
+  `wake_up_time` यहां collect होना Recovery business ownership को Nutrition में
+  transfer नहीं करता।
+- `user_workout_profiles` one-to-one workout setup/preferences store करता है।
+- `profile_overview` security-invoker view Profile summary के लिए Weight, Height,
+  BMI, और BMR derive करता है; duplicate body values `profiles` में store नहीं होते।
+- `auth_identities` direct client access deny करता है और future Firebase/provider
+  linking के लिए backend-only boundary है।
+- Current Android runtime `ProfileRepository` को local persistent
+  `RoomProfileRepository` से bind करता है। `FakeAuthRepository` app-owned
+  DataStore session publish करता है; Profile active fake user ID से keyed है,
+  account switch पर isolated रहता है, और logout clean guest identity पर लौटता
+  है। Auth identity और local Profile fields app restart survive करते हैं।
+  Personal Information name और normalized username Room में persist करता है;
+  avatar app-internal file में रहता है। Live Supabase objects schema foundation
+  हैं; remote Profile/avatar synchronization future backend repository से आएगी।
 
 ---
 
@@ -299,24 +322,17 @@ Settings bottom nav tab नहीं होगा। Settings gear icon से �
 
 ### Profile Dashboard Structure
 
-Profile screen एक **Fitness Hub + Account Launcher** की तरह काम करेगी:
+Current Profile screen card-less identity surface है:
 
-1. **Header:** User identity summary (Name, avatar, basic identity).
-2. **Current Plan:** Current plan summary and optional subscription shortcut.
-3. **Progress Launchers:** Journey card and Progress Photos card.
-4. **Quick Actions:** Nutrition Targets, Workout Settings, Health Connections.
-5. **Shortcuts:** Rewards, Resources, Settings.
+1. **Top Bar:** Left-aligned `@username`; right-side Edit और Settings actions.
+2. **Standalone Entry:** Back icon दिखेगा; persistent `You` tab में Back icon नहीं होगा।
+3. **Identity:** Large reusable avatar, display name, `@username`, status, और membership chip.
+4. **Metrics:** Weight, Height, और BMR plain row में दिखेंगे; wrapper card नहीं होगा।
+5. **Edit:** Avatar tap और Edit icon दोनों `SettingsRoute.PersonalInfo` खोलेंगे।
 
-Profile cards के click actions:
-- **Journey** -> `navigate(ProgressRoute.Journey)`
-- **Progress Photos** -> `navigate(ProgressRoute.ProgressPhotos)`
-- **Nutrition Targets** -> `navigate(NutritionRoute.Targets)`
-- **Workout Settings** -> `navigate(WorkoutRoute.Settings)`
-- **Health Connections** -> `navigate(HealthRoute.Connections)`
-- **Subscription / Current Plan** -> `navigate(BillingRoute.Subscription)`
-- **Rewards** -> `navigate(RewardsRoute.Home)`
-- **Resources** -> `navigate(LearnRoute.Home)`
-- **Settings** -> `navigate(SettingsRoute.Home)`
+Future Progress, Workout, Nutrition, Health, Billing, Rewards, और Learn launchers
+उनके owning feature slices implement होने पर independently add होंगे। Profile
+उनकी repositories या business state own नहीं करेगा।
 
 ### Settings Gear Icon
 

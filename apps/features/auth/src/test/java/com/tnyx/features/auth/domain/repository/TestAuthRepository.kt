@@ -40,4 +40,6 @@ class TestAuthRepository : AuthRepository {
         maybeDelay()
         return resendOtpResult
     }
+
+    override suspend fun signOut() = Unit
 }

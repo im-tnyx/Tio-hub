@@ -1,16 +1,14 @@
 package com.tnyx.features.profile.navigation
 
 import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.tnyx.features.profile.presentation.home.ProfileHomeRoute
 import com.tnyx.routing.routes.ProfileRoute
 
 fun NavGraphBuilder.profileGraph(
-    navController: NavHostController,
     onOpenSettings: () -> Unit,
-    onOpenProgress: () -> Unit,
+    onOpenPersonalInfo: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
     navigation<ProfileRoute.Graph>(
@@ -19,16 +17,9 @@ fun NavGraphBuilder.profileGraph(
         composable<ProfileRoute.Home> {
             ProfileHomeRoute(
                 onOpenSettings = onOpenSettings,
-                onOpenProgress = onOpenProgress,
-                onNavigateBack = onNavigateBack
-            )
-        }
-
-        composable<ProfileRoute.PersonalInfo> {
-            ProfileHomeRoute(
-                onOpenSettings = onOpenSettings,
-                onOpenProgress = onOpenProgress,
-                onNavigateBack = onNavigateBack
+                onOpenEditProfile = onOpenPersonalInfo,
+                onNavigateBack = onNavigateBack,
+                showBackButton = true,
             )
         }
     }

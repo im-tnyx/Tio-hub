@@ -1,5 +1,8 @@
 package com.tnyx.shared.profile.domain.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 enum class MembershipTier {
     Free,
     Plus,
@@ -16,6 +19,7 @@ enum class MembershipTier {
     }
 }
 
+@Serializable
 data class UserProfile(
     val id: String,
     val displayName: String,
@@ -36,8 +40,10 @@ data class UserProfile(
     val workoutChart: ProfileWorkoutChart = ProfileWorkoutChart(),
     val avatarUrl: String? = null,
     val membershipTier: MembershipTier = MembershipTier.fromPlanLabel(planLabel),
+    val username: String = "",
 )
 
+@Serializable
 data class ProfileJourney(
     val name: String = "",
     val initialWeight: Double = 0.0,
@@ -45,6 +51,7 @@ data class ProfileJourney(
     val progress: Float = 0f,
 )
 
+@Serializable
 data class ProfileWorkoutChart(
     val durationMinutes: List<Float> = emptyList(),
     val volumeKg: List<Float> = emptyList(),

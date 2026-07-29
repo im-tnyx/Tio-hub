@@ -11,6 +11,7 @@ fun SettingsHomeRoute(
     onOpenNutritionTargets: () -> Unit,
     onOpenAppPreferences: () -> Unit,
     onOpenPersonalInfo: () -> Unit,
+    onLogout: () -> Unit,
     viewModel: SettingsHomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -23,6 +24,7 @@ fun SettingsHomeRoute(
                 SettingsHomeAction.PersonalInfoClicked -> onOpenPersonalInfo()
                 SettingsHomeAction.NutritionTargetsClicked -> onOpenNutritionTargets()
                 SettingsHomeAction.AppPreferencesClicked -> onOpenAppPreferences()
+                SettingsHomeAction.LogoutClicked -> onLogout()
                 SettingsHomeAction.ResetPasswordClicked -> {
                     // TODO: Wire reset password flow when the destination exists.
                 }

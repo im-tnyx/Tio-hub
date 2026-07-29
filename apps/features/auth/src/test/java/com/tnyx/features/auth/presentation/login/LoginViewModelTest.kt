@@ -1,7 +1,7 @@
 package com.tnyx.features.auth.presentation.login
 
 import com.tnyx.features.auth.domain.model.AuthResult
-import com.tnyx.features.auth.domain.model.AuthSession
+import com.tnyx.shared.auth.domain.model.AuthSession
 import com.tnyx.features.auth.domain.repository.TestAuthRepository
 import com.tnyx.features.auth.presentation.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi

@@ -16,4 +16,6 @@ interface AuthRepository {
     suspend fun verifyOtp(email: String, code: String): AuthResult
 
     suspend fun resendOtp(email: String): AuthResult
+
+    suspend fun signOut()
 }

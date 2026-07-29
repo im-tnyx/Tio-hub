@@ -13,7 +13,8 @@ fun NavGraphBuilder.settingsGraph(
     navController: NavHostController,
     onNavigateBack: () -> Unit,
     onOpenNutritionTargets: () -> Unit,
-    onOpenAppPreferences: () -> Unit
+    onOpenAppPreferences: () -> Unit,
+    onLogout: () -> Unit,
 ) {
     navigation<SettingsRoute.Graph>(
         startDestination = SettingsRoute.Home
@@ -23,7 +24,8 @@ fun NavGraphBuilder.settingsGraph(
                 onNavigateBack = onNavigateBack,
                 onOpenNutritionTargets = onOpenNutritionTargets,
                 onOpenAppPreferences = onOpenAppPreferences,
-                onOpenPersonalInfo = { navController.navigate(SettingsRoute.PersonalInfo) }
+                onOpenPersonalInfo = { navController.navigate(SettingsRoute.PersonalInfo) },
+                onLogout = onLogout,
             )
         }
 
@@ -47,7 +49,8 @@ fun NavGraphBuilder.settingsGraph(
                 onNavigateBack = onNavigateBack,
                 onOpenNutritionTargets = onOpenNutritionTargets,
                 onOpenAppPreferences = onOpenAppPreferences,
-                onOpenPersonalInfo = { navController.navigate(SettingsRoute.PersonalInfo) }
+                onOpenPersonalInfo = { navController.navigate(SettingsRoute.PersonalInfo) },
+                onLogout = onLogout,
             )
         }
 
@@ -56,7 +59,8 @@ fun NavGraphBuilder.settingsGraph(
                 onNavigateBack = onNavigateBack,
                 onOpenNutritionTargets = onOpenNutritionTargets,
                 onOpenAppPreferences = onOpenAppPreferences,
-                onOpenPersonalInfo = { navController.navigate(SettingsRoute.PersonalInfo) }
+                onOpenPersonalInfo = { navController.navigate(SettingsRoute.PersonalInfo) },
+                onLogout = onLogout,
             )
         }
 
@@ -65,7 +69,8 @@ fun NavGraphBuilder.settingsGraph(
                 onNavigateBack = onNavigateBack,
                 onOpenNutritionTargets = onOpenNutritionTargets,
                 onOpenAppPreferences = onOpenAppPreferences,
-                onOpenPersonalInfo = { navController.navigate(SettingsRoute.PersonalInfo) }
+                onOpenPersonalInfo = { navController.navigate(SettingsRoute.PersonalInfo) },
+                onLogout = onLogout,
             )
         }
 
@@ -74,7 +79,8 @@ fun NavGraphBuilder.settingsGraph(
                 onNavigateBack = onNavigateBack,
                 onOpenNutritionTargets = onOpenNutritionTargets,
                 onOpenAppPreferences = onOpenAppPreferences,
-                onOpenPersonalInfo = { navController.navigate(SettingsRoute.PersonalInfo) }
+                onOpenPersonalInfo = { navController.navigate(SettingsRoute.PersonalInfo) },
+                onLogout = onLogout,
             )
         }
 
@@ -83,7 +89,8 @@ fun NavGraphBuilder.settingsGraph(
                 onNavigateBack = onNavigateBack,
                 onOpenNutritionTargets = onOpenNutritionTargets,
                 onOpenAppPreferences = onOpenAppPreferences,
-                onOpenPersonalInfo = { navController.navigate(SettingsRoute.PersonalInfo) }
+                onOpenPersonalInfo = { navController.navigate(SettingsRoute.PersonalInfo) },
+                onLogout = onLogout,
             )
         }
 

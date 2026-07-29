@@ -11,6 +11,11 @@ ADRs should be short, explicit, and linked from the relevant canonical docs when
 - [ADR-0003: Type-Safe Navigation And Chrome Policy](0003-type-safe-navigation-and-chrome-policy.md)
 - [ADR-0004: Incremental Supabase Setup](0004-incremental-supabase-setup.md)
 - [ADR-0005: User-Configurable Bottom Navigation](0005-user-configurable-bottom-navigation.md)
+- [ADR-0006: Backend-Mediated Client Data Access](0006-backend-mediated-client-data-access.md)
+
+Superseded historical decision:
+
+- [ADR-0005: Backend Transition After Supabase-backed App Completion](0005-backend-transition-after-supabase-app-completion.md), superseded by ADR-0006.
 
 ## ADR Status Values
 

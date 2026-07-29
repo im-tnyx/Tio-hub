@@ -6,4 +6,5 @@ data class SplashUiState(
 
 sealed class SplashEffect {
     object NavigateToWelcome : SplashEffect()
+    object NavigateToMain : SplashEffect()
 }

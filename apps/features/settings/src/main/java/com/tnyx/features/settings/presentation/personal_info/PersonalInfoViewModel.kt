@@ -6,6 +6,8 @@ import com.tnyx.core.ui.components.inputs.Country
 import com.tnyx.core.ui.components.inputs.cmToFeetInches
 import com.tnyx.core.ui.components.inputs.countryForMobile
 import com.tnyx.core.ui.components.inputs.feetInchesToCm
+import com.tnyx.shared.auth.domain.repository.AuthSessionProvider
+import com.tnyx.shared.profile.domain.model.UserProfile
 import com.tnyx.shared.profile.domain.repository.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -20,12 +22,14 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class PersonalInfoViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
+    private val sessionProvider: AuthSessionProvider,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PersonalInfoUiState())
     val uiState: StateFlow<PersonalInfoUiState> = _uiState.asStateFlow()
 
     private var countdownJob: Job? = null
+    private var activeProfile: UserProfile? = null
 
     init {
         val defaultCountry = countryForMobile("")
@@ -37,6 +41,7 @@ class PersonalInfoViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching {
                 profileRepository.getCurrentProfile().collect { profile ->
+                    activeProfile = profile
                     update { state ->
                         if (state.hasChanges) {
                             state.copy(
@@ -46,6 +51,8 @@ class PersonalInfoViewModel @Inject constructor(
                         } else {
                             state.copy(
                                 fullName = profile.displayName,
+                                username = profile.username,
+                                email = sessionProvider.currentSession()?.email.orEmpty(),
                                 avatarUrl = profile.avatarUrl,
                                 membershipTier = profile.membershipTier,
                             )
@@ -67,7 +74,22 @@ class PersonalInfoViewModel @Inject constructor(
 
     fun onAction(action: PersonalInfoAction) {
         when (action) {
-            is PersonalInfoAction.OnFullNameChange -> update { it.copy(fullName = action.name, hasChanges = true) }
+            is PersonalInfoAction.OnFullNameChange -> update {
+                it.copy(
+                    fullName = action.name,
+                    fullNameError = null,
+                    saveError = null,
+                    hasChanges = true,
+                )
+            }
+            is PersonalInfoAction.OnUsernameChange -> update {
+                it.copy(
+                    username = action.username,
+                    usernameError = null,
+                    saveError = null,
+                    hasChanges = true,
+                )
+            }
             is PersonalInfoAction.OnEmailChange -> update { it.copy(email = action.email, hasChanges = true) }
             is PersonalInfoAction.OnMobileChange -> update { it.copy(phoneNumber = action.value, hasChanges = true) }
             is PersonalInfoAction.OnCountrySelected -> update { it.copy(selectedCountry = action.country, hasChanges = true) }
@@ -142,7 +164,7 @@ class PersonalInfoViewModel @Inject constructor(
                 update {
                     it.copy(
                         isAvatarUploading = false,
-                        avatarError = "Profile photo could not be uploaded. Try again.",
+                        avatarError = "Profile photo could not be updated. Try again.",
                     )
                 }
             }
@@ -249,14 +271,77 @@ class PersonalInfoViewModel @Inject constructor(
     }
 
     private fun save() {
+        val state = _uiState.value
+        val normalizedUsername = state.username
+            .trim()
+            .removePrefix("@")
+            .lowercase()
+        val fullNameError = if (state.fullName.isBlank()) "Full name is required" else null
+        val usernameError = if (!USERNAME_PATTERN.matches(normalizedUsername)) {
+            "Use 3-30 lowercase letters, numbers, or underscores"
+        } else {
+            null
+        }
+
+        if (fullNameError != null || usernameError != null) {
+            update {
+                it.copy(
+                    fullNameError = fullNameError,
+                    usernameError = usernameError,
+                    saveError = null,
+                )
+            }
+            return
+        }
+
+        val profile = activeProfile
+        if (profile == null) {
+            update { it.copy(saveError = "Profile is not ready. Try again.") }
+            return
+        }
+
+        val updatedProfile = profile.copy(
+            displayName = state.fullName.trim(),
+            username = normalizedUsername,
+        )
+
         viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true) }
-            delay(1000)
-            _uiState.update { it.copy(isSaving = false, hasChanges = false) }
+            update {
+                it.copy(
+                    isSaving = true,
+                    fullNameError = null,
+                    usernameError = null,
+                    saveError = null,
+                )
+            }
+            runCatching {
+                profileRepository.updateProfile(updatedProfile)
+            }.onSuccess {
+                activeProfile = updatedProfile
+                update {
+                    it.copy(
+                        fullName = updatedProfile.displayName,
+                        username = updatedProfile.username,
+                        isSaving = false,
+                        hasChanges = false,
+                    )
+                }
+            }.onFailure {
+                update {
+                    it.copy(
+                        isSaving = false,
+                        saveError = "Profile could not be saved. Try again.",
+                    )
+                }
+            }
         }
     }
 
     private inline fun update(block: (PersonalInfoUiState) -> PersonalInfoUiState) {
         _uiState.update(block)
+    }
+
+    private companion object {
+        val USERNAME_PATTERN = Regex("[a-z0-9_]{3,30}")
     }
 }

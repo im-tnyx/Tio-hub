@@ -1,131 +1,66 @@
 # Avatar Storage Setup
 
-The Android avatar flow uses the public Supabase Storage bucket `profile-avatars` and stores one JPEG object per authenticated user:
+Last updated: 2026-07-29
 
-```text
-<auth-user-id>/avatar.jpg
-```
+## Current Runtime
 
-The app writes the resulting public URL to `public.profiles.avatar_url`. The URL includes a cache-busting query parameter after replacement so Coil refreshes every visible avatar surface.
+- Android currently binds `ProfileRepository` to `RoomProfileRepository`.
+- Selecting an avatar stores a JPEG under app-internal storage and persists its
+  local file URI in the per-user Room Profile row.
+- The local avatar survives process restart but does not upload or synchronize
+  to Supabase.
+- The inactive `SupabaseProfileRepository` remains prototype/reference code and
+  is not the approved production data path.
 
-## Required database contract
+## Live Storage Foundation
 
-The target Supabase project must contain `public.profiles` with:
+The connected Tio-hub Supabase project contains the public `tio-profile`
+bucket:
 
-- `id uuid primary key` matching `auth.users.id`
-- `avatar_url text null`
-- Row Level Security enabled
-- authenticated users allowed to select and update only their own row
-
-The connected `Tnyx_flutter` project inspected on July 18, 2026 does not currently expose a `public.profiles` table, so no production schema change was applied from ChatGPT.
-
-## Required bucket contract
-
-Create a public bucket named `profile-avatars` with:
-
-- maximum file size: 5 MB or lower
+- object pattern: `<user-id>/avatar.jpg`
+- maximum object size: 5 MB
 - allowed MIME type: `image/jpeg`
-- public reads
-- authenticated, owner-scoped insert/update/select/delete policies
+- owner-scoped authenticated object policies
 
-The client converts selected images to a center-cropped JPEG with a maximum edge of 1024 px before upload.
+`public.profiles.avatar_url` stores the image location in the current schema.
+The verified object and security inventory is maintained in
+[SUPABASE_SCHEMA_STATUS.md](SUPABASE_SCHEMA_STATUS.md). Executable storage
+setup belongs only in timestamped files under `supabase/migrations/`; do not
+copy ad-hoc SQL from this document into a project.
 
-## Policy template
+## Future Backend Contract
 
-Review and apply this SQL to the correct project through the repository's normal migration workflow. Do not run it against an unrelated project.
+Production avatar operations will use backend APIs. The backend must:
 
-```sql
-alter table public.profiles
-  add column if not exists avatar_url text;
+1. Verify the client token and map it to the internal user ID.
+2. Reject attempts to write another user's object path.
+3. Accept only supported image types and enforce byte and dimension limits.
+4. Normalize the final image to JPEG and use a deterministic object path.
+5. Upload with server-controlled Supabase credentials.
+6. Update `profiles.avatar_url` in the same owned-user operation.
+7. Return a stable avatar URL or media DTO to the client.
+8. Remove both the stored object and profile reference when requested.
 
-alter table public.profiles enable row level security;
+The Android repository implementation may expose the existing
+`updateAvatar(jpegBytes)` and `removeAvatar()` contract while replacing only
+its data implementation with backend API calls.
 
-create policy "profiles_select_own"
-on public.profiles
-for select
-to authenticated
-using ((select auth.uid()) = id);
+## Validation Gate
 
-create policy "profiles_update_own"
-on public.profiles
-for update
-to authenticated
-using ((select auth.uid()) = id)
-with check ((select auth.uid()) = id);
+Before enabling remote avatar persistence:
 
-insert into storage.buckets (
-  id,
-  name,
-  public,
-  file_size_limit,
-  allowed_mime_types
-)
-values (
-  'profile-avatars',
-  'profile-avatars',
-  true,
-  5242880,
-  array['image/jpeg']
-)
-on conflict (id) do update set
-  public = excluded.public,
-  file_size_limit = excluded.file_size_limit,
-  allowed_mime_types = excluded.allowed_mime_types;
+1. Verify signed-out requests are rejected.
+2. Verify user A cannot read, replace, or delete user B's private operation
+   targets.
+3. Verify invalid MIME types, empty files, and oversized files are rejected.
+4. Verify replacement refreshes Home, You/Profile, and Personal Information.
+5. Verify removal returns all avatar surfaces to initials/person fallback.
+6. Verify backend logs do not contain image bytes, credentials, or tokens.
+7. Verify no Supabase service-role credential is packaged in Android.
 
-create policy "avatar_insert_own_folder"
-on storage.objects
-for insert
-to authenticated
-with check (
-  bucket_id = 'profile-avatars'
-  and (storage.foldername(name))[1] = (select auth.uid()::text)
-);
+## Deferred Camera Support
 
-create policy "avatar_select_own"
-on storage.objects
-for select
-to authenticated
-using (
-  bucket_id = 'profile-avatars'
-  and owner_id = (select auth.uid()::text)
-);
-
-create policy "avatar_update_own"
-on storage.objects
-for update
-to authenticated
-using (
-  bucket_id = 'profile-avatars'
-  and owner_id = (select auth.uid()::text)
-)
-with check (
-  bucket_id = 'profile-avatars'
-  and (storage.foldername(name))[1] = (select auth.uid()::text)
-);
-
-create policy "avatar_delete_own"
-on storage.objects
-for delete
-to authenticated
-using (
-  bucket_id = 'profile-avatars'
-  and owner_id = (select auth.uid()::text)
-);
-```
-
-Before applying, check for policies with equivalent behavior and avoid duplicate names. Storage upsert requires INSERT, SELECT, and UPDATE permissions. Deleting requires SELECT and DELETE permissions.
-
-## Runtime validation
-
-1. Sign in as user A and upload an avatar.
-2. Confirm the object path begins with user A's UUID.
-3. Confirm `profiles.avatar_url` updates only for user A.
-4. Confirm Home, You/Profile, and Personal Information refresh without restarting.
-5. Replace the image and verify the new bytes display instead of the cached image.
-6. Remove the image and verify all surfaces return to initials/person fallback.
-7. Sign in as user B and verify user B cannot update or delete user A's object.
-8. Verify non-JPEG source images are converted before upload and large images are reduced to 1024 px.
-
-## Deferred camera support
-
-This change uses the system gallery picker. Full-resolution camera capture should be added separately with `FileProvider`, a temporary content URI, cleanup, and rotation handling. `TakePicturePreview` should not be used for production avatars because it only returns a thumbnail.
+The current UI uses the system gallery picker. Full-resolution camera capture
+remains a separate slice using `FileProvider`, a temporary content URI,
+rotation handling, and cleanup. `TakePicturePreview` should not be used for a
+production avatar because it returns only a thumbnail.

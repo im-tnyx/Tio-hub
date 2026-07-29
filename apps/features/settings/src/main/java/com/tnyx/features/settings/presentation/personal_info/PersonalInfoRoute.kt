@@ -72,7 +72,7 @@ fun PersonalInfoRoute(
             text = {
                 Text(
                     if (uiState.avatarUrl.isNullOrBlank()) {
-                        "Choose a photo from your device. It will be cropped to a square before upload."
+                        "Choose a photo from your device. It will be cropped and kept for this app session."
                     } else {
                         "Choose a new photo or remove the current profile photo."
                     },

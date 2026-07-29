@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted
+Superseded by
+[ADR-0006: Backend-Mediated Client Data Access](0006-backend-mediated-client-data-access.md)
 
 ## Context
 

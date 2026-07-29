@@ -27,23 +27,30 @@ dynamic flow without replacing stable section and step identities.
 - Added tests for ordering, section boundaries, serialization, insertion-safe
   positions, and invalid definitions.
 - Added canonical Tio onboarding architecture documentation.
+- Added typed `OnboardingDraft`, versioned `OnboardingProgress`, and atomic
+  `OnboardingCheckpoint` contracts.
+- Added `OnboardingRepository` in the feature and an app-owned Preferences
+  DataStore implementation with Hilt binding.
+- Added deterministic resume validation that preserves compatible checkpoints
+  and resets stale versions, unknown positions, or unknown IDs.
+- Added feature serialization/resume tests and app Robolectric persistence
+  recreation tests.
 
 ## Next
 
-- Add app-owned local draft and progress persistence behind repository
-  contracts.
 - Add the Onboarding graph/container and render state through actions.
 - Implement one simple section at a time, starting with Profile.
 
 ## Truth Boundary
 
 - No onboarding section screen is implemented by this checkpoint.
-- No draft/resume repository is implemented by this checkpoint.
+- Local checkpoint persistence is device-owned and is not yet connected to a
+  ViewModel, route, authenticated account, or final business repositories.
 - No backend, Supabase synchronization, remote config, analytics, or completion
   finalization is implemented by this checkpoint.
 
 ## Validation
 
 - `./gradlew.bat :features:onboarding:testDebugUnitTest
-  :features:onboarding:compileDebugKotlin --no-configuration-cache`
-- Result: BUILD SUCCESSFUL.
+  :app:testDebugUnitTest :app:compileDebugKotlin --no-configuration-cache`
+- Result: BUILD SUCCESSFUL; 39 tests, 0 failures, 0 errors.

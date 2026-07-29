@@ -21,16 +21,20 @@ Implemented:
 - versioned `OnboardingFlowDefinition`,
 - deterministic first/next/previous position handling,
 - insertion-safe serialized positions,
-- the simple version 1 flow definition.
+- the simple version 1 flow definition,
+- typed `OnboardingDraft` answers and versioned `OnboardingProgress`,
+- atomic `OnboardingCheckpoint` storage behind `OnboardingRepository`,
+- app-owned Preferences DataStore persistence,
+- compatible-checkpoint resume and stale-checkpoint reset behavior.
 
 Not implemented:
 
 - onboarding section screens,
-- local draft or progress persistence,
 - onboarding navigation graph/container,
+- ViewModel integration and completion finalization,
 - backend or Supabase synchronization,
 - conditional remote-config paths,
-- analytics or finalization.
+- analytics.
 
 ## Version 1 Flow
 
@@ -72,16 +76,28 @@ OnboardingRoute
 Section screens receive state and emit actions. They do not receive a
 repository, Supabase client, database object, or mutable business owner.
 
-## Persistence Direction
+## Local Persistence
 
-The next slice should introduce two distinct local concepts:
+The current local slice uses two distinct concepts:
 
 - `OnboardingProgress`: current flow version and stable position.
 - `OnboardingDraft`: entered answers that survive process restart.
 
-The repository contract belongs to the onboarding feature. Android storage
-implementation belongs to `apps/app`. A future backend implementation may
-replace or compose with the local implementation without changing screens.
+They are written together as one `OnboardingCheckpoint`, preventing draft and
+position writes from diverging. The repository contract belongs to the
+onboarding feature. `DataStoreOnboardingRepository` and its Hilt binding belong
+to `apps/app`.
+
+`OnboardingCheckpointResolver` accepts a checkpoint only when its flow version,
+position, completed section IDs, and answer step IDs belong to the active flow.
+Otherwise it returns an empty checkpoint at the first active step. This is a
+deliberate reset policy; a future flow version can replace it with an explicit
+migration.
+
+The checkpoint is currently device-local and is not scoped to an authenticated
+account. The graph integration must define guest-to-account handoff and clear
+behavior before backend synchronization is added. A future backend
+implementation may compose with the local repository without changing screens.
 
 Finalization will map answers to their owning domain repositories. It must not
 create one permanent onboarding mega-table or make Onboarding the owner of
@@ -89,8 +105,8 @@ Profile, Nutrition, Workout, Health, or Recovery data.
 
 ## Delivery Stages
 
-1. Stable flow contracts and tests.
-2. Local draft/progress repository and resume tests.
+1. Stable flow contracts and tests. Completed.
+2. Local draft/progress repository and resume tests. Completed.
 3. Onboarding graph, container, ViewModel, state, and actions.
 4. Profile, Body Goal, Workout, and Review sections delivered one at a time.
 5. Backend finalization and optional dynamic flow only after Auth/API contracts

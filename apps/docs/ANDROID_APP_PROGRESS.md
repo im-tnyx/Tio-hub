@@ -102,9 +102,15 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
   Profile -> Body Goal -> Workout -> Review flow with stable string IDs.
 - [x] Flow tests cover ordering, cross-section navigation, serialization,
   insertion-safe positions, and invalid definitions.
+- [x] Typed draft and versioned progress are persisted atomically through the
+  feature-owned `OnboardingRepository` contract and app-owned Preferences
+  DataStore implementation.
+- [x] Resume validation preserves compatible checkpoints and resets stale flow
+  versions, unknown positions, and unknown IDs.
 - [ ] Full modular onboarding runtime is not yet wired into the new app architecture.
-- [ ] Onboarding persistence is not yet repository-backed.
-- [ ] Resume manager is not yet backend repository-backed.
+- [ ] Local checkpoint is not yet connected to an Onboarding ViewModel or graph.
+- [ ] Authenticated account handoff, backend sync, and finalization are not yet
+  repository-backed.
 
 ### Nutrition
 
@@ -262,6 +268,16 @@ Rule: Future module folders may exist as checked-in ownership placeholders, but 
 ---
 
 ## ✅ Latest Validation
+
+### 2026-07-29: Local Onboarding checkpoint persistence
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :app:testDebugUnitTest :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL; 39 tests, 0 failures, 0 errors.
+- [x] Scope: typed draft answers, versioned progress, atomic checkpoint
+  persistence, Hilt binding, compatible resume, and stale-checkpoint reset.
+- [x] No onboarding UI/navigation, authenticated account handoff, backend or
+  Supabase sync, analytics, or completion finalization was added.
 
 ### 2026-07-29: Stable Onboarding flow contracts
 

@@ -15,6 +15,9 @@ sealed interface RootRoute {
     data object Welcome : RootRoute
 
     @Serializable
+    data object Onboarding : RootRoute
+
+    @Serializable
     data object AuthGraph : RootRoute
 
     @Serializable

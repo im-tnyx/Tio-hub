@@ -107,8 +107,13 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
   DataStore implementation.
 - [x] Resume validation preserves compatible checkpoints and resets stale flow
   versions, unknown positions, and unknown IDs.
-- [ ] Full modular onboarding runtime is not yet wired into the new app architecture.
-- [ ] Local checkpoint is not yet connected to an Onboarding ViewModel or graph.
+- [x] Typed `RootRoute.Onboarding`, feature-owned navigation, generic container,
+  ViewModel, state, actions, and effects are wired.
+- [x] ViewModel serializes checkpoint operations and handles required answers,
+  next/back/skip, local completion, and persistence retry.
+- [ ] Full modular onboarding runtime is not yet user-entered or product-complete.
+- [ ] Section-specific forms are not implemented, so Welcome intentionally does
+  not launch the onboarding destination yet.
 - [ ] Authenticated account handoff, backend sync, and finalization are not yet
   repository-backed.
 
@@ -268,6 +273,17 @@ Rule: Future module folders may exist as checked-in ownership placeholders, but 
 ---
 
 ## ✅ Latest Validation
+
+### 2026-07-29: Onboarding presentation container
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :app:testDebugUnitTest :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL; 51 tests, 0 failures, 0 errors.
+- [x] Scope: typed root destination, generic Tnyx-token container,
+  ViewModel/state/actions/effects, serialized persistence operations,
+  validation, next/back/skip, local completion, and retry behavior.
+- [x] Welcome entry, section-specific forms, authenticated account handoff,
+  backend/Supabase sync, analytics, and business finalization remain unchanged.
 
 ### 2026-07-29: Local Onboarding checkpoint persistence
 

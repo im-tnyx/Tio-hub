@@ -35,22 +35,33 @@ dynamic flow without replacing stable section and step identities.
   and resets stale versions, unknown positions, or unknown IDs.
 - Added feature serialization/resume tests and app Robolectric persistence
   recreation tests.
+- Added typed `RootRoute.Onboarding` registration and feature-owned navigation.
+- Added `OnboardingRoute`, generic `OnboardingScreen`, `OnboardingViewModel`,
+  `OnboardingUiState`, actions, and navigation effects.
+- Added serialized load/save operations, required-answer validation,
+  next/back/skip behavior, local completion, and persistence retry handling.
+- Added ViewModel tests for fresh start, resume, answer persistence, boundaries,
+  skip, exit, completion, validation, and read/write recovery.
 
 ## Next
 
-- Add the Onboarding graph/container and render state through actions.
 - Implement one simple section at a time, starting with Profile.
+- Switch Welcome `Get Started` to the onboarding destination only when the
+  first required Profile section is usable.
 
 ## Truth Boundary
 
-- No onboarding section screen is implemented by this checkpoint.
-- Local checkpoint persistence is device-owned and is not yet connected to a
-  ViewModel, route, authenticated account, or final business repositories.
-- No backend, Supabase synchronization, remote config, analytics, or completion
-  finalization is implemented by this checkpoint.
+- A generic container is implemented, but no section-specific input form is
+  implemented by this checkpoint.
+- `RootRoute.Onboarding` is registered but intentionally not launched from
+  Welcome, preventing users from entering an incomplete required-step flow.
+- Local checkpoint persistence is device-owned and is not connected to an
+  authenticated account or final business repositories.
+- No backend, Supabase synchronization, remote config, analytics, or business
+  repository finalization is implemented by this checkpoint.
 
 ## Validation
 
 - `./gradlew.bat :features:onboarding:testDebugUnitTest
   :app:testDebugUnitTest :app:compileDebugKotlin --no-configuration-cache`
-- Result: BUILD SUCCESSFUL; 39 tests, 0 failures, 0 errors.
+- Result: BUILD SUCCESSFUL; 51 tests, 0 failures, 0 errors.

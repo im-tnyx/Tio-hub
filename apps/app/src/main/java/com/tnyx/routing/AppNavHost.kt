@@ -13,6 +13,7 @@ import com.tnyx.core.legal.presentation.route.LegalRoute
 import com.tnyx.features.splash.presentation.route.SplashRoute
 import com.tnyx.features.auth.navigation.authGraph
 import com.tnyx.features.nutrition.presentation.targets.NutritionTargetsRoute
+import com.tnyx.features.onboarding.navigation.onboardingScreen
 import com.tnyx.features.profile.navigation.profileGraph
 import com.tnyx.features.settings.navigation.settingsGraph
 import com.tnyx.features.welcome.navigation.welcomeScreen
@@ -71,6 +72,18 @@ fun AppNavHost(
             onNavigateToLegal = { title, url ->
                 navController.navigate(RootRoute.Legal(title = title, url = url))
             }
+        )
+
+        onboardingScreen(
+            onCompleted = {
+                navController.navigate(RootRoute.MainGraph) {
+                    popUpTo(RootRoute.Onboarding) { inclusive = true }
+                    launchSingleTop = true
+                }
+            },
+            onExit = {
+                navController.popBackStack()
+            },
         )
 
         composable<RootRoute.MainGraph> {

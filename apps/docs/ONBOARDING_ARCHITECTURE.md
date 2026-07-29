@@ -25,13 +25,17 @@ Implemented:
 - typed `OnboardingDraft` answers and versioned `OnboardingProgress`,
 - atomic `OnboardingCheckpoint` storage behind `OnboardingRepository`,
 - app-owned Preferences DataStore persistence,
-- compatible-checkpoint resume and stale-checkpoint reset behavior.
+- compatible-checkpoint resume and stale-checkpoint reset behavior,
+- typed `RootRoute.Onboarding` destination and feature-owned navigation,
+- `Route + Screen + ViewModel + UiState + Action` presentation container,
+- serialized answer/save/navigation operations with validation and retry,
+- next, back, skippable-section, and local-completion behavior.
 
 Not implemented:
 
-- onboarding section screens,
-- onboarding navigation graph/container,
-- ViewModel integration and completion finalization,
+- section-specific Profile, Body Goal, Workout, or Review forms,
+- Welcome or Splash entry into the onboarding destination,
+- authenticated account handoff or business-repository finalization,
 - backend or Supabase synchronization,
 - conditional remote-config paths,
 - analytics.
@@ -61,7 +65,7 @@ not transfer ownership of its answers to Onboarding.
 These rules allow a later flow to insert `nutrition`, `health`, `targets`,
 `ai_coach`, or permission sections without rewriting existing positions.
 
-## Planned Runtime Shape
+## Current Runtime Shape
 
 ```text
 OnboardingRoute
@@ -95,8 +99,8 @@ deliberate reset policy; a future flow version can replace it with an explicit
 migration.
 
 The checkpoint is currently device-local and is not scoped to an authenticated
-account. The graph integration must define guest-to-account handoff and clear
-behavior before backend synchronization is added. A future backend
+account. Entry and finalization work must define guest-to-account handoff and
+clear behavior before backend synchronization is added. A future backend
 implementation may compose with the local repository without changing screens.
 
 Finalization will map answers to their owning domain repositories. It must not
@@ -107,7 +111,7 @@ Profile, Nutrition, Workout, Health, or Recovery data.
 
 1. Stable flow contracts and tests. Completed.
 2. Local draft/progress repository and resume tests. Completed.
-3. Onboarding graph, container, ViewModel, state, and actions.
+3. Onboarding graph, container, ViewModel, state, and actions. Completed.
 4. Profile, Body Goal, Workout, and Review sections delivered one at a time.
 5. Backend finalization and optional dynamic flow only after Auth/API contracts
    are approved.

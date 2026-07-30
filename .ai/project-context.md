@@ -28,22 +28,16 @@ The current checked-in app focus is native Android and Wear OS under `apps/`.
 
 The Android app is in architecture-foundation and vertical-slice buildout.
 
-Canonical progress tracking lives in:
+For authoritative implementation status, see:
 
-- `apps/docs/ANDROID_APP_PROGRESS.md`
+- [Android App Progress](../apps/docs/ANDROID_APP_PROGRESS.md)
 
 Do not infer production readiness from skeleton modules.
 
 ## Future Platform Scope
 
-The long-term product may include:
+Do not build future platform work until explicitly requested.
+For the long-term product vision, see:
 
-- Android
-- Wear OS
-- Future iOS
-- Future Flutter experiments or migration paths
-- Future TypeScript / Turborepo backend-web-admin workspace
-- Supabase / PostgreSQL
-- AI Coach
-- Health Connect, Samsung Health, Garmin, Fitbit, Apple Health
-- Community, Challenges, Subscription, Recovery, Offline Mode
+- [Architecture](../apps/docs/ARCHITECTURE.md)
+- [Supabase Incremental Setup Plan](../apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md)

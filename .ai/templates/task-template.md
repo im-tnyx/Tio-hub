@@ -71,10 +71,20 @@ Include only when the same objective genuinely spans another owner.
 
 Exactly one highest-value next action.
 
+## Required Context
+
+List only the `.ai/core/` files and canonical docs this task actually needs.
+Agent loads only these — not the full `.ai/` layer.
+
+- `.ai/core/architecture-summary.md`
+- `.ai/core/coding-rules.md`
+- `.ai/core/ui-rules.md`
+- (remove lines not needed for this task)
+
 ## Canonical References
 
 - `AGENTS.md`
 - `.ai/CURRENT.md`
-- Applicable platform instructions
-- Relevant canonical docs
+- Applicable task playbook under `.ai/task-playbooks/`
+- Relevant canonical docs under `apps/docs/`
 - Relevant runtime source/config

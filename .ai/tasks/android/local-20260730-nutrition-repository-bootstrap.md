@@ -3,6 +3,16 @@
 Status: In Progress
 Updated: 2026-07-30
 
+## Required Context
+
+- `.ai/core/architecture-summary.md`
+- `.ai/core/coding-rules.md`
+- `.ai/core/supabase-rules.md`
+- `.ai/task-playbooks/android.md`
+- `.ai/task-playbooks/supabase.md`
+- `apps/docs/ANDROID_APP_PROGRESS.md`
+- `apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md`
+
 ## Objective
 
 Remove fake/local-only runtime truth from the currently visible Android

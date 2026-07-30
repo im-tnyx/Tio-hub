@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import com.tnyx.core.theme.TnyxTheme
 import com.tnyx.core.ui.components.cards.TnyxCard
 import com.tnyx.core.ui.components.cards.TnyxCardVariant
-import com.tnyx.core.ui.components.inputs.TnyxDatePickerDialog
+import com.tnyx.core.ui.components.inputs.TnyxDobPickerDialog
 import com.tnyx.features.onboarding.domain.model.OnboardingAnswer
 import com.tnyx.features.onboarding.presentation.common.OnboardingStepHeading
 import com.tnyx.features.onboarding.presentation.common.OnboardingValidationMessage
@@ -92,10 +92,10 @@ internal fun DateOfBirthStep(
     }
 
     if (showDatePicker) {
-        TnyxDatePickerDialog(
-            title = "Select date of birth",
+        TnyxDobPickerDialog(
+            title = "DOB Picker",
             supportingText = "This helps personalize your Tio experience",
-            initialDate = selectedDate ?: LocalDate.now().minusYears(DEFAULT_AGE_YEARS),
+            initialDate = selectedDate ?: DEFAULT_DATE_OF_BIRTH,
             minimumYear = EARLIEST_BIRTH_YEAR,
             maximumDate = LocalDate.now().minusDays(1),
             onDismiss = { showDatePicker = false },
@@ -107,5 +107,5 @@ internal fun DateOfBirthStep(
     }
 }
 
-private const val DEFAULT_AGE_YEARS = 25L
-private const val EARLIEST_BIRTH_YEAR = 1900
+private val DEFAULT_DATE_OF_BIRTH: LocalDate = LocalDate.of(2003, 4, 15)
+private const val EARLIEST_BIRTH_YEAR = 1950

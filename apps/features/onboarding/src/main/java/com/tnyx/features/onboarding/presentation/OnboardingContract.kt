@@ -1,6 +1,7 @@
 package com.tnyx.features.onboarding.presentation
 
 import com.tnyx.features.onboarding.domain.model.OnboardingAnswer
+import com.tnyx.features.onboarding.domain.model.OnboardingRouteContext
 import com.tnyx.features.onboarding.domain.model.OnboardingPosition
 import com.tnyx.features.onboarding.domain.model.OnboardingStepId
 
@@ -33,7 +34,9 @@ enum class OnboardingValidationError {
 }
 
 sealed interface OnboardingAction {
-    data object Init : OnboardingAction
+    data class Init(
+        val initialRouteContext: OnboardingRouteContext = OnboardingRouteContext(),
+    ) : OnboardingAction
     data object Retry : OnboardingAction
     data object BackClicked : OnboardingAction
     data object ContinueClicked : OnboardingAction

@@ -2,11 +2,17 @@ package com.tnyx.features.onboarding.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tnyx.features.onboarding.domain.analytics.OnboardingAnalyticsEvent
+import com.tnyx.features.onboarding.domain.analytics.OnboardingAnalyticsTracker
 import com.tnyx.features.onboarding.domain.flow.DefaultOnboardingFlow
 import com.tnyx.features.onboarding.domain.model.OnboardingAnswer
+import com.tnyx.features.onboarding.domain.model.OnboardingAuthState
 import com.tnyx.features.onboarding.domain.model.OnboardingCheckpoint
 import com.tnyx.features.onboarding.domain.model.OnboardingFlowDefinition
+import com.tnyx.features.onboarding.domain.model.OnboardingPosition
+import com.tnyx.features.onboarding.domain.model.OnboardingRouteContext
 import com.tnyx.features.onboarding.domain.repository.OnboardingRepository
+import com.tnyx.features.onboarding.domain.usecase.BuildFlowUseCase
 import com.tnyx.features.onboarding.domain.usecase.AdvanceOnboardingStepResult
 import com.tnyx.features.onboarding.domain.usecase.AdvanceOnboardingStepUseCase
 import com.tnyx.features.onboarding.domain.usecase.CompleteOnboardingResult
@@ -18,6 +24,7 @@ import com.tnyx.features.onboarding.domain.usecase.InitializeOnboardingSessionRe
 import com.tnyx.features.onboarding.domain.usecase.InitializeOnboardingSessionUseCase
 import com.tnyx.features.onboarding.domain.usecase.PersistOnboardingCheckpointResult
 import com.tnyx.features.onboarding.domain.usecase.PersistOnboardingCheckpointUseCase
+import com.tnyx.features.onboarding.domain.usecase.PrepareOnboardingCheckpointUseCase
 import com.tnyx.features.onboarding.domain.usecase.ResolveBackNavigationResult
 import com.tnyx.features.onboarding.domain.usecase.ResolveBackNavigationUseCase
 import com.tnyx.features.onboarding.domain.usecase.RetryOnboardingSessionResult
@@ -25,6 +32,8 @@ import com.tnyx.features.onboarding.domain.usecase.RetryOnboardingSessionUseCase
 import com.tnyx.features.onboarding.domain.usecase.SeedOnboardingRecommendationsUseCase
 import com.tnyx.features.onboarding.domain.usecase.SkipOnboardingSectionUseCase
 import com.tnyx.features.onboarding.domain.usecase.UpdateOnboardingAnswerUseCase
+import com.tnyx.shared.auth.domain.repository.AuthSessionProvider
+import com.tnyx.shared.profile.domain.model.UserProfile
 import com.tnyx.shared.profile.domain.repository.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -33,6 +42,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -43,6 +53,7 @@ import kotlinx.coroutines.sync.withLock
 class OnboardingViewModel @Inject constructor(
     private val repository: OnboardingRepository,
     private val profileRepository: ProfileRepository,
+    private val sessionProvider: AuthSessionProvider = EmptyAuthSessionProvider,
     private val finalizeOnboardingProfile: FinalizeOnboardingProfileUseCase =
         FinalizeOnboardingProfileUseCase(),
     private val advanceOnboardingStep: AdvanceOnboardingStepUseCase =
@@ -65,8 +76,11 @@ class OnboardingViewModel @Inject constructor(
         RetryOnboardingSessionUseCase(),
     private val updateOnboardingAnswer: UpdateOnboardingAnswerUseCase =
         UpdateOnboardingAnswerUseCase(),
-    private val seedOnboardingRecommendations: SeedOnboardingRecommendationsUseCase =
-        SeedOnboardingRecommendationsUseCase(),
+    private val prepareOnboardingCheckpoint: PrepareOnboardingCheckpointUseCase =
+        PrepareOnboardingCheckpointUseCase(),
+    private val buildFlowUseCase: BuildFlowUseCase = BuildFlowUseCase(),
+    private val analyticsTracker: OnboardingAnalyticsTracker =
+        OnboardingAnalyticsTracker(com.tnyx.features.onboarding.domain.analytics.OnboardingAnalyticsLogger()),
 ) : ViewModel() {
     companion object {
         private const val CompletionReadyDelayMillis = 900L
@@ -82,14 +96,25 @@ class OnboardingViewModel @Inject constructor(
     val effect = effectChannel.receiveAsFlow()
 
     private var checkpoint: OnboardingCheckpoint? = null
+    private var progressCheckpoint: OnboardingCheckpoint? = null
+    private var currentProfileSnapshot: UserProfile? = null
+    private var initialRouteContext: OnboardingRouteContext = OnboardingRouteContext()
     private var initializationStarted = false
+    private var lastTrackedPosition: OnboardingPosition? = null
+    private var completionTracked = false
 
     fun handleAction(action: OnboardingAction) {
         when (action) {
-            OnboardingAction.Init -> initialize()
+            is OnboardingAction.Init -> initialize(action.initialRouteContext)
             OnboardingAction.Retry -> retry()
-            OnboardingAction.BackClicked -> runOperation(::navigateBack)
-            OnboardingAction.ContinueClicked -> runOperation(::continueForward)
+            OnboardingAction.BackClicked -> runOperation {
+                trackCurrentSectionAction(isNext = false)
+                navigateBack()
+            }
+            OnboardingAction.ContinueClicked -> runOperation {
+                trackCurrentSectionAction(isNext = true)
+                continueForward()
+            }
             OnboardingAction.SkipSectionClicked -> runOperation(::skipCurrentSection)
             is OnboardingAction.AnswerChanged -> {
                 runOperation { updateCurrentAnswer(action.answer) }
@@ -97,7 +122,8 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
-    private fun initialize() {
+    private fun initialize(initialRouteContext: OnboardingRouteContext) {
+        this.initialRouteContext = this.initialRouteContext.mergedWith(initialRouteContext)
         if (initializationStarted) return
         initializationStarted = true
 
@@ -111,6 +137,7 @@ class OnboardingViewModel @Inject constructor(
                 }
 
                 try {
+                    currentProfileSnapshot = profileRepository.getCurrentProfile().first()
                     when (
                         val result = initializeOnboardingSession(
                             flow = flow,
@@ -119,6 +146,7 @@ class OnboardingViewModel @Inject constructor(
                         )
                     ) {
                         InitializeOnboardingSessionResult.ProfileAlreadyCompleted -> {
+                            trackCompletionIfNeeded()
                             _uiState.update {
                                 it.copy(
                                     isLoading = false,
@@ -130,8 +158,19 @@ class OnboardingViewModel @Inject constructor(
                         }
 
                         is InitializeOnboardingSessionResult.Ready -> {
+                            val preparedCheckpoint = normalizedCheckpoint(result.checkpoint)
+                            if (result.checkpoint != preparedCheckpoint) {
+                                when (persistOnboardingCheckpoint(preparedCheckpoint, repository)) {
+                                    is PersistOnboardingCheckpointResult.Failure -> {
+                                        showInitializationFailure()
+                                        return@withLock
+                                    }
+
+                                    is PersistOnboardingCheckpointResult.Success -> Unit
+                                }
+                            }
                             applyCheckpointState(
-                                checkpoint = result.checkpoint,
+                                checkpoint = preparedCheckpoint,
                                 status = OnboardingCheckpointUiStatus.Ready,
                             )
                         }
@@ -142,6 +181,7 @@ class OnboardingViewModel @Inject constructor(
                                     persistCheckpoint = result.persistCheckpoint,
                                 )
                             ) {
+                                trackCompletionIfNeeded()
                                 emitEffect(OnboardingEffect.Completed)
                             }
                             return@withLock
@@ -158,6 +198,7 @@ class OnboardingViewModel @Inject constructor(
 
     private fun retry() {
         runOperation {
+            currentProfileSnapshot = profileRepository.getCurrentProfile().first()
             checkpoint?.let { currentCheckpoint ->
                 render(
                     checkpoint = currentCheckpoint,
@@ -172,7 +213,7 @@ class OnboardingViewModel @Inject constructor(
                     finalizeOnboardingProfile = finalizeOnboardingProfile,
                 )
             ) {
-                RetryOnboardingSessionResult.Reinitialize -> initialize()
+                RetryOnboardingSessionResult.Reinitialize -> initialize(initialRouteContext)
                 is RetryOnboardingSessionResult.Persisted -> {
                     applyCheckpointState(
                         checkpoint = result.checkpoint,
@@ -207,7 +248,11 @@ class OnboardingViewModel @Inject constructor(
 
     private suspend fun updateCurrentAnswer(answer: OnboardingAnswer?) {
         val currentCheckpoint = checkpoint ?: return
-        saveAndRender(updateOnboardingAnswer(currentCheckpoint, answer))
+        saveAndRender(
+            updatedCheckpoint = updateOnboardingAnswer(currentCheckpoint, answer),
+            showSavingState = false,
+            updateProgressCheckpoint = false,
+        )
     }
 
     private suspend fun continueForward() {
@@ -230,14 +275,16 @@ class OnboardingViewModel @Inject constructor(
             return
         }
 
-        val advanceResult = advanceOnboardingStep(currentCheckpoint, flow)
+        val advanceResult = preparedAdvanceResult(
+            advanceOnboardingStep(currentCheckpoint, flow),
+        )
         val previewCheckpoint = when (advanceResult) {
             is AdvanceOnboardingStepResult.Completed -> advanceResult.checkpoint
             is AdvanceOnboardingStepResult.Next -> advanceResult.checkpoint
         }
         applyCheckpointState(
             checkpoint = previewCheckpoint,
-            status = OnboardingCheckpointUiStatus.Saving,
+            status = OnboardingCheckpointUiStatus.Ready,
         )
 
         when (
@@ -267,6 +314,7 @@ class OnboardingViewModel @Inject constructor(
                     checkpoint = result.checkpoint,
                     status = OnboardingCheckpointUiStatus.Ready,
                 )
+                trackCompletionIfNeeded()
                 showCompletionStates()
             }
 
@@ -283,14 +331,15 @@ class OnboardingViewModel @Inject constructor(
         completedCheckpoint: OnboardingCheckpoint,
         persistCheckpoint: Boolean = true,
     ): Boolean {
+        val preparedCheckpoint = normalizedCheckpoint(completedCheckpoint)
         applyCheckpointState(
-            checkpoint = completedCheckpoint,
+            checkpoint = preparedCheckpoint,
             status = OnboardingCheckpointUiStatus.Saving,
         )
 
         return when (
             completeOnboardingUseCase(
-                checkpoint = completedCheckpoint,
+                checkpoint = preparedCheckpoint,
                 persistCheckpoint = persistCheckpoint,
                 onboardingRepository = repository,
                 profileRepository = profileRepository,
@@ -299,15 +348,16 @@ class OnboardingViewModel @Inject constructor(
         ) {
             is CompleteOnboardingResult.Success -> {
                 applyCheckpointState(
-                    checkpoint = completedCheckpoint,
+                    checkpoint = preparedCheckpoint,
                     status = OnboardingCheckpointUiStatus.Ready,
                 )
+                trackCompletionIfNeeded()
                 true
             }
 
             is CompleteOnboardingResult.Failure -> {
                 applyCheckpointState(
-                    checkpoint = completedCheckpoint,
+                    checkpoint = preparedCheckpoint,
                     status = OnboardingCheckpointUiStatus.PersistenceError,
                 )
                 false
@@ -329,24 +379,44 @@ class OnboardingViewModel @Inject constructor(
     }
 
     private suspend fun saveAndRender(updatedCheckpoint: OnboardingCheckpoint): Boolean {
+        return saveAndRender(
+            updatedCheckpoint = updatedCheckpoint,
+            showSavingState = false,
+            updateProgressCheckpoint = true,
+        )
+    }
+
+    private suspend fun saveAndRender(
+        updatedCheckpoint: OnboardingCheckpoint,
+        showSavingState: Boolean,
+        updateProgressCheckpoint: Boolean,
+    ): Boolean {
+        val preparedCheckpoint = normalizedCheckpoint(updatedCheckpoint)
         applyCheckpointState(
-            checkpoint = updatedCheckpoint,
-            status = OnboardingCheckpointUiStatus.Saving,
+            checkpoint = preparedCheckpoint,
+            status = if (showSavingState) {
+                OnboardingCheckpointUiStatus.Saving
+            } else {
+                OnboardingCheckpointUiStatus.Ready
+            },
+            updateProgressCheckpoint = updateProgressCheckpoint,
         )
 
-        return when (persistOnboardingCheckpoint(updatedCheckpoint, repository)) {
+        return when (persistOnboardingCheckpoint(preparedCheckpoint, repository)) {
             is PersistOnboardingCheckpointResult.Success -> {
                 applyCheckpointState(
-                    checkpoint = updatedCheckpoint,
+                    checkpoint = preparedCheckpoint,
                     status = OnboardingCheckpointUiStatus.Ready,
+                    updateProgressCheckpoint = updateProgressCheckpoint,
                 )
                 true
             }
 
             is PersistOnboardingCheckpointResult.Failure -> {
                 applyCheckpointState(
-                    checkpoint = updatedCheckpoint,
+                    checkpoint = preparedCheckpoint,
                     status = OnboardingCheckpointUiStatus.PersistenceError,
+                    updateProgressCheckpoint = updateProgressCheckpoint,
                 )
                 false
             }
@@ -356,13 +426,48 @@ class OnboardingViewModel @Inject constructor(
     private fun applyCheckpointState(
         checkpoint: OnboardingCheckpoint,
         status: OnboardingCheckpointUiStatus,
+        updateProgressCheckpoint: Boolean = true,
     ) {
-        val checkpointWithRecommendations = seedOnboardingRecommendations(checkpoint)
-        this.checkpoint = checkpointWithRecommendations
+        val preparedCheckpoint = normalizedCheckpoint(checkpoint)
+        this.checkpoint = preparedCheckpoint
+        if (updateProgressCheckpoint || progressCheckpoint == null) {
+            progressCheckpoint = preparedCheckpoint
+        }
         render(
-            checkpoint = checkpointWithRecommendations,
+            checkpoint = preparedCheckpoint,
             status = status,
         )
+    }
+
+    private fun normalizedCheckpoint(
+        checkpoint: OnboardingCheckpoint,
+    ): OnboardingCheckpoint {
+        val routeAlignedCheckpoint = checkpoint.copy(
+            routeContext = checkpoint.routeContext.mergedWith(initialRouteContext),
+        )
+        return prepareOnboardingCheckpoint(
+            checkpoint = routeAlignedCheckpoint,
+            currentProfile = currentProfileSnapshot,
+            authSession = sessionProvider.currentSession(),
+        )
+    }
+
+    private fun preparedAdvanceResult(
+        advanceResult: AdvanceOnboardingStepResult,
+    ): AdvanceOnboardingStepResult {
+        return when (advanceResult) {
+            is AdvanceOnboardingStepResult.Completed -> {
+                AdvanceOnboardingStepResult.Completed(
+                    checkpoint = normalizedCheckpoint(advanceResult.checkpoint),
+                )
+            }
+
+            is AdvanceOnboardingStepResult.Next -> {
+                AdvanceOnboardingStepResult.Next(
+                    checkpoint = normalizedCheckpoint(advanceResult.checkpoint),
+                )
+            }
+        }
     }
 
     private fun showInitializationFailure() {
@@ -397,18 +502,82 @@ class OnboardingViewModel @Inject constructor(
         checkpoint: OnboardingCheckpoint,
         status: OnboardingCheckpointUiStatus = OnboardingCheckpointUiStatus.Ready,
     ) {
+        buildFlowUseCase(flow, checkpoint)
+        trackScreenViewIfNeeded(checkpoint.progress.position)
         _uiState.value = checkpointUiStateFactory(
             checkpoint = checkpoint,
             flow = flow,
+            progressSourceCheckpoint = progressCheckpoint ?: checkpoint,
             status = status,
         )
     }
 
     private fun runOperation(operation: suspend () -> Unit) {
+        if (operationMutex.isLocked) return
         viewModelScope.launch {
-            operationMutex.withLock {
+            if (!operationMutex.tryLock()) return@launch
+            try {
                 operation()
+            } finally {
+                operationMutex.unlock()
             }
         }
     }
+
+    private fun trackCurrentSectionAction(isNext: Boolean) {
+        val sectionId = checkpoint?.progress?.position?.sectionId?.value ?: return
+        analyticsTracker.track(
+            if (isNext) {
+                OnboardingAnalyticsEvent.NextClicked(sectionId)
+            } else {
+                OnboardingAnalyticsEvent.BackClicked(sectionId)
+            },
+        )
+    }
+
+    private fun trackScreenViewIfNeeded(position: OnboardingPosition) {
+        if (position == lastTrackedPosition) return
+        lastTrackedPosition = position
+        analyticsTracker.track(
+            OnboardingAnalyticsEvent.ScreenView(
+                sectionId = position.sectionId.value,
+                stepId = position.stepId.value,
+            ),
+        )
+    }
+
+    private fun trackCompletionIfNeeded() {
+        if (completionTracked) return
+        completionTracked = true
+        analyticsTracker.track(OnboardingAnalyticsEvent.OnboardingCompleted)
+    }
+}
+
+private fun OnboardingRouteContext.mergedWith(
+    initialRouteContext: OnboardingRouteContext,
+): OnboardingRouteContext {
+    return copy(
+        entryPath = if (initialRouteContext.entryPath != com.tnyx.features.onboarding.domain.model.OnboardingEntryPath.GetStarted) {
+            initialRouteContext.entryPath
+        } else {
+            entryPath
+        },
+        authState = if (initialRouteContext.authState != OnboardingAuthState.SignedOut) {
+            initialRouteContext.authState
+        } else {
+            authState
+        },
+        signupCompleted = signupCompleted || initialRouteContext.signupCompleted,
+        workoutPlanEnabled = initialRouteContext.workoutPlanEnabled ?: workoutPlanEnabled,
+        mobilePresent = mobilePresent || initialRouteContext.mobilePresent,
+        mobileVerified = mobileVerified || initialRouteContext.mobileVerified,
+        namePrefilled = namePrefilled || initialRouteContext.namePrefilled,
+        authRequired = authRequired || initialRouteContext.authRequired,
+    )
+}
+
+private object EmptyAuthSessionProvider : AuthSessionProvider {
+    override fun observeSession() = kotlinx.coroutines.flow.flowOf(null)
+
+    override fun currentSession() = null
 }

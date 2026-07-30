@@ -43,7 +43,7 @@ class SplashViewModelTest {
     }
 
     @Test
-    fun persistedSessionNavigatesToMain() = runTest {
+    fun persistedSessionWithoutCompletedOnboardingNavigatesToOnboarding() = runTest {
         val viewModel = SplashViewModel(
             TestSessionProvider(session()),
             TestProfileRepository(),
@@ -56,7 +56,7 @@ class SplashViewModelTest {
         viewModel.handleAction(SplashAction.Init)
         advanceUntilIdle()
 
-        assertEquals(listOf(SplashEffect.NavigateToMain), effects)
+        assertEquals(listOf(SplashEffect.NavigateToOnboarding), effects)
         assertFalse(viewModel.uiState.value.isLoading)
         collectJob.cancel()
     }
@@ -76,7 +76,7 @@ class SplashViewModelTest {
         viewModel.handleAction(SplashAction.Init)
         advanceUntilIdle()
 
-        assertEquals(listOf(SplashEffect.NavigateToMain), effects)
+        assertEquals(listOf(SplashEffect.NavigateToOnboarding), effects)
         collectJob.cancel()
     }
 

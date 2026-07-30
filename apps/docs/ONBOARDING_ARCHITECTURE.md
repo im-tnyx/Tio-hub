@@ -19,15 +19,24 @@ Implemented:
 
 - stable `OnboardingSectionId` and namespaced `OnboardingStepId` values,
 - versioned `OnboardingFlowDefinition`,
+- dedicated `BuildFlowUseCase` for effective-flow construction,
+- dedicated `RestoreFlowUseCase` for resume-aware checkpoint restoration,
 - deterministic first/next/previous position handling,
+- a domain-owned `OnboardingStateMachine` that centralizes conditional next,
+  previous, and section-skip transitions,
 - insertion-safe serialized positions,
 - the current local flow definition,
 - typed `OnboardingDraft` answers and versioned `OnboardingProgress`,
 - atomic `OnboardingCheckpoint` storage behind `OnboardingRepository`,
 - app-owned Preferences DataStore persistence,
+- explicit `ResumeManager` snapshot persistence alongside checkpoint storage,
 - compatible-checkpoint resume and stale-checkpoint reset behavior,
 - typed `RootRoute.Onboarding` destination and feature-owned navigation,
 - `Route + Screen + ViewModel + UiState + Action` presentation container,
+- a dedicated `SectionRenderer` that maps runtime section/step state to screen
+  content,
+- a dedicated `StepValidator` that centralizes button text, shell visibility,
+  and required-answer validation wiring,
 - serialized answer/save/navigation operations with validation and retry,
 - next, back, skippable-section, and local-completion behavior,
 - Profile name, gender, and date-of-birth step content,
@@ -43,13 +52,18 @@ Implemented:
 - Targets step-target, sleep-target, water-target, recommendation-summary,
   goal-pace, and nutrition-summary step content with stable typed target IDs,
   bounded numeric targets, and a required target-bridge confirmation step,
-- Source channel, reason, and optional referral-detail step content with
-  stable persisted source IDs,
+- Source channel and reason step content with stable persisted source IDs,
+- signed-in/profile-aware checkpoint preparation that pre-seeds available
+  profile answers before rendering the local flow,
+- auth/mobile-aware effective-flow handling so prefilled users can skip the
+  local intro/mobile path without adding extra intro or typing-only steps,
 - Review summary content with explicit local confirmation,
 - post-review setup and ready completion states before app entry,
 - `OnboardingUiState` draft-answer exposure for review-only summary rendering,
 - shared onboarding choice cards for single-select and multi-select steps,
 - scroll-safe content handling for longer onboarding forms,
+- onboarding analytics event contracts and tracker/logger wiring with a local
+  placeholder sink,
 - Welcome `Get Started` entry into `RootRoute.Onboarding`,
 - local Profile finalization for completed onboarding answers,
 - guest cold-start entry to `MainGraph` after completed onboarding.
@@ -59,7 +73,7 @@ Not implemented:
 - guest-to-auth account handoff or full business-repository finalization,
 - backend or Supabase synchronization,
 - conditional remote-config paths,
-- analytics.
+- production analytics sink.
 
 ## Current Local Flow
 
@@ -72,7 +86,7 @@ Not implemented:
 | `workout_intro` | `choice` (form implemented) | Onboarding workout gate |
 | `workout` | `experience`, `gym_access`, `location`, `focus_areas`, optional `equipment`, `training_days`, `duration`, `split`, optional `health_concerns`, optional `special_event_goal` (forms implemented) | Workout |
 | `targets` | `steps_target`, `sleep_target`, `water_target`, `recommendation_summary`, `goal_pace`, `nutrition_summary` (forms implemented) | Future Nutrition/Progress/Recovery contracts |
-| `source` | `channel`, `reason`, optional `referral_detail` (forms implemented) | Onboarding / future attribution contract |
+| `source` | `channel`, `reason` (forms implemented) | Onboarding / future attribution contract |
 | `review` | `summary` (form implemented) | Onboarding orchestration only |
 
 The Workout section is skippable in version 1. A section being skippable does
@@ -126,9 +140,7 @@ Source answers currently use:
 - one discovery-source ID from `friend_referral`, `social_media`, `search`,
   `app_store`, `coach_or_gym`, or `other`.
 - one source-reason ID from `workout_focus`, `nutrition_focus`, or
-  `complete_reset`,
-- an optional free-text referral/detail answer with trimmed length in
-  `2..80` when the user chooses to share it.
+  `complete_reset`.
 
 Review currently uses:
 
@@ -164,6 +176,7 @@ OnboardingRoute
   -> OnboardingScreen
   -> OnboardingViewModel
   -> OnboardingUiState + OnboardingAction
+  -> OnboardingStateMachine + flow/navigation use cases
   -> flow and validation use cases
   -> OnboardingRepository
   -> app-owned local/backend implementation
@@ -196,6 +209,13 @@ active local profile and marks that profile as onboarded. Entry and future
 finalization work must still define guest-to-account handoff and clear behavior
 before backend synchronization is added. A future backend
 implementation may compose with the local repository without changing screens.
+
+When a signed-in or partially prefilled profile enters onboarding, checkpoint
+preparation can now seed name, dob, gender, mobile, height, current weight,
+and target weight into the draft before rendering. The effective local flow can
+also hide `intro` and `mobile` when that bootstrap context already exists,
+while keeping the current single intro screen and the same stable section/step
+IDs for fresh users.
 
 Finalization will map answers to their owning domain repositories. It must not
 create one permanent onboarding mega-table or make Onboarding the owner of

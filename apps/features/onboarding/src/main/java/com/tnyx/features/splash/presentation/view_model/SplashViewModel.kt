@@ -45,13 +45,14 @@ class SplashViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             delay(2000L)
             val session = sessionProvider.observeSession().first()
-            val hasCompletedOnboarding = profileRepository.getCurrentProfile()
-                .first()
-                .hasCompletedOnboarding
+            val currentProfile = profileRepository.getCurrentProfile().first()
+            val hasCompletedOnboarding = currentProfile.hasCompletedOnboarding
             _uiState.update { it.copy(isLoading = false) }
             _effect.emit(
-                if (session != null || hasCompletedOnboarding) {
+                if (hasCompletedOnboarding) {
                     SplashEffect.NavigateToMain
+                } else if (session != null) {
+                    SplashEffect.NavigateToOnboarding
                 } else {
                     SplashEffect.NavigateToWelcome
                 },

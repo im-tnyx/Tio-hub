@@ -39,13 +39,14 @@ Implemented:
   duration step content,
 - Workout-specific validation and stable persisted workout IDs and duration
   minute values,
+- Review summary content with explicit local confirmation,
+- `OnboardingUiState` draft-answer exposure for review-only summary rendering,
 - shared onboarding choice cards for single-select and multi-select steps,
 - scroll-safe content handling for longer onboarding forms,
 - Welcome `Get Started` entry into `RootRoute.Onboarding`.
 
 Not implemented:
 
-- Review form,
 - authenticated account handoff or business-repository finalization,
 - backend or Supabase synchronization,
 - conditional remote-config paths,
@@ -58,7 +59,7 @@ Not implemented:
 | `profile` | `name`, `gender`, `date_of_birth` (forms implemented) | Profile |
 | `body_goal` | `primary_goal`, `height`, `current_weight`, `target_weight`, `activity_level` (forms implemented) | Profile/Nutrition contracts as approved |
 | `workout` | `experience`, `location`, optional `equipment`, `training_days`, `duration` (forms implemented) | Workout |
-| `review` | `summary` | Onboarding orchestration only |
+| `review` | `summary` (form implemented) | Onboarding orchestration only |
 
 The Workout section is skippable in version 1. A section being skippable does
 not transfer ownership of its answers to Onboarding.
@@ -87,9 +88,17 @@ Workout answers currently use:
 - one or more training-day IDs from `monday` through `sunday`,
 - one duration minute value from `30`, `45`, `60`, `90`, or `120`.
 
+Review currently uses:
+
+- the persisted local draft to render a read-only summary of Profile, Body
+  Goal, and Workout answers,
+- a required `Toggle(true)` confirmation for `review.summary` before local
+  completion is allowed.
+
 Welcome `Get Started` now opens onboarding and Welcome `Skip` still opens Main.
-The user-facing flow is partial: completing Workout advances to the
-unimplemented Review form. This must not be described as complete onboarding.
+The user-facing flow can now complete locally. This still must not be described
+as final product onboarding, because authenticated account handoff, backend
+finalization, and remote synchronization remain unimplemented.
 
 ## Stable Identity Rules
 
@@ -152,6 +161,6 @@ Profile, Nutrition, Workout, Health, or Recovery data.
 2. Local draft/progress repository and resume tests. Completed.
 3. Onboarding graph, container, ViewModel, state, and actions. Completed.
 4. Profile, Body Goal, Workout, and Review sections delivered one at a time.
-   Profile, Body Goal, and Workout completed; Review pending.
+   Profile, Body Goal, Workout, and Review completed for the local flow.
 5. Backend finalization and optional dynamic flow only after Auth/API contracts
    are approved.

@@ -118,9 +118,11 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
   answers.
 - [x] Workout experience, location, optional equipment, training days, and
   duration forms render in the container and persist stable typed answers.
+- [x] Review summary renders collected answers, requires explicit confirmation,
+  and allows local onboarding completion.
 - [x] Welcome `Get Started` opens onboarding; Welcome `Skip` still opens Main.
-- [ ] Review is not implemented, so onboarding becomes incomplete after the
-  Workout section.
+- [x] The local onboarding shell now reaches completion without a placeholder
+  step.
 - [ ] Full modular onboarding runtime is not yet product-complete.
 - [ ] Authenticated account handoff, backend sync, and finalization are not yet
   repository-backed.
@@ -281,6 +283,17 @@ Rule: Future module folders may exist as checked-in ownership placeholders, but 
 ---
 
 ## ✅ Latest Validation
+
+### 2026-07-30: Review onboarding completion step
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :app:testDebugUnitTest :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL; onboarding 45 tests, app 25 tests, 0 failures,
+  0 errors.
+- [x] Scope: Review summary rendering, explicit finish confirmation, draft
+  answer exposure through UI state, and local completion validation.
+- [x] Backend/account handoff, remote sync, analytics, and business
+  finalization remain incomplete or unchanged.
 
 ### 2026-07-30: Workout onboarding section
 
@@ -456,4 +469,4 @@ Known warning:
 ---
 
 **Last Updated:** 2026-07-30
-**Current Focus:** Complete the Review step so the onboarding shell can reach a real local completion state before any backend/account handoff work.
+**Current Focus:** Define authenticated account handoff and backend finalization for onboarding without breaking the approved local draft/checkpoint foundation.

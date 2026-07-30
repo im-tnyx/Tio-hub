@@ -246,6 +246,7 @@ class OnboardingViewModel @Inject constructor(
             isSaving = isSaving,
             position = position,
             currentAnswer = currentAnswer,
+            draftAnswers = checkpoint.draft.answers,
             completedFraction = flow.completedFraction(position),
             sectionNumber = sectionIndex + 1,
             sectionCount = flow.sections.size,
@@ -314,6 +315,10 @@ class OnboardingViewModel @Inject constructor(
 
             OnboardingStepIds.WorkoutDuration -> {
                 this is OnboardingAnswer.Decimal && value in WORKOUT_DURATION_MINUTES
+            }
+
+            OnboardingStepIds.ReviewSummary -> {
+                this is OnboardingAnswer.Toggle && value
             }
 
             else -> isMeaningful()

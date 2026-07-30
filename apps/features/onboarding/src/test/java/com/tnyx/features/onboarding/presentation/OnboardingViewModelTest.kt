@@ -438,6 +438,28 @@ class OnboardingViewModelTest {
     }
 
     @Test
+    fun reviewSummaryRequiresExplicitConfirmation() = runTest {
+        val reviewPosition = position(
+            OnboardingSectionIds.Review,
+            OnboardingStepIds.ReviewSummary,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(position = reviewPosition),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Toggle(false)))
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Toggle(true)))
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
     fun continueAcrossSectionBoundaryMarksPreviousSectionCompleted() = runTest {
         val currentPosition = position(
             OnboardingSectionIds.Profile,

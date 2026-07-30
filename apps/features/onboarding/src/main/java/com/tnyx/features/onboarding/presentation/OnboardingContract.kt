@@ -2,12 +2,14 @@ package com.tnyx.features.onboarding.presentation
 
 import com.tnyx.features.onboarding.domain.model.OnboardingAnswer
 import com.tnyx.features.onboarding.domain.model.OnboardingPosition
+import com.tnyx.features.onboarding.domain.model.OnboardingStepId
 
 data class OnboardingUiState(
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
     val position: OnboardingPosition? = null,
     val currentAnswer: OnboardingAnswer? = null,
+    val draftAnswers: Map<OnboardingStepId, OnboardingAnswer> = emptyMap(),
     val completedFraction: Float = 0f,
     val sectionNumber: Int = 0,
     val sectionCount: Int = 0,

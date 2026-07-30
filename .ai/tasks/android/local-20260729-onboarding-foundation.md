@@ -1,6 +1,6 @@
 # Android Onboarding Foundation
 
-Status: In Progress
+Status: Complete
 Updated: 2026-07-30
 
 ## Objective
@@ -64,12 +64,18 @@ dynamic flow without replacing stable section and step identities.
 - Added Workout-specific validation and stable persisted values for experience
   IDs, workout-location IDs, training-day IDs, and duration minute values.
 - Added Workout validation and section-boundary navigation tests.
+- Added a real Review summary step that renders collected answers and requires
+  explicit confirmation before finishing onboarding.
+- Exposed draft answers through `OnboardingUiState` so Review can summarize the
+  full local checkpoint without giving screens repository access.
+- Added Review-specific validation and completion tests.
 
 ## Next
 
-- Implement the Review step so onboarding can reach a real local completion
-  state.
-- Keep backend/account handoff deferred until Review is in place.
+- If onboarding continues, the next slice should define authenticated account
+  handoff and backend finalization ownership.
+- Keep Supabase/backend synchronization deferred until those contracts are
+  approved.
 
 ## Truth Boundary
 
@@ -78,8 +84,9 @@ dynamic flow without replacing stable section and step identities.
   level forms are implemented.
 - Workout experience, location, optional equipment, training days, and duration
   forms are implemented.
-- Welcome `Get Started` now enters onboarding, but the flow becomes incomplete
-  at the Review step because that section is not implemented yet.
+- Review renders a real local summary and explicit confirmation step.
+- Welcome `Get Started` now enters onboarding and the local flow can finish
+  without hitting a placeholder screen.
 - Welcome `Skip` retains the existing direct-to-Main behavior.
 - Local checkpoint persistence is device-owned and is not connected to an
   authenticated account or final business repositories.
@@ -90,5 +97,5 @@ dynamic flow without replacing stable section and step identities.
 
 - `./gradlew.bat :features:onboarding:testDebugUnitTest
   :app:testDebugUnitTest :app:compileDebugKotlin --no-configuration-cache`
-- Result: BUILD SUCCESSFUL; onboarding 44 tests, app 25 tests, 0 failures,
+- Result: BUILD SUCCESSFUL; onboarding 45 tests, app 25 tests, 0 failures,
   0 errors.

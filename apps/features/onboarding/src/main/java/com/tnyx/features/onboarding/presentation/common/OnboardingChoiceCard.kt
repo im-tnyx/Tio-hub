@@ -22,10 +22,11 @@ internal fun OnboardingChoiceCard(
     title: String,
     description: String,
     selected: Boolean,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     badge: String? = null,
     selectionMode: OnboardingSelectionMode = OnboardingSelectionMode.Single,
+    showSelectionControl: Boolean = true,
 ) {
     TnyxCard(
         modifier = modifier.fillMaxWidth(),
@@ -37,28 +38,30 @@ internal fun OnboardingChoiceCard(
             horizontalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceM),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            when (selectionMode) {
-                OnboardingSelectionMode.Single -> {
-                    RadioButton(
-                        selected = selected,
-                        onClick = null,
-                        colors = RadioButtonDefaults.colors(
-                            selectedColor = TnyxTheme.colors.primary,
-                            unselectedColor = TnyxTheme.colors.textMuted,
-                        ),
-                    )
-                }
+            if (showSelectionControl) {
+                when (selectionMode) {
+                    OnboardingSelectionMode.Single -> {
+                        RadioButton(
+                            selected = selected,
+                            onClick = null,
+                            colors = RadioButtonDefaults.colors(
+                                selectedColor = TnyxTheme.colors.primary,
+                                unselectedColor = TnyxTheme.colors.textMuted,
+                            ),
+                        )
+                    }
 
-                OnboardingSelectionMode.Multiple -> {
-                    Checkbox(
-                        checked = selected,
-                        onCheckedChange = null,
-                        colors = CheckboxDefaults.colors(
-                            checkedColor = TnyxTheme.colors.primary,
-                            uncheckedColor = TnyxTheme.colors.textMuted,
-                            checkmarkColor = TnyxTheme.colors.onPrimary,
-                        ),
-                    )
+                    OnboardingSelectionMode.Multiple -> {
+                        Checkbox(
+                            checked = selected,
+                            onCheckedChange = null,
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = TnyxTheme.colors.primary,
+                                uncheckedColor = TnyxTheme.colors.textMuted,
+                                checkmarkColor = TnyxTheme.colors.onPrimary,
+                            ),
+                        )
+                    }
                 }
             }
 

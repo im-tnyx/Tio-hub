@@ -3,22 +3,36 @@ package com.tnyx.features.onboarding.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tnyx.features.onboarding.domain.flow.DefaultOnboardingFlow
-import com.tnyx.features.onboarding.domain.flow.OnboardingCheckpointResolver
-import com.tnyx.features.onboarding.domain.flow.OnboardingStepIds
 import com.tnyx.features.onboarding.domain.model.OnboardingAnswer
 import com.tnyx.features.onboarding.domain.model.OnboardingCheckpoint
 import com.tnyx.features.onboarding.domain.model.OnboardingFlowDefinition
-import com.tnyx.features.onboarding.domain.model.OnboardingPosition
-import com.tnyx.features.onboarding.domain.model.OnboardingStepId
 import com.tnyx.features.onboarding.domain.repository.OnboardingRepository
+import com.tnyx.features.onboarding.domain.usecase.AdvanceOnboardingStepResult
+import com.tnyx.features.onboarding.domain.usecase.AdvanceOnboardingStepUseCase
+import com.tnyx.features.onboarding.domain.usecase.CompleteOnboardingResult
+import com.tnyx.features.onboarding.domain.usecase.CompleteOnboardingUseCase
+import com.tnyx.features.onboarding.domain.usecase.ContinueOnboardingSessionResult
+import com.tnyx.features.onboarding.domain.usecase.ContinueOnboardingSessionUseCase
+import com.tnyx.features.onboarding.domain.usecase.FinalizeOnboardingProfileUseCase
+import com.tnyx.features.onboarding.domain.usecase.InitializeOnboardingSessionResult
+import com.tnyx.features.onboarding.domain.usecase.InitializeOnboardingSessionUseCase
+import com.tnyx.features.onboarding.domain.usecase.PersistOnboardingCheckpointResult
+import com.tnyx.features.onboarding.domain.usecase.PersistOnboardingCheckpointUseCase
+import com.tnyx.features.onboarding.domain.usecase.ResolveBackNavigationResult
+import com.tnyx.features.onboarding.domain.usecase.ResolveBackNavigationUseCase
+import com.tnyx.features.onboarding.domain.usecase.RetryOnboardingSessionResult
+import com.tnyx.features.onboarding.domain.usecase.RetryOnboardingSessionUseCase
+import com.tnyx.features.onboarding.domain.usecase.SeedOnboardingRecommendationsUseCase
+import com.tnyx.features.onboarding.domain.usecase.SkipOnboardingSectionUseCase
+import com.tnyx.features.onboarding.domain.usecase.UpdateOnboardingAnswerUseCase
+import com.tnyx.shared.profile.domain.repository.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -28,9 +42,37 @@ import kotlinx.coroutines.sync.withLock
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
     private val repository: OnboardingRepository,
+    private val profileRepository: ProfileRepository,
+    private val finalizeOnboardingProfile: FinalizeOnboardingProfileUseCase =
+        FinalizeOnboardingProfileUseCase(),
+    private val advanceOnboardingStep: AdvanceOnboardingStepUseCase =
+        AdvanceOnboardingStepUseCase(),
+    private val resolveBackNavigation: ResolveBackNavigationUseCase =
+        ResolveBackNavigationUseCase(),
+    private val skipOnboardingSection: SkipOnboardingSectionUseCase =
+        SkipOnboardingSectionUseCase(),
+    private val persistOnboardingCheckpoint: PersistOnboardingCheckpointUseCase =
+        PersistOnboardingCheckpointUseCase(),
+    private val completeOnboardingUseCase: CompleteOnboardingUseCase =
+        CompleteOnboardingUseCase(),
+    private val continueOnboardingSession: ContinueOnboardingSessionUseCase =
+        ContinueOnboardingSessionUseCase(),
+    private val initializeOnboardingSession: InitializeOnboardingSessionUseCase =
+        InitializeOnboardingSessionUseCase(),
+    private val checkpointUiStateFactory: OnboardingCheckpointUiStateFactory =
+        OnboardingCheckpointUiStateFactory(),
+    private val retryOnboardingSession: RetryOnboardingSessionUseCase =
+        RetryOnboardingSessionUseCase(),
+    private val updateOnboardingAnswer: UpdateOnboardingAnswerUseCase =
+        UpdateOnboardingAnswerUseCase(),
+    private val seedOnboardingRecommendations: SeedOnboardingRecommendationsUseCase =
+        SeedOnboardingRecommendationsUseCase(),
 ) : ViewModel() {
+    companion object {
+        private const val CompletionReadyDelayMillis = 900L
+    }
+
     private val flow: OnboardingFlowDefinition = DefaultOnboardingFlow.definition
-    private val resolver = OnboardingCheckpointResolver()
     private val operationMutex = Mutex()
 
     private val _uiState = MutableStateFlow(OnboardingUiState())
@@ -69,54 +111,116 @@ class OnboardingViewModel @Inject constructor(
                 }
 
                 try {
-                    val storedCheckpoint = repository.observeCheckpoint().first()
-                    val resolvedCheckpoint = resolver.resolve(storedCheckpoint, flow)
-                    if (storedCheckpoint != resolvedCheckpoint) {
-                        repository.saveCheckpoint(resolvedCheckpoint)
-                    }
-                    checkpoint = resolvedCheckpoint
-                    render(resolvedCheckpoint)
-                    if (resolvedCheckpoint.progress.isCompleted) {
-                        effectChannel.send(OnboardingEffect.Completed)
+                    when (
+                        val result = initializeOnboardingSession(
+                            flow = flow,
+                            onboardingRepository = repository,
+                            profileRepository = profileRepository,
+                        )
+                    ) {
+                        InitializeOnboardingSessionResult.ProfileAlreadyCompleted -> {
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    hasPersistenceError = false,
+                                )
+                            }
+                            emitEffect(OnboardingEffect.Completed)
+                            return@withLock
+                        }
+
+                        is InitializeOnboardingSessionResult.Ready -> {
+                            applyCheckpointState(
+                                checkpoint = result.checkpoint,
+                                status = OnboardingCheckpointUiStatus.Ready,
+                            )
+                        }
+
+                        is InitializeOnboardingSessionResult.ResumeCompletedCheckpoint -> {
+                            if (completeOnboarding(
+                                    completedCheckpoint = result.checkpoint,
+                                    persistCheckpoint = result.persistCheckpoint,
+                                )
+                            ) {
+                                emitEffect(OnboardingEffect.Completed)
+                            }
+                            return@withLock
+                        }
                     }
                 } catch (exception: Exception) {
                     if (exception is CancellationException) throw exception
                     initializationStarted = false
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            hasPersistenceError = true,
-                        )
-                    }
+                    showInitializationFailure()
                 }
             }
         }
     }
 
     private fun retry() {
-        val currentCheckpoint = checkpoint
-        if (currentCheckpoint == null) {
-            initialize()
-            return
-        }
-
         runOperation {
-            saveAndRender(currentCheckpoint)
+            checkpoint?.let { currentCheckpoint ->
+                render(
+                    checkpoint = currentCheckpoint,
+                    status = OnboardingCheckpointUiStatus.Saving,
+                )
+            }
+            when (
+                val result = retryOnboardingSession(
+                    checkpoint = checkpoint,
+                    onboardingRepository = repository,
+                    profileRepository = profileRepository,
+                    finalizeOnboardingProfile = finalizeOnboardingProfile,
+                )
+            ) {
+                RetryOnboardingSessionResult.Reinitialize -> initialize()
+                is RetryOnboardingSessionResult.Persisted -> {
+                    applyCheckpointState(
+                        checkpoint = result.checkpoint,
+                        status = OnboardingCheckpointUiStatus.Ready,
+                    )
+                }
+
+                is RetryOnboardingSessionResult.PersistFailed -> {
+                    applyCheckpointState(
+                        checkpoint = result.checkpoint,
+                        status = OnboardingCheckpointUiStatus.PersistenceError,
+                    )
+                }
+
+                is RetryOnboardingSessionResult.Completed -> {
+                    applyCheckpointState(
+                        checkpoint = result.checkpoint,
+                        status = OnboardingCheckpointUiStatus.Ready,
+                    )
+                    showCompletionStates()
+                }
+
+                is RetryOnboardingSessionResult.CompleteFailed -> {
+                    applyCheckpointState(
+                        checkpoint = result.checkpoint,
+                        status = OnboardingCheckpointUiStatus.PersistenceError,
+                    )
+                }
+            }
         }
     }
 
     private suspend fun updateCurrentAnswer(answer: OnboardingAnswer?) {
         val currentCheckpoint = checkpoint ?: return
-        val stepId = currentCheckpoint.progress.position.stepId
-        val updatedDraft = if (answer == null) {
-            currentCheckpoint.draft.withoutAnswer(stepId)
-        } else {
-            currentCheckpoint.draft.withAnswer(stepId, answer)
-        }
-        saveAndRender(currentCheckpoint.copy(draft = updatedDraft))
+        saveAndRender(updateOnboardingAnswer(currentCheckpoint, answer))
     }
 
     private suspend fun continueForward() {
+        when (_uiState.value.completionStage) {
+            OnboardingCompletionStage.SettingUp -> return
+            OnboardingCompletionStage.Ready -> {
+                emitEffect(OnboardingEffect.Completed)
+                return
+            }
+
+            null -> Unit
+        }
+
         val currentCheckpoint = checkpoint ?: return
         val currentState = _uiState.value
         if (!currentState.canContinue) {
@@ -126,137 +230,177 @@ class OnboardingViewModel @Inject constructor(
             return
         }
 
-        val currentPosition = currentCheckpoint.progress.position
-        val nextPosition = flow.next(currentPosition)
-        if (nextPosition == null) {
-            val completedCheckpoint = currentCheckpoint.copy(
-                progress = currentCheckpoint.progress.copy(
-                    completedSectionIds = currentCheckpoint.progress.completedSectionIds +
-                        currentPosition.sectionId,
-                    isCompleted = true,
-                ),
-            )
-            if (saveAndRender(completedCheckpoint)) {
-                effectChannel.send(OnboardingEffect.Completed)
-            }
-            return
+        val advanceResult = advanceOnboardingStep(currentCheckpoint, flow)
+        val previewCheckpoint = when (advanceResult) {
+            is AdvanceOnboardingStepResult.Completed -> advanceResult.checkpoint
+            is AdvanceOnboardingStepResult.Next -> advanceResult.checkpoint
         }
-
-        val completedSections = if (nextPosition.sectionId != currentPosition.sectionId) {
-            currentCheckpoint.progress.completedSectionIds + currentPosition.sectionId
-        } else {
-            currentCheckpoint.progress.completedSectionIds
-        }
-        saveAndRender(
-            currentCheckpoint.copy(
-                progress = currentCheckpoint.progress.copy(
-                    position = nextPosition,
-                    completedSectionIds = completedSections,
-                ),
-            ),
+        applyCheckpointState(
+            checkpoint = previewCheckpoint,
+            status = OnboardingCheckpointUiStatus.Saving,
         )
+
+        when (
+            val result = continueOnboardingSession(
+                advanceResult = advanceResult,
+                onboardingRepository = repository,
+                profileRepository = profileRepository,
+                finalizeOnboardingProfile = finalizeOnboardingProfile,
+            )
+        ) {
+            is ContinueOnboardingSessionResult.Persisted -> {
+                applyCheckpointState(
+                    checkpoint = result.checkpoint,
+                    status = OnboardingCheckpointUiStatus.Ready,
+                )
+            }
+
+            is ContinueOnboardingSessionResult.PersistFailed -> {
+                applyCheckpointState(
+                    checkpoint = result.checkpoint,
+                    status = OnboardingCheckpointUiStatus.PersistenceError,
+                )
+            }
+
+            is ContinueOnboardingSessionResult.Completed -> {
+                applyCheckpointState(
+                    checkpoint = result.checkpoint,
+                    status = OnboardingCheckpointUiStatus.Ready,
+                )
+                showCompletionStates()
+            }
+
+            is ContinueOnboardingSessionResult.CompleteFailed -> {
+                applyCheckpointState(
+                    checkpoint = result.checkpoint,
+                    status = OnboardingCheckpointUiStatus.PersistenceError,
+                )
+            }
+        }
+    }
+
+    private suspend fun completeOnboarding(
+        completedCheckpoint: OnboardingCheckpoint,
+        persistCheckpoint: Boolean = true,
+    ): Boolean {
+        applyCheckpointState(
+            checkpoint = completedCheckpoint,
+            status = OnboardingCheckpointUiStatus.Saving,
+        )
+
+        return when (
+            completeOnboardingUseCase(
+                checkpoint = completedCheckpoint,
+                persistCheckpoint = persistCheckpoint,
+                onboardingRepository = repository,
+                profileRepository = profileRepository,
+                finalizeOnboardingProfile = finalizeOnboardingProfile,
+            )
+        ) {
+            is CompleteOnboardingResult.Success -> {
+                applyCheckpointState(
+                    checkpoint = completedCheckpoint,
+                    status = OnboardingCheckpointUiStatus.Ready,
+                )
+                true
+            }
+
+            is CompleteOnboardingResult.Failure -> {
+                applyCheckpointState(
+                    checkpoint = completedCheckpoint,
+                    status = OnboardingCheckpointUiStatus.PersistenceError,
+                )
+                false
+            }
+        }
     }
 
     private suspend fun navigateBack() {
-        val currentCheckpoint = checkpoint
-        if (currentCheckpoint == null) {
-            effectChannel.send(OnboardingEffect.Exit)
-            return
+        when (val result = resolveBackNavigation(checkpoint, flow)) {
+            ResolveBackNavigationResult.Exit -> effectChannel.send(OnboardingEffect.Exit)
+            is ResolveBackNavigationResult.Previous -> saveAndRender(result.checkpoint)
         }
-        val previousPosition = flow.previous(currentCheckpoint.progress.position)
-        if (previousPosition == null) {
-            effectChannel.send(OnboardingEffect.Exit)
-            return
-        }
-
-        saveAndRender(
-            currentCheckpoint.copy(
-                progress = currentCheckpoint.progress.copy(
-                    position = previousPosition,
-                    isCompleted = false,
-                ),
-            ),
-        )
     }
 
     private suspend fun skipCurrentSection() {
         val currentCheckpoint = checkpoint ?: return
-        val currentPosition = currentCheckpoint.progress.position
-        val currentSection = flow.sections.first { section ->
-            section.id == currentPosition.sectionId
-        }
-        if (!currentSection.isSkippable) return
-
-        var nextPosition: OnboardingPosition? = flow.next(currentPosition)
-        while (nextPosition?.sectionId == currentPosition.sectionId) {
-            nextPosition = flow.next(nextPosition)
-        }
-        val targetPosition = nextPosition ?: return
-
-        saveAndRender(
-            currentCheckpoint.copy(
-                progress = currentCheckpoint.progress.copy(
-                    position = targetPosition,
-                    isCompleted = false,
-                ),
-            ),
-        )
+        val skippedCheckpoint = skipOnboardingSection(currentCheckpoint, flow) ?: return
+        saveAndRender(skippedCheckpoint)
     }
 
     private suspend fun saveAndRender(updatedCheckpoint: OnboardingCheckpoint): Boolean {
-        checkpoint = updatedCheckpoint
-        render(
-            updatedCheckpoint,
-            isSaving = true,
+        applyCheckpointState(
+            checkpoint = updatedCheckpoint,
+            status = OnboardingCheckpointUiStatus.Saving,
         )
 
-        return try {
-            repository.saveCheckpoint(updatedCheckpoint)
-            render(updatedCheckpoint)
-            true
-        } catch (exception: Exception) {
-            if (exception is CancellationException) throw exception
-            render(
-                updatedCheckpoint,
+        return when (persistOnboardingCheckpoint(updatedCheckpoint, repository)) {
+            is PersistOnboardingCheckpointResult.Success -> {
+                applyCheckpointState(
+                    checkpoint = updatedCheckpoint,
+                    status = OnboardingCheckpointUiStatus.Ready,
+                )
+                true
+            }
+
+            is PersistOnboardingCheckpointResult.Failure -> {
+                applyCheckpointState(
+                    checkpoint = updatedCheckpoint,
+                    status = OnboardingCheckpointUiStatus.PersistenceError,
+                )
+                false
+            }
+        }
+    }
+
+    private fun applyCheckpointState(
+        checkpoint: OnboardingCheckpoint,
+        status: OnboardingCheckpointUiStatus,
+    ) {
+        val checkpointWithRecommendations = seedOnboardingRecommendations(checkpoint)
+        this.checkpoint = checkpointWithRecommendations
+        render(
+            checkpoint = checkpointWithRecommendations,
+            status = status,
+        )
+    }
+
+    private fun showInitializationFailure() {
+        _uiState.update {
+            it.copy(
+                isLoading = false,
                 hasPersistenceError = true,
             )
-            false
+        }
+    }
+
+    private suspend fun emitEffect(effect: OnboardingEffect) {
+        effectChannel.send(effect)
+    }
+
+    private suspend fun showCompletionStates() {
+        _uiState.update {
+            it.copy(
+                completionStage = OnboardingCompletionStage.SettingUp,
+                isSaving = false,
+                hasPersistenceError = false,
+                validationError = null,
+            )
+        }
+        delay(CompletionReadyDelayMillis)
+        _uiState.update {
+            it.copy(completionStage = OnboardingCompletionStage.Ready)
         }
     }
 
     private fun render(
         checkpoint: OnboardingCheckpoint,
-        isSaving: Boolean = false,
-        hasPersistenceError: Boolean = false,
+        status: OnboardingCheckpointUiStatus = OnboardingCheckpointUiStatus.Ready,
     ) {
-        val position = checkpoint.progress.position
-        val sectionIndex = flow.sections.indexOfFirst { section -> section.id == position.sectionId }
-        val section = flow.sections[sectionIndex]
-        val step = section.steps.first { definition -> definition.id == position.stepId }
-        val stepIndex = flow.sections
-            .take(sectionIndex)
-            .sumOf { definition -> definition.steps.size } +
-            section.steps.indexOf(step)
-        val currentAnswer = checkpoint.draft.answerFor(position.stepId)
-        val hasRequiredAnswer = !step.isRequired ||
-            currentAnswer.isMeaningfulFor(position.stepId)
-
-        _uiState.value = OnboardingUiState(
-            isLoading = false,
-            isSaving = isSaving,
-            position = position,
-            currentAnswer = currentAnswer,
-            draftAnswers = checkpoint.draft.answers,
-            completedFraction = flow.completedFraction(position),
-            sectionNumber = sectionIndex + 1,
-            sectionCount = flow.sections.size,
-            stepNumber = stepIndex + 1,
-            totalSteps = flow.totalSteps,
-            canContinue = !checkpoint.progress.isCompleted && hasRequiredAnswer,
-            canSkipSection = !checkpoint.progress.isCompleted && section.isSkippable,
-            isLastStep = flow.next(position) == null,
-            validationError = null,
-            hasPersistenceError = hasPersistenceError,
+        _uiState.value = checkpointUiStateFactory(
+            checkpoint = checkpoint,
+            flow = flow,
+            status = status,
         )
     }
 
@@ -266,128 +410,5 @@ class OnboardingViewModel @Inject constructor(
                 operation()
             }
         }
-    }
-
-    private fun OnboardingAnswer?.isMeaningfulFor(stepId: OnboardingStepId): Boolean {
-        return when (stepId) {
-            OnboardingStepIds.ProfileName -> {
-                this is OnboardingAnswer.Text && value.trim().length in PROFILE_NAME_LENGTH
-            }
-
-            OnboardingStepIds.ProfileGender -> {
-                this is OnboardingAnswer.Text && value in PROFILE_GENDER_IDS
-            }
-
-            OnboardingStepIds.ProfileDateOfBirth -> {
-                this is OnboardingAnswer.Text && value.isValidDateOfBirth()
-            }
-
-            OnboardingStepIds.BodyGoalPrimaryGoal -> {
-                this is OnboardingAnswer.Text && value in PRIMARY_GOAL_IDS
-            }
-
-            OnboardingStepIds.BodyGoalHeight -> {
-                this is OnboardingAnswer.Decimal && value in HEIGHT_CM_RANGE
-            }
-
-            OnboardingStepIds.BodyGoalCurrentWeight,
-            OnboardingStepIds.BodyGoalTargetWeight -> {
-                this is OnboardingAnswer.Decimal && value in WEIGHT_KG_RANGE
-            }
-
-            OnboardingStepIds.BodyGoalActivityLevel -> {
-                this is OnboardingAnswer.Text && value in ACTIVITY_LEVEL_IDS
-            }
-
-            OnboardingStepIds.WorkoutExperience -> {
-                this is OnboardingAnswer.Text && value in WORKOUT_EXPERIENCE_IDS
-            }
-
-            OnboardingStepIds.WorkoutLocation -> {
-                this is OnboardingAnswer.Text && value in WORKOUT_LOCATION_IDS
-            }
-
-            OnboardingStepIds.WorkoutTrainingDays -> {
-                this is OnboardingAnswer.Selections &&
-                    values.isNotEmpty() &&
-                    values.all(WORKOUT_TRAINING_DAY_IDS::contains)
-            }
-
-            OnboardingStepIds.WorkoutDuration -> {
-                this is OnboardingAnswer.Decimal && value in WORKOUT_DURATION_MINUTES
-            }
-
-            OnboardingStepIds.ReviewSummary -> {
-                this is OnboardingAnswer.Toggle && value
-            }
-
-            else -> isMeaningful()
-        }
-    }
-
-    private fun OnboardingAnswer?.isMeaningful(): Boolean {
-        return when (this) {
-            null -> false
-            is OnboardingAnswer.Text -> value.isNotBlank()
-            is OnboardingAnswer.Decimal -> true
-            is OnboardingAnswer.Selections -> values.isNotEmpty()
-            is OnboardingAnswer.Toggle -> true
-        }
-    }
-
-    private fun String.isValidDateOfBirth(): Boolean {
-        return runCatching { LocalDate.parse(this) }
-            .getOrNull()
-            ?.let { date -> !date.isBefore(EARLIEST_DATE_OF_BIRTH) && date.isBefore(LocalDate.now()) }
-            ?: false
-    }
-
-    private companion object {
-        val PROFILE_NAME_LENGTH = 2..30
-        val PROFILE_GENDER_IDS = setOf("male", "female", "prefer_not_to_say")
-        val PRIMARY_GOAL_IDS = setOf(
-            "build_muscle",
-            "lose_weight",
-            "keep_fit",
-            "boost_strength",
-            "manage_stress",
-        )
-        val ACTIVITY_LEVEL_IDS = setOf(
-            "sedentary",
-            "light",
-            "active",
-            "very_active",
-            "dynamic",
-        )
-        val WORKOUT_EXPERIENCE_IDS = setOf(
-            "fresh",
-            "beginner",
-            "intermediate",
-            "advanced",
-        )
-        val WORKOUT_LOCATION_IDS = setOf(
-            "gym",
-            "home",
-            "both",
-        )
-        val WORKOUT_TRAINING_DAY_IDS = setOf(
-            "monday",
-            "tuesday",
-            "wednesday",
-            "thursday",
-            "friday",
-            "saturday",
-            "sunday",
-        )
-        val WORKOUT_DURATION_MINUTES = setOf(
-            30.0,
-            45.0,
-            60.0,
-            90.0,
-            120.0,
-        )
-        val HEIGHT_CM_RANGE = 80.0..260.0
-        val WEIGHT_KG_RANGE = 20.0..400.0
-        val EARLIEST_DATE_OF_BIRTH: LocalDate = LocalDate.of(1900, 1, 1)
     }
 }

@@ -18,14 +18,14 @@ class OnboardingFlowDefinitionTest {
         val flow = DefaultOnboardingFlow.definition
 
         assertEquals(
-            listOf("profile", "body_goal", "workout", "review"),
+            listOf("intro", "profile", "body_goal", "mobile", "workout_intro", "workout", "targets", "source", "review"),
             flow.sections.map { section -> section.id.value },
         )
-        assertEquals(14, flow.totalSteps)
+        assertEquals(32, flow.totalSteps)
         assertEquals(
             OnboardingPosition(
-                sectionId = OnboardingSectionIds.Profile,
-                stepId = OnboardingStepIds.ProfileName,
+                sectionId = OnboardingSectionIds.Intro,
+                stepId = OnboardingStepIds.IntroWelcome,
             ),
             flow.firstPosition(),
         )
@@ -42,6 +42,14 @@ class OnboardingFlowDefinitionTest {
     @Test
     fun nextAndPreviousCrossSectionBoundaries() {
         val flow = DefaultOnboardingFlow.definition
+        val introEnd = OnboardingPosition(
+            sectionId = OnboardingSectionIds.Intro,
+            stepId = OnboardingStepIds.IntroWelcome,
+        )
+        val profileStart = OnboardingPosition(
+            sectionId = OnboardingSectionIds.Profile,
+            stepId = OnboardingStepIds.ProfileName,
+        )
         val profileEnd = OnboardingPosition(
             sectionId = OnboardingSectionIds.Profile,
             stepId = OnboardingStepIds.ProfileDateOfBirth,
@@ -51,8 +59,322 @@ class OnboardingFlowDefinitionTest {
             stepId = OnboardingStepIds.BodyGoalPrimaryGoal,
         )
 
+        assertEquals(profileStart, flow.next(introEnd))
+        assertEquals(introEnd, flow.previous(profileStart))
         assertEquals(bodyStart, flow.next(profileEnd))
         assertEquals(profileEnd, flow.previous(bodyStart))
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.BodyGoal,
+                stepId = OnboardingStepIds.BodyGoalHealthCondition,
+            ),
+            flow.next(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.BodyGoal,
+                    stepId = OnboardingStepIds.BodyGoalActivityLevel,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Mobile,
+                stepId = OnboardingStepIds.MobileNumber,
+            ),
+            flow.next(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.BodyGoal,
+                    stepId = OnboardingStepIds.BodyGoalHealthCondition,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.WorkoutIntro,
+                stepId = OnboardingStepIds.WorkoutIntroChoice,
+            ),
+            flow.next(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Mobile,
+                    stepId = OnboardingStepIds.MobileNumber,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Workout,
+                stepId = OnboardingStepIds.WorkoutExperience,
+            ),
+            flow.next(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.WorkoutIntro,
+                    stepId = OnboardingStepIds.WorkoutIntroChoice,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Workout,
+                stepId = OnboardingStepIds.WorkoutGymAccess,
+            ),
+            flow.next(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Workout,
+                    stepId = OnboardingStepIds.WorkoutExperience,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Workout,
+                stepId = OnboardingStepIds.WorkoutLocation,
+            ),
+            flow.next(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Workout,
+                    stepId = OnboardingStepIds.WorkoutGymAccess,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Workout,
+                stepId = OnboardingStepIds.WorkoutFocusAreas,
+            ),
+            flow.next(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Workout,
+                    stepId = OnboardingStepIds.WorkoutLocation,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Workout,
+                stepId = OnboardingStepIds.WorkoutEquipment,
+            ),
+            flow.next(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Workout,
+                    stepId = OnboardingStepIds.WorkoutFocusAreas,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Workout,
+                stepId = OnboardingStepIds.WorkoutSplit,
+            ),
+            flow.next(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Workout,
+                    stepId = OnboardingStepIds.WorkoutDuration,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Workout,
+                stepId = OnboardingStepIds.WorkoutHealthConcerns,
+            ),
+            flow.next(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Workout,
+                    stepId = OnboardingStepIds.WorkoutSplit,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Workout,
+                stepId = OnboardingStepIds.WorkoutSpecialEventGoal,
+            ),
+            flow.next(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Workout,
+                    stepId = OnboardingStepIds.WorkoutHealthConcerns,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Targets,
+                stepId = OnboardingStepIds.TargetsRecommendationSummary,
+            ),
+            flow.next(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Targets,
+                    stepId = OnboardingStepIds.TargetsWaterTarget,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Targets,
+                stepId = OnboardingStepIds.TargetsGoalPace,
+            ),
+            flow.next(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Targets,
+                    stepId = OnboardingStepIds.TargetsRecommendationSummary,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Targets,
+                stepId = OnboardingStepIds.TargetsNutritionSummary,
+            ),
+            flow.next(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Targets,
+                    stepId = OnboardingStepIds.TargetsGoalPace,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Workout,
+                stepId = OnboardingStepIds.WorkoutDuration,
+            ),
+            flow.previous(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Workout,
+                    stepId = OnboardingStepIds.WorkoutSplit,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Workout,
+                stepId = OnboardingStepIds.WorkoutSplit,
+            ),
+            flow.previous(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Workout,
+                    stepId = OnboardingStepIds.WorkoutHealthConcerns,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Workout,
+                stepId = OnboardingStepIds.WorkoutHealthConcerns,
+            ),
+            flow.previous(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Workout,
+                    stepId = OnboardingStepIds.WorkoutSpecialEventGoal,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Workout,
+                stepId = OnboardingStepIds.WorkoutGymAccess,
+            ),
+            flow.previous(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Workout,
+                    stepId = OnboardingStepIds.WorkoutLocation,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Workout,
+                stepId = OnboardingStepIds.WorkoutFocusAreas,
+            ),
+            flow.previous(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Workout,
+                    stepId = OnboardingStepIds.WorkoutEquipment,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.BodyGoal,
+                stepId = OnboardingStepIds.BodyGoalHealthCondition,
+            ),
+            flow.previous(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Mobile,
+                    stepId = OnboardingStepIds.MobileNumber,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.WorkoutIntro,
+                stepId = OnboardingStepIds.WorkoutIntroChoice,
+            ),
+            flow.previous(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Workout,
+                    stepId = OnboardingStepIds.WorkoutExperience,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Targets,
+                stepId = OnboardingStepIds.TargetsStepsTarget,
+            ),
+            flow.next(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Workout,
+                    stepId = OnboardingStepIds.WorkoutSpecialEventGoal,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Source,
+                stepId = OnboardingStepIds.SourceChannel,
+            ),
+            flow.next(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Targets,
+                    stepId = OnboardingStepIds.TargetsNutritionSummary,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Source,
+                stepId = OnboardingStepIds.SourceReason,
+            ),
+            flow.next(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Source,
+                    stepId = OnboardingStepIds.SourceChannel,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Source,
+                stepId = OnboardingStepIds.SourceReferralDetail,
+            ),
+            flow.next(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Source,
+                    stepId = OnboardingStepIds.SourceReason,
+                ),
+            ),
+        )
+        assertEquals(
+            OnboardingPosition(
+                sectionId = OnboardingSectionIds.Review,
+                stepId = OnboardingStepIds.ReviewSummary,
+            ),
+            flow.next(
+                OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Source,
+                    stepId = OnboardingStepIds.SourceReferralDetail,
+                ),
+            ),
+        )
         assertNull(flow.previous(flow.firstPosition()))
         assertNull(
             flow.next(
@@ -92,16 +414,16 @@ class OnboardingFlowDefinitionTest {
     @Test
     fun positionRoundTripsWithStableStringIds() {
         val position = OnboardingPosition(
-            sectionId = OnboardingSectionIds.Workout,
-            stepId = OnboardingStepIds.WorkoutDuration,
+            sectionId = OnboardingSectionIds.Mobile,
+            stepId = OnboardingStepIds.MobileNumber,
         )
 
         val encoded = Json.encodeToString(OnboardingPosition.serializer(), position)
         val decoded = Json.decodeFromString(OnboardingPosition.serializer(), encoded)
 
         assertEquals(position, decoded)
-        assertTrue(encoded.contains("\"workout\""))
-        assertTrue(encoded.contains("\"workout.duration\""))
+        assertTrue(encoded.contains("\"mobile\""))
+        assertTrue(encoded.contains("\"mobile.number\""))
     }
 
     @Test

@@ -129,6 +129,187 @@ class OnboardingCheckpointResolverTest {
         assertTrue(resolved.draft.answers.isEmpty())
     }
 
+    @Test
+    fun priorFlowWorkoutCheckpointMigratesWorkoutIntroChoice() {
+        val previousFlowCheckpoint = checkpoint(
+            flowVersion = flow.version - 9,
+            position = OnboardingPosition(
+                sectionId = OnboardingSectionIds.Workout,
+                stepId = OnboardingStepIds.WorkoutExperience,
+            ),
+        )
+
+        val resolved = resolver.resolve(previousFlowCheckpoint, flow)
+
+        assertEquals(flow.version, resolved.progress.flowVersion)
+        assertEquals(
+            OnboardingAnswer.Toggle(true),
+            resolved.draft.answerFor(OnboardingStepIds.WorkoutIntroChoice),
+        )
+        assertTrue(resolved.progress.completedSectionIds.contains(OnboardingSectionIds.Mobile))
+        assertTrue(resolved.progress.completedSectionIds.contains(OnboardingSectionIds.Intro))
+        assertTrue(resolved.progress.completedSectionIds.contains(OnboardingSectionIds.WorkoutIntro))
+    }
+
+    @Test
+    fun priorFlowProfileCheckpointKeepsPositionWhenMobileBoundaryWasNotReached() {
+        val previousFlowCheckpoint = checkpoint(
+            flowVersion = flow.version - 7,
+            position = OnboardingPosition(
+                sectionId = OnboardingSectionIds.Profile,
+                stepId = OnboardingStepIds.ProfileName,
+            ),
+        )
+
+        val resolved = resolver.resolve(previousFlowCheckpoint, flow)
+
+        assertEquals(flow.version, resolved.progress.flowVersion)
+        assertEquals(previousFlowCheckpoint.progress.position, resolved.progress.position)
+        assertTrue(resolved.progress.completedSectionIds.isEmpty())
+    }
+
+    @Test
+    fun priorFlowWorkoutIntroCheckpointMigratesMobileSectionCompletion() {
+        val previousFlowCheckpoint = checkpoint(
+            flowVersion = flow.version - 8,
+            position = OnboardingPosition(
+                sectionId = OnboardingSectionIds.WorkoutIntro,
+                stepId = OnboardingStepIds.WorkoutIntroChoice,
+            ),
+        )
+
+        val resolved = resolver.resolve(previousFlowCheckpoint, flow)
+
+        assertEquals(flow.version, resolved.progress.flowVersion)
+        assertTrue(resolved.progress.completedSectionIds.contains(OnboardingSectionIds.Mobile))
+    }
+
+    @Test
+    fun priorFlowLaterWorkoutCheckpointGetsDefaultFocusAreas() {
+        val previousFlowCheckpoint = checkpoint(
+            flowVersion = flow.version - 6,
+            position = OnboardingPosition(
+                sectionId = OnboardingSectionIds.Workout,
+                stepId = OnboardingStepIds.WorkoutEquipment,
+            ),
+        )
+
+        val resolved = resolver.resolve(previousFlowCheckpoint, flow)
+
+        assertEquals(flow.version, resolved.progress.flowVersion)
+        assertEquals(
+            OnboardingAnswer.Selections(
+                listOf("full_body", "shoulders", "arms", "back", "chest", "abs", "glutes", "legs", "cardio"),
+            ),
+            resolved.draft.answerFor(OnboardingStepIds.WorkoutFocusAreas),
+        )
+    }
+
+    @Test
+    fun priorFlowPastWorkoutCheckpointGetsDefaultSplit() {
+        val previousFlowCheckpoint = checkpoint(
+            flowVersion = flow.version - 5,
+            position = OnboardingPosition(
+                sectionId = OnboardingSectionIds.Targets,
+                stepId = OnboardingStepIds.TargetsStepsTarget,
+            ),
+            draft = OnboardingDraft()
+                .withAnswer(OnboardingStepIds.WorkoutExperience, OnboardingAnswer.Text("beginner"))
+                .withAnswer(OnboardingStepIds.WorkoutLocation, OnboardingAnswer.Text("home"))
+                .withAnswer(
+                    OnboardingStepIds.WorkoutFocusAreas,
+                    OnboardingAnswer.Selections(listOf("arms", "back")),
+                )
+                .withAnswer(
+                    OnboardingStepIds.WorkoutTrainingDays,
+                    OnboardingAnswer.Selections(listOf("monday", "friday")),
+                )
+                .withAnswer(OnboardingStepIds.WorkoutDuration, OnboardingAnswer.Decimal(60.0)),
+        )
+
+        val resolved = resolver.resolve(previousFlowCheckpoint, flow)
+
+        assertEquals(flow.version, resolved.progress.flowVersion)
+        assertEquals(
+            OnboardingAnswer.Text("auto"),
+            resolved.draft.answerFor(OnboardingStepIds.WorkoutSplit),
+        )
+    }
+
+    @Test
+    fun priorFlowPastWorkoutCheckpointKeepsPositionWithoutInjectingOptionalHealthConcerns() {
+        val previousFlowCheckpoint = checkpoint(
+            flowVersion = flow.version - 4,
+            position = OnboardingPosition(
+                sectionId = OnboardingSectionIds.Targets,
+                stepId = OnboardingStepIds.TargetsStepsTarget,
+            ),
+        )
+
+        val resolved = resolver.resolve(previousFlowCheckpoint, flow)
+
+        assertEquals(flow.version, resolved.progress.flowVersion)
+        assertNull(resolved.draft.answerFor(OnboardingStepIds.WorkoutHealthConcerns))
+    }
+
+    @Test
+    fun priorFlowPastWorkoutCheckpointKeepsPositionWithoutInjectingOptionalSpecialEvent() {
+        val previousFlowCheckpoint = checkpoint(
+            flowVersion = flow.version - 3,
+            position = OnboardingPosition(
+                sectionId = OnboardingSectionIds.Targets,
+                stepId = OnboardingStepIds.TargetsStepsTarget,
+            ),
+        )
+
+        val resolved = resolver.resolve(previousFlowCheckpoint, flow)
+
+        assertEquals(flow.version, resolved.progress.flowVersion)
+        assertNull(resolved.draft.answerFor(OnboardingStepIds.WorkoutSpecialEventGoal))
+    }
+
+    @Test
+    fun priorFlowPastWorkoutCheckpointInfersGymAccessFromLocation() {
+        val previousFlowCheckpoint = checkpoint(
+            flowVersion = flow.version - 2,
+            position = OnboardingPosition(
+                sectionId = OnboardingSectionIds.Targets,
+                stepId = OnboardingStepIds.TargetsStepsTarget,
+            ),
+            draft = OnboardingDraft().withAnswer(
+                OnboardingStepIds.WorkoutLocation,
+                OnboardingAnswer.Text("both"),
+            ),
+        )
+
+        val resolved = resolver.resolve(previousFlowCheckpoint, flow)
+
+        assertEquals(flow.version, resolved.progress.flowVersion)
+        assertEquals(
+            OnboardingAnswer.Text("both"),
+            resolved.draft.answerFor(OnboardingStepIds.WorkoutGymAccess),
+        )
+    }
+
+    @Test
+    fun priorFlowPastTargetsWaterCheckpointAutoCompletesRecommendationSummary() {
+        val previousFlowCheckpoint = checkpoint(
+            flowVersion = flow.version - 1,
+            position = OnboardingPosition(
+                sectionId = OnboardingSectionIds.Targets,
+                stepId = OnboardingStepIds.TargetsGoalPace,
+            ),
+        )
+
+        val resolved = resolver.resolve(previousFlowCheckpoint, flow)
+
+        assertEquals(flow.version, resolved.progress.flowVersion)
+        assertEquals(
+            OnboardingAnswer.Toggle(true),
+            resolved.draft.answerFor(OnboardingStepIds.TargetsRecommendationSummary),
+        )
+    }
+
     private fun checkpoint(
         flowVersion: Int = flow.version,
         position: OnboardingPosition = flow.firstPosition(),

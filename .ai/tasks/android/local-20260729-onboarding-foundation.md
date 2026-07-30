@@ -69,13 +69,20 @@ dynamic flow without replacing stable section and step identities.
 - Exposed draft answers through `OnboardingUiState` so Review can summarize the
   full local checkpoint without giving screens repository access.
 - Added Review-specific validation and completion tests.
+- Added local onboarding finalization into `ProfileRepository` so completed
+  onboarding persists name, dob, gender, height, current weight, target weight,
+  and a profile-level completion flag.
+- Added Splash gating from the local profile completion flag so signed-out
+  users who finished onboarding return directly to `MainGraph`.
+- Added retry coverage for failed completion finalization and resume coverage
+  for completed checkpoints that still need profile finalization.
 
 ## Next
 
-- If onboarding continues, the next slice should define authenticated account
-  handoff and backend finalization ownership.
-- Keep Supabase/backend synchronization deferred until those contracts are
-  approved.
+- If onboarding continues, split the current scaffolded container into a final
+  shell + section + step structure before adding more onboarding breadth.
+- Guest-to-auth profile handoff should follow that cleanup so new flows do not
+  build on the current generic section-switch presentation layer.
 
 ## Truth Boundary
 
@@ -88,8 +95,12 @@ dynamic flow without replacing stable section and step identities.
 - Welcome `Get Started` now enters onboarding and the local flow can finish
   without hitting a placeholder screen.
 - Welcome `Skip` retains the existing direct-to-Main behavior.
-- Local checkpoint persistence is device-owned and is not connected to an
-  authenticated account or final business repositories.
+- Completed onboarding now finalizes a subset of answers into the active local
+  profile and marks that profile as onboarded.
+- Signed-out users with a completed local profile now skip Welcome on cold
+  start and enter `MainGraph`.
+- Local checkpoint persistence is still device-owned and is not connected to an
+  authenticated account handoff or final business repositories.
 - No backend, Supabase synchronization, remote config, analytics, or business
   repository finalization is implemented by this checkpoint.
 

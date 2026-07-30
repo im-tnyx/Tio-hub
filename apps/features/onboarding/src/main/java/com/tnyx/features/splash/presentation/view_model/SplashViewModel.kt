@@ -6,6 +6,7 @@ import com.tnyx.features.splash.presentation.action.SplashAction
 import com.tnyx.features.splash.presentation.state.SplashEffect
 import com.tnyx.features.splash.presentation.state.SplashUiState
 import com.tnyx.shared.auth.domain.repository.AuthSessionProvider
+import com.tnyx.shared.profile.domain.repository.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -20,6 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SplashViewModel @Inject constructor(
     private val sessionProvider: AuthSessionProvider,
+    private val profileRepository: ProfileRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SplashUiState())
@@ -43,12 +45,15 @@ class SplashViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             delay(2000L)
             val session = sessionProvider.observeSession().first()
+            val hasCompletedOnboarding = profileRepository.getCurrentProfile()
+                .first()
+                .hasCompletedOnboarding
             _uiState.update { it.copy(isLoading = false) }
             _effect.emit(
-                if (session == null) {
-                    SplashEffect.NavigateToWelcome
-                } else {
+                if (session != null || hasCompletedOnboarding) {
                     SplashEffect.NavigateToMain
+                } else {
+                    SplashEffect.NavigateToWelcome
                 },
             )
         }

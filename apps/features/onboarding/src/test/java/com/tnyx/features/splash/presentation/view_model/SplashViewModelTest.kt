@@ -4,6 +4,8 @@ import com.tnyx.features.splash.presentation.action.SplashAction
 import com.tnyx.features.splash.presentation.state.SplashEffect
 import com.tnyx.shared.auth.domain.model.AuthSession
 import com.tnyx.shared.auth.domain.repository.AuthSessionProvider
+import com.tnyx.shared.profile.domain.model.UserProfile
+import com.tnyx.shared.profile.domain.repository.ProfileRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -23,7 +25,10 @@ class SplashViewModelTest {
 
     @Test
     fun signedOutSessionNavigatesToWelcome() = runTest {
-        val viewModel = SplashViewModel(TestSessionProvider(null))
+        val viewModel = SplashViewModel(
+            TestSessionProvider(null),
+            TestProfileRepository(),
+        )
         val effects = mutableListOf<SplashEffect>()
         val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.effect.collect(effects::add)
@@ -39,7 +44,10 @@ class SplashViewModelTest {
 
     @Test
     fun persistedSessionNavigatesToMain() = runTest {
-        val viewModel = SplashViewModel(TestSessionProvider(session()))
+        val viewModel = SplashViewModel(
+            TestSessionProvider(session()),
+            TestProfileRepository(),
+        )
         val effects = mutableListOf<SplashEffect>()
         val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.effect.collect(effects::add)
@@ -55,13 +63,47 @@ class SplashViewModelTest {
 
     @Test
     fun repeatedInitEmitsOnlyOneNavigationEffect() = runTest {
-        val viewModel = SplashViewModel(TestSessionProvider(session()))
+        val viewModel = SplashViewModel(
+            TestSessionProvider(session()),
+            TestProfileRepository(),
+        )
         val effects = mutableListOf<SplashEffect>()
         val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.effect.collect(effects::add)
         }
 
         viewModel.handleAction(SplashAction.Init)
+        viewModel.handleAction(SplashAction.Init)
+        advanceUntilIdle()
+
+        assertEquals(listOf(SplashEffect.NavigateToMain), effects)
+        collectJob.cancel()
+    }
+
+    @Test
+    fun completedGuestOnboardingNavigatesToMain() = runTest {
+        val viewModel = SplashViewModel(
+            TestSessionProvider(null),
+            TestProfileRepository(
+                UserProfile(
+                    id = "local-guest",
+                    displayName = "Santosh",
+                    dob = "1990-01-01",
+                    gender = "male",
+                    planLabel = "",
+                    weight = 72.0,
+                    height = 175,
+                    bmi = 0.0,
+                    bmr = 0,
+                    hasCompletedOnboarding = true,
+                ),
+            ),
+        )
+        val effects = mutableListOf<SplashEffect>()
+        val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effect.collect(effects::add)
+        }
+
         viewModel.handleAction(SplashAction.Init)
         advanceUntilIdle()
 
@@ -85,4 +127,28 @@ private class TestSessionProvider(
     override fun observeSession(): Flow<AuthSession?> = flowOf(session)
 
     override fun currentSession(): AuthSession? = session
+}
+
+private class TestProfileRepository(
+    private val profile: UserProfile = UserProfile(
+        id = "local-guest",
+        displayName = "",
+        dob = "",
+        gender = "",
+        planLabel = "",
+        weight = 0.0,
+        height = 0,
+        bmi = 0.0,
+        bmr = 0,
+    ),
+) : ProfileRepository {
+    override fun getCurrentProfile(): Flow<UserProfile> = flowOf(profile)
+
+    override fun getProfile(userId: String): Flow<UserProfile> = flowOf(profile)
+
+    override suspend fun updateProfile(profile: UserProfile) = Unit
+
+    override suspend fun updateAvatar(jpegBytes: ByteArray): String = ""
+
+    override suspend fun removeAvatar() = Unit
 }

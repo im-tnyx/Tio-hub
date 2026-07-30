@@ -9,9 +9,12 @@ import com.tnyx.features.onboarding.domain.model.OnboardingDraft
 import com.tnyx.features.onboarding.domain.model.OnboardingPosition
 import com.tnyx.features.onboarding.domain.model.OnboardingProgress
 import com.tnyx.features.onboarding.domain.repository.OnboardingRepository
+import com.tnyx.shared.profile.domain.model.UserProfile
+import com.tnyx.shared.profile.domain.repository.ProfileRepository
 import java.time.LocalDate
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
@@ -34,7 +37,7 @@ class OnboardingViewModelTest {
     @Test
     fun initCreatesAndPersistsFreshCheckpoint() = runTest {
         val repository = TestOnboardingRepository()
-        val viewModel = OnboardingViewModel(repository)
+        val viewModel = OnboardingViewModel(repository, TestProfileRepository())
 
         viewModel.handleAction(OnboardingAction.Init)
         advanceUntilIdle()
@@ -56,7 +59,7 @@ class OnboardingViewModelTest {
             ),
         )
         val repository = TestOnboardingRepository(expected)
-        val viewModel = OnboardingViewModel(repository)
+        val viewModel = OnboardingViewModel(repository, TestProfileRepository())
 
         viewModel.handleAction(OnboardingAction.Init)
         advanceUntilIdle()
@@ -67,7 +70,14 @@ class OnboardingViewModelTest {
 
     @Test
     fun answerChangePersistsDraftAndEnablesRequiredStep() = runTest {
-        val repository = TestOnboardingRepository()
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.Profile,
+                    OnboardingStepIds.ProfileName,
+                ),
+            ),
+        )
         val viewModel = initializedViewModel(repository)
         val answer = OnboardingAnswer.Text("Santosh")
 
@@ -91,16 +101,20 @@ class OnboardingViewModelTest {
         advanceUntilIdle()
 
         assertEquals(OnboardingStepIds.ProfileName, viewModel.uiState.value.position?.stepId)
-        assertEquals(
-            OnboardingValidationError.RequiredAnswerInvalid,
-            viewModel.uiState.value.validationError,
-        )
-        assertTrue(repository.savedCheckpoints.isEmpty())
+        assertNull(viewModel.uiState.value.validationError)
+        assertEquals(1, repository.savedCheckpoints.size)
     }
 
     @Test
     fun profileNameRequiresTwoToThirtyCharacters() = runTest {
-        val repository = TestOnboardingRepository()
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.Profile,
+                    OnboardingStepIds.ProfileName,
+                ),
+            ),
+        )
         val viewModel = initializedViewModel(repository)
 
         viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Text("S")))
@@ -266,7 +280,7 @@ class OnboardingViewModelTest {
     }
 
     @Test
-    fun bodyGoalFinalStepContinuesToWorkoutSection() = runTest {
+    fun bodyGoalActivityLevelContinuesToHealthCondition() = runTest {
         val currentPosition = position(
             OnboardingSectionIds.BodyGoal,
             OnboardingStepIds.BodyGoalActivityLevel,
@@ -286,7 +300,60 @@ class OnboardingViewModelTest {
         advanceUntilIdle()
 
         assertEquals(
-            OnboardingStepIds.WorkoutExperience,
+            OnboardingStepIds.BodyGoalHealthCondition,
+            viewModel.uiState.value.position?.stepId,
+        )
+    }
+
+    @Test
+    fun healthConditionRequiresSupportedSelection() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.BodyGoal,
+                    OnboardingStepIds.BodyGoalHealthCondition,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(
+            OnboardingAction.AnswerChanged(OnboardingAnswer.Selections(listOf("unknown"))),
+        )
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(
+            OnboardingAction.AnswerChanged(OnboardingAnswer.Selections(listOf("none"))),
+        )
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun bodyGoalFinalStepContinuesToMobileSection() = runTest {
+        val currentPosition = position(
+            OnboardingSectionIds.BodyGoal,
+            OnboardingStepIds.BodyGoalHealthCondition,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = currentPosition,
+                draft = OnboardingDraft().withAnswer(
+                    currentPosition.stepId,
+                    OnboardingAnswer.Selections(listOf("none")),
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            OnboardingStepIds.MobileNumber,
             viewModel.uiState.value.position?.stepId,
         )
         assertTrue(
@@ -295,6 +362,133 @@ class OnboardingViewModelTest {
                 ?.completedSectionIds
                 .orEmpty()
                 .contains(OnboardingSectionIds.BodyGoal),
+        )
+    }
+
+    @Test
+    fun mobileNumberRequiresSupportedLength() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.Mobile,
+                    OnboardingStepIds.MobileNumber,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Text("12345")))
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(
+            OnboardingAction.AnswerChanged(OnboardingAnswer.Text("+91 9876543210")),
+        )
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun mobileStepContinuesToWorkoutIntroSection() = runTest {
+        val currentPosition = position(
+            OnboardingSectionIds.Mobile,
+            OnboardingStepIds.MobileNumber,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = currentPosition,
+                draft = OnboardingDraft().withAnswer(
+                    currentPosition.stepId,
+                    OnboardingAnswer.Text("+91 9876543210"),
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            OnboardingStepIds.WorkoutIntroChoice,
+            viewModel.uiState.value.position?.stepId,
+        )
+        assertTrue(
+            repository.checkpoint
+                ?.progress
+                ?.completedSectionIds
+                .orEmpty()
+                .contains(OnboardingSectionIds.Mobile),
+        )
+    }
+
+    @Test
+    fun workoutIntroRequiresExplicitChoice() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.WorkoutIntro,
+                    OnboardingStepIds.WorkoutIntroChoice,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Toggle(false)))
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun workoutIntroYesContinuesToWorkoutSection() = runTest {
+        val currentPosition = position(
+            OnboardingSectionIds.WorkoutIntro,
+            OnboardingStepIds.WorkoutIntroChoice,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = currentPosition,
+                draft = OnboardingDraft().withAnswer(
+                    currentPosition.stepId,
+                    OnboardingAnswer.Toggle(true),
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            OnboardingStepIds.WorkoutExperience,
+            viewModel.uiState.value.position?.stepId,
+        )
+    }
+
+    @Test
+    fun workoutIntroNoContinuesToTargetsSection() = runTest {
+        val currentPosition = position(
+            OnboardingSectionIds.WorkoutIntro,
+            OnboardingStepIds.WorkoutIntroChoice,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = currentPosition,
+                draft = OnboardingDraft().withAnswer(
+                    currentPosition.stepId,
+                    OnboardingAnswer.Toggle(false),
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            OnboardingStepIds.TargetsStepsTarget,
+            viewModel.uiState.value.position?.stepId,
         )
     }
 
@@ -320,6 +514,79 @@ class OnboardingViewModelTest {
     }
 
     @Test
+    fun workoutExperienceContinuesToGymAccess() = runTest {
+        val currentPosition = position(
+            OnboardingSectionIds.Workout,
+            OnboardingStepIds.WorkoutExperience,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = currentPosition,
+                draft = OnboardingDraft().withAnswer(
+                    currentPosition.stepId,
+                    OnboardingAnswer.Text("beginner"),
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            OnboardingStepIds.WorkoutGymAccess,
+            viewModel.uiState.value.position?.stepId,
+        )
+    }
+
+    @Test
+    fun workoutGymAccessRequiresSupportedStableId() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.Workout,
+                    OnboardingStepIds.WorkoutGymAccess,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Text("office")))
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Text("both")))
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun workoutGymAccessContinuesToLocation() = runTest {
+        val currentPosition = position(
+            OnboardingSectionIds.Workout,
+            OnboardingStepIds.WorkoutGymAccess,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = currentPosition,
+                draft = OnboardingDraft().withAnswer(
+                    currentPosition.stepId,
+                    OnboardingAnswer.Text("both"),
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            OnboardingStepIds.WorkoutLocation,
+            viewModel.uiState.value.position?.stepId,
+        )
+    }
+
+    @Test
     fun workoutLocationRequiresSupportedStableId() = runTest {
         val repository = TestOnboardingRepository(
             checkpoint(
@@ -338,6 +605,113 @@ class OnboardingViewModelTest {
         viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Text("both")))
         advanceUntilIdle()
         assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun workoutLocationContinuesToFocusAreas() = runTest {
+        val currentPosition = position(
+            OnboardingSectionIds.Workout,
+            OnboardingStepIds.WorkoutLocation,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = currentPosition,
+                draft = OnboardingDraft().withAnswer(
+                    currentPosition.stepId,
+                    OnboardingAnswer.Text("both"),
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            OnboardingStepIds.WorkoutFocusAreas,
+            viewModel.uiState.value.position?.stepId,
+        )
+    }
+
+    @Test
+    fun workoutFocusAreasRequireSupportedSelectionShape() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.Workout,
+                    OnboardingStepIds.WorkoutFocusAreas,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(
+            OnboardingAction.AnswerChanged(OnboardingAnswer.Selections(listOf("full_body", "arms"))),
+        )
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(
+            OnboardingAction.AnswerChanged(OnboardingAnswer.Selections(listOf("arms", "back"))),
+        )
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun workoutFocusAreasContinueToEquipment() = runTest {
+        val currentPosition = position(
+            OnboardingSectionIds.Workout,
+            OnboardingStepIds.WorkoutFocusAreas,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = currentPosition,
+                draft = OnboardingDraft()
+                    .withAnswer(OnboardingStepIds.WorkoutGymAccess, OnboardingAnswer.Text("both"))
+                    .withAnswer(
+                        currentPosition.stepId,
+                        OnboardingAnswer.Selections(listOf("arms", "back")),
+                    ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            OnboardingStepIds.WorkoutEquipment,
+            viewModel.uiState.value.position?.stepId,
+        )
+    }
+
+    @Test
+    fun gymOnlyFocusAreasSkipEquipment() = runTest {
+        val currentPosition = position(
+            OnboardingSectionIds.Workout,
+            OnboardingStepIds.WorkoutFocusAreas,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = currentPosition,
+                draft = OnboardingDraft()
+                    .withAnswer(OnboardingStepIds.WorkoutGymAccess, OnboardingAnswer.Text("gym"))
+                    .withAnswer(
+                        currentPosition.stepId,
+                        OnboardingAnswer.Selections(listOf("arms", "back")),
+                    ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            OnboardingStepIds.WorkoutTrainingDays,
+            viewModel.uiState.value.position?.stepId,
+        )
     }
 
     @Test
@@ -405,7 +779,7 @@ class OnboardingViewModelTest {
     }
 
     @Test
-    fun workoutFinalStepContinuesToReviewSection() = runTest {
+    fun workoutDurationContinuesToSplit() = runTest {
         val currentPosition = position(
             OnboardingSectionIds.Workout,
             OnboardingStepIds.WorkoutDuration,
@@ -425,7 +799,130 @@ class OnboardingViewModelTest {
         advanceUntilIdle()
 
         assertEquals(
-            OnboardingStepIds.ReviewSummary,
+            OnboardingStepIds.WorkoutSplit,
+            viewModel.uiState.value.position?.stepId,
+        )
+    }
+
+    @Test
+    fun workoutSplitRequiresSupportedStableId() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.Workout,
+                    OnboardingStepIds.WorkoutSplit,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Text("bro_split")))
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Text("auto")))
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun workoutSplitContinuesToHealthConcerns() = runTest {
+        val currentPosition = position(
+            OnboardingSectionIds.Workout,
+            OnboardingStepIds.WorkoutSplit,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = currentPosition,
+                draft = OnboardingDraft().withAnswer(
+                    currentPosition.stepId,
+                    OnboardingAnswer.Text("auto"),
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            OnboardingStepIds.WorkoutHealthConcerns,
+            viewModel.uiState.value.position?.stepId,
+        )
+    }
+
+    @Test
+    fun workoutHealthConcernsRemainsOptionalWithoutAnswer() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.Workout,
+                    OnboardingStepIds.WorkoutHealthConcerns,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        assertTrue(viewModel.uiState.value.canContinue)
+        assertNull(viewModel.uiState.value.currentAnswer)
+    }
+
+    @Test
+    fun workoutHealthConcernsContinuesToSpecialEventGoal() = runTest {
+        val currentPosition = position(
+            OnboardingSectionIds.Workout,
+            OnboardingStepIds.WorkoutHealthConcerns,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = currentPosition,
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            OnboardingStepIds.WorkoutSpecialEventGoal,
+            viewModel.uiState.value.position?.stepId,
+        )
+    }
+
+    @Test
+    fun workoutSpecialEventRemainsOptionalWithoutAnswer() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.Workout,
+                    OnboardingStepIds.WorkoutSpecialEventGoal,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        assertTrue(viewModel.uiState.value.canContinue)
+        assertNull(viewModel.uiState.value.currentAnswer)
+    }
+
+    @Test
+    fun workoutFinalStepContinuesToTargetsSection() = runTest {
+        val currentPosition = position(
+            OnboardingSectionIds.Workout,
+            OnboardingStepIds.WorkoutSpecialEventGoal,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = currentPosition,
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            OnboardingStepIds.TargetsStepsTarget,
             viewModel.uiState.value.position?.stepId,
         )
         assertTrue(
@@ -434,6 +931,371 @@ class OnboardingViewModelTest {
                 ?.completedSectionIds
                 .orEmpty()
                 .contains(OnboardingSectionIds.Workout),
+        )
+    }
+
+    @Test
+    fun targetsStepsTargetRequiresSupportedRange() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.Targets,
+                    OnboardingStepIds.TargetsStepsTarget,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Decimal(1500.0)))
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Decimal(8000.0)))
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun targetsSleepTargetRequiresSupportedStableId() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.Targets,
+                    OnboardingStepIds.TargetsSleepTarget,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Text("night_owl")))
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(
+            OnboardingAction.AnswerChanged(OnboardingAnswer.Text("balanced_evenings")),
+        )
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun targetsWaterTargetRequiresSupportedRange() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.Targets,
+                    OnboardingStepIds.TargetsWaterTarget,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Decimal(250.0)))
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Decimal(2500.0)))
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun targetsGoalPaceRequiresSupportedStableId() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.Targets,
+                    OnboardingStepIds.TargetsGoalPace,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Text("fast")))
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Text("steady")))
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun targetsNutritionSummaryRequiresSupportedStableId() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.Targets,
+                    OnboardingStepIds.TargetsNutritionSummary,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(
+            OnboardingAction.AnswerChanged(OnboardingAnswer.Text("meal_skipper")),
+        )
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(
+            OnboardingAction.AnswerChanged(OnboardingAnswer.Text("protein_priority")),
+        )
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun targetsRecommendationSummaryIsAutoSeededAndContinuable() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.Targets,
+                    OnboardingStepIds.TargetsRecommendationSummary,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        assertEquals(
+            OnboardingAnswer.Toggle(true),
+            viewModel.uiState.value.currentAnswer,
+        )
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun targetsRecommendationSummaryContinuesToGoalPace() = runTest {
+        val currentPosition = position(
+            OnboardingSectionIds.Targets,
+            OnboardingStepIds.TargetsRecommendationSummary,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = currentPosition,
+                draft = OnboardingDraft().withAnswer(
+                    currentPosition.stepId,
+                    OnboardingAnswer.Toggle(true),
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            OnboardingStepIds.TargetsGoalPace,
+            viewModel.uiState.value.position?.stepId,
+        )
+    }
+
+    @Test
+    fun targetsGoalPaceContinuesToNutritionSummary() = runTest {
+        val currentPosition = position(
+            OnboardingSectionIds.Targets,
+            OnboardingStepIds.TargetsGoalPace,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = currentPosition,
+                draft = OnboardingDraft().withAnswer(
+                    currentPosition.stepId,
+                    OnboardingAnswer.Text("steady"),
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            OnboardingStepIds.TargetsNutritionSummary,
+            viewModel.uiState.value.position?.stepId,
+        )
+    }
+
+    @Test
+    fun targetsFinalStepContinuesToSourceSection() = runTest {
+        val currentPosition = position(
+            OnboardingSectionIds.Targets,
+            OnboardingStepIds.TargetsNutritionSummary,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = currentPosition,
+                draft = OnboardingDraft().withAnswer(
+                    currentPosition.stepId,
+                    OnboardingAnswer.Text("protein_priority"),
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            OnboardingStepIds.SourceChannel,
+            viewModel.uiState.value.position?.stepId,
+        )
+        assertTrue(
+            repository.checkpoint
+                ?.progress
+                ?.completedSectionIds
+                .orEmpty()
+                .contains(OnboardingSectionIds.Targets),
+        )
+    }
+
+    @Test
+    fun sourceChannelRequiresSupportedStableId() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.Source,
+                    OnboardingStepIds.SourceChannel,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Text("newspaper")))
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(
+            OnboardingAction.AnswerChanged(OnboardingAnswer.Text("social_media")),
+        )
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun sourceReasonRequiresSupportedStableId() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.Source,
+                    OnboardingStepIds.SourceReason,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Text("just_testing")))
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(
+            OnboardingAction.AnswerChanged(OnboardingAnswer.Text("complete_reset")),
+        )
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun sourceReferralDetailAllowsBlankOrMeaningfulValue() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.Source,
+                    OnboardingStepIds.SourceReferralDetail,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        assertTrue(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Text("x")))
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun sourceChannelContinuesToReasonStep() = runTest {
+        val currentPosition = position(
+            OnboardingSectionIds.Source,
+            OnboardingStepIds.SourceChannel,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = currentPosition,
+                draft = OnboardingDraft().withAnswer(
+                    currentPosition.stepId,
+                    OnboardingAnswer.Text("friend_referral"),
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            OnboardingStepIds.SourceReason,
+            viewModel.uiState.value.position?.stepId,
+        )
+    }
+
+    @Test
+    fun sourceReasonContinuesToReferralDetailStep() = runTest {
+        val currentPosition = position(
+            OnboardingSectionIds.Source,
+            OnboardingStepIds.SourceReason,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = currentPosition,
+                draft = OnboardingDraft().withAnswer(
+                    currentPosition.stepId,
+                    OnboardingAnswer.Text("complete_reset"),
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            OnboardingStepIds.SourceReferralDetail,
+            viewModel.uiState.value.position?.stepId,
+        )
+    }
+
+    @Test
+    fun sourceFinalStepContinuesToReviewSection() = runTest {
+        val currentPosition = position(
+            OnboardingSectionIds.Source,
+            OnboardingStepIds.SourceReferralDetail,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = currentPosition,
+                draft = OnboardingDraft().withAnswer(
+                    currentPosition.stepId,
+                    OnboardingAnswer.Text("Coach Neha"),
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            OnboardingStepIds.ReviewSummary,
+            viewModel.uiState.value.position?.stepId,
+        )
+        assertTrue(
+            repository.checkpoint
+                ?.progress
+                ?.completedSectionIds
+                .orEmpty()
+                .contains(OnboardingSectionIds.Source),
         )
     }
 
@@ -493,7 +1355,7 @@ class OnboardingViewModelTest {
     }
 
     @Test
-    fun skipWorkoutMovesDirectlyToReviewWithoutCompletingWorkout() = runTest {
+    fun skipWorkoutMovesDirectlyToTargetsWithoutCompletingWorkout() = runTest {
         val repository = TestOnboardingRepository(
             checkpoint(
                 position = position(
@@ -507,13 +1369,38 @@ class OnboardingViewModelTest {
         viewModel.handleAction(OnboardingAction.SkipSectionClicked)
         advanceUntilIdle()
 
-        assertEquals(OnboardingStepIds.ReviewSummary, viewModel.uiState.value.position?.stepId)
+        assertEquals(OnboardingStepIds.TargetsStepsTarget, viewModel.uiState.value.position?.stepId)
         assertFalse(
             repository.checkpoint
                 ?.progress
                 ?.completedSectionIds
                 .orEmpty()
                 .contains(OnboardingSectionIds.Workout),
+        )
+    }
+
+    @Test
+    fun backFromTargetsReturnsWorkoutIntroWhenWorkoutWasDeclined() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.Targets,
+                    OnboardingStepIds.TargetsStepsTarget,
+                ),
+                draft = OnboardingDraft().withAnswer(
+                    OnboardingStepIds.WorkoutIntroChoice,
+                    OnboardingAnswer.Toggle(false),
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.BackClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            OnboardingStepIds.WorkoutIntroChoice,
+            viewModel.uiState.value.position?.stepId,
         )
     }
 
@@ -533,7 +1420,7 @@ class OnboardingViewModelTest {
     }
 
     @Test
-    fun finalAnsweredStepPersistsLocalCompletionAndEmitsCompleted() = runTest {
+    fun finalAnsweredStepPersistsLocalCompletionAndShowsReadyCompletionState() = runTest {
         val reviewPosition = position(
             OnboardingSectionIds.Review,
             OnboardingStepIds.ReviewSummary,
@@ -556,7 +1443,38 @@ class OnboardingViewModelTest {
         viewModel.handleAction(OnboardingAction.ContinueClicked)
         advanceUntilIdle()
 
-        assertTrue(repository.checkpoint?.progress?.isCompleted == true)
+        assertTrue(repository.savedCheckpoints.last().progress.isCompleted)
+        assertEquals(OnboardingCompletionStage.Ready, viewModel.uiState.value.completionStage)
+        assertTrue(effects.isEmpty())
+        collectJob.cancel()
+    }
+
+    @Test
+    fun completionReadyStateEmitsCompletedAfterSecondContinue() = runTest {
+        val reviewPosition = position(
+            OnboardingSectionIds.Review,
+            OnboardingStepIds.ReviewSummary,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = reviewPosition,
+                draft = OnboardingDraft().withAnswer(
+                    reviewPosition.stepId,
+                    OnboardingAnswer.Toggle(true),
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+        val effects = mutableListOf<OnboardingEffect>()
+        val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effect.collect(effects::add)
+        }
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
         assertEquals(listOf(OnboardingEffect.Completed), effects)
         collectJob.cancel()
     }
@@ -579,7 +1497,8 @@ class OnboardingViewModelTest {
                 ),
             ),
         )
-        val viewModel = OnboardingViewModel(repository)
+        val profileRepository = TestProfileRepository()
+        val viewModel = OnboardingViewModel(repository, profileRepository)
         val effects = mutableListOf<OnboardingEffect>()
         val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.effect.collect(effects::add)
@@ -589,12 +1508,21 @@ class OnboardingViewModelTest {
         advanceUntilIdle()
 
         assertEquals(listOf(OnboardingEffect.Completed), effects)
+        assertTrue(profileRepository.currentProfile.value.hasCompletedOnboarding)
+        assertEquals(1, repository.clearedCheckpointCount)
         collectJob.cancel()
     }
 
     @Test
     fun failedAnswerSaveKeepsDraftAndRetryPersistsIt() = runTest {
-        val repository = TestOnboardingRepository()
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.Profile,
+                    OnboardingStepIds.ProfileName,
+                ),
+            ),
+        )
         val viewModel = initializedViewModel(repository)
         repository.failSaves = true
         val answer = OnboardingAnswer.Text("Santosh")
@@ -622,7 +1550,7 @@ class OnboardingViewModelTest {
         val repository = TestOnboardingRepository().apply {
             failReads = true
         }
-        val viewModel = OnboardingViewModel(repository)
+        val viewModel = OnboardingViewModel(repository, TestProfileRepository())
 
         viewModel.handleAction(OnboardingAction.Init)
         advanceUntilIdle()
@@ -636,7 +1564,7 @@ class OnboardingViewModelTest {
         advanceUntilIdle()
 
         assertFalse(viewModel.uiState.value.hasPersistenceError)
-        assertEquals(OnboardingStepIds.ProfileName, viewModel.uiState.value.position?.stepId)
+        assertEquals(OnboardingStepIds.IntroWelcome, viewModel.uiState.value.position?.stepId)
     }
 
     @Test
@@ -644,7 +1572,7 @@ class OnboardingViewModelTest {
         val repository = TestOnboardingRepository().apply {
             failReads = true
         }
-        val viewModel = OnboardingViewModel(repository)
+        val viewModel = OnboardingViewModel(repository, TestProfileRepository())
         val effects = mutableListOf<OnboardingEffect>()
         val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.effect.collect(effects::add)
@@ -659,10 +1587,112 @@ class OnboardingViewModelTest {
         collectJob.cancel()
     }
 
+    @Test
+    fun finalAnsweredStepFinalizesProfileAndClearsCheckpoint() = runTest {
+        val reviewPosition = position(
+            OnboardingSectionIds.Review,
+            OnboardingStepIds.ReviewSummary,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = reviewPosition,
+                draft = OnboardingDraft()
+                    .withAnswer(
+                        OnboardingStepIds.ProfileName,
+                        OnboardingAnswer.Text("Santosh Kumar"),
+                    )
+                    .withAnswer(
+                        OnboardingStepIds.ProfileDateOfBirth,
+                        OnboardingAnswer.Text("1990-01-01"),
+                    )
+                    .withAnswer(
+                        OnboardingStepIds.ProfileGender,
+                        OnboardingAnswer.Text("male"),
+                    )
+                    .withAnswer(
+                        OnboardingStepIds.BodyGoalHeight,
+                        OnboardingAnswer.Decimal(176.0),
+                    )
+                    .withAnswer(
+                        OnboardingStepIds.BodyGoalCurrentWeight,
+                        OnboardingAnswer.Decimal(74.5),
+                    )
+                    .withAnswer(
+                        OnboardingStepIds.BodyGoalTargetWeight,
+                        OnboardingAnswer.Decimal(70.0),
+                    )
+                    .withAnswer(
+                        reviewPosition.stepId,
+                        OnboardingAnswer.Toggle(true),
+                    ),
+            ),
+        )
+        val profileRepository = TestProfileRepository()
+        val viewModel = initializedViewModel(repository, profileRepository)
+        val effects = mutableListOf<OnboardingEffect>()
+        val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effect.collect(effects::add)
+        }
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertTrue(repository.savedCheckpoints.last().progress.isCompleted)
+        assertEquals(1, repository.clearedCheckpointCount)
+        assertEquals(OnboardingCompletionStage.Ready, viewModel.uiState.value.completionStage)
+        assertTrue(effects.isEmpty())
+        assertEquals("Santosh Kumar", profileRepository.currentProfile.value.displayName)
+        assertEquals("1990-01-01", profileRepository.currentProfile.value.dob)
+        assertEquals("male", profileRepository.currentProfile.value.gender)
+        assertEquals(176, profileRepository.currentProfile.value.height)
+        assertEquals(74.5, profileRepository.currentProfile.value.weight, 0.0)
+        assertEquals(74.5, profileRepository.currentProfile.value.currentJourney.initialWeight, 0.0)
+        assertEquals(70.0, profileRepository.currentProfile.value.currentJourney.targetWeight, 0.0)
+        assertTrue(profileRepository.currentProfile.value.hasCompletedOnboarding)
+        collectJob.cancel()
+    }
+
+    @Test
+    fun failedProfileFinalizationCanRetryFromCompletedCheckpoint() = runTest {
+        val reviewPosition = position(
+            OnboardingSectionIds.Review,
+            OnboardingStepIds.ReviewSummary,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = reviewPosition,
+                draft = OnboardingDraft().withAnswer(
+                    reviewPosition.stepId,
+                    OnboardingAnswer.Toggle(true),
+                ),
+            ),
+        )
+        val profileRepository = TestProfileRepository().apply {
+            failUpdates = true
+        }
+        val viewModel = initializedViewModel(repository, profileRepository)
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.hasPersistenceError)
+        assertFalse(profileRepository.currentProfile.value.hasCompletedOnboarding)
+
+        profileRepository.failUpdates = false
+        viewModel.handleAction(OnboardingAction.Retry)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.hasPersistenceError)
+        assertEquals(OnboardingCompletionStage.Ready, viewModel.uiState.value.completionStage)
+        assertTrue(profileRepository.currentProfile.value.hasCompletedOnboarding)
+        assertEquals(1, repository.clearedCheckpointCount)
+    }
+
     private fun TestScope.initializedViewModel(
         repository: TestOnboardingRepository,
+        profileRepository: TestProfileRepository = TestProfileRepository(),
     ): OnboardingViewModel {
-        val viewModel = OnboardingViewModel(repository)
+        val viewModel = OnboardingViewModel(repository, profileRepository)
         viewModel.handleAction(OnboardingAction.Init)
         advanceUntilIdle()
         repository.savedCheckpoints.clear()
@@ -700,6 +1730,7 @@ private class TestOnboardingRepository(
         private set
     var failReads: Boolean = false
     var failSaves: Boolean = false
+    var clearedCheckpointCount: Int = 0
     val savedCheckpoints = mutableListOf<OnboardingCheckpoint>()
 
     override fun observeCheckpoint(): Flow<OnboardingCheckpoint?> {
@@ -718,5 +1749,38 @@ private class TestOnboardingRepository(
 
     override suspend fun clearCheckpoint() {
         checkpoint = null
+        clearedCheckpointCount += 1
     }
+}
+
+private class TestProfileRepository(
+    initialProfile: UserProfile = UserProfile(
+        id = "local-guest",
+        displayName = "",
+        dob = "",
+        gender = "",
+        planLabel = "",
+        weight = 0.0,
+        height = 0,
+        bmi = 0.0,
+        bmr = 0,
+    ),
+) : ProfileRepository {
+    val currentProfile = MutableStateFlow(initialProfile)
+    var failUpdates: Boolean = false
+
+    override fun getCurrentProfile(): Flow<UserProfile> = currentProfile
+
+    override fun getProfile(userId: String): Flow<UserProfile> = currentProfile
+
+    override suspend fun updateProfile(profile: UserProfile) {
+        if (failUpdates) {
+            error("Expected test profile update failure")
+        }
+        currentProfile.value = profile
+    }
+
+    override suspend fun updateAvatar(jpegBytes: ByteArray): String = ""
+
+    override suspend fun removeAvatar() = Unit
 }

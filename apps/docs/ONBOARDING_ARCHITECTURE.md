@@ -21,7 +21,7 @@ Implemented:
 - versioned `OnboardingFlowDefinition`,
 - deterministic first/next/previous position handling,
 - insertion-safe serialized positions,
-- the simple version 1 flow definition,
+- the current local flow definition,
 - typed `OnboardingDraft` answers and versioned `OnboardingProgress`,
 - atomic `OnboardingCheckpoint` storage behind `OnboardingRepository`,
 - app-owned Preferences DataStore persistence,
@@ -35,30 +35,44 @@ Implemented:
 - Body Goal primary-goal, height, current-weight, target-weight, and
   activity-level step content,
 - Body Goal-specific validation and stable persisted goal/activity IDs,
-- Workout experience, location, optional equipment, training-days, and
-  duration step content,
-- Workout-specific validation and stable persisted workout IDs and duration
-  minute values,
+- Workout intro gate, experience, gym-access, location-bias, focus-areas,
+  conditional equipment, training-days, duration, split, optional workout
+  concerns, and optional special-event step content,
+- Workout-specific validation, conditional visible-progress handling, and
+  stable persisted workout IDs and duration minute values,
+- Targets step-target, sleep-target, water-target, recommendation-summary,
+  goal-pace, and nutrition-summary step content with stable typed target IDs,
+  bounded numeric targets, and a required target-bridge confirmation step,
+- Source channel, reason, and optional referral-detail step content with
+  stable persisted source IDs,
 - Review summary content with explicit local confirmation,
+- post-review setup and ready completion states before app entry,
 - `OnboardingUiState` draft-answer exposure for review-only summary rendering,
 - shared onboarding choice cards for single-select and multi-select steps,
 - scroll-safe content handling for longer onboarding forms,
-- Welcome `Get Started` entry into `RootRoute.Onboarding`.
+- Welcome `Get Started` entry into `RootRoute.Onboarding`,
+- local Profile finalization for completed onboarding answers,
+- guest cold-start entry to `MainGraph` after completed onboarding.
 
 Not implemented:
 
-- authenticated account handoff or business-repository finalization,
+- guest-to-auth account handoff or full business-repository finalization,
 - backend or Supabase synchronization,
 - conditional remote-config paths,
 - analytics.
 
-## Version 1 Flow
+## Current Local Flow
 
 | Section ID | Initial steps | Business destination |
 |---|---|---|
+| `intro` | `welcome` (form implemented) | Onboarding entry |
 | `profile` | `name`, `gender`, `date_of_birth` (forms implemented) | Profile |
-| `body_goal` | `primary_goal`, `height`, `current_weight`, `target_weight`, `activity_level` (forms implemented) | Profile/Nutrition contracts as approved |
-| `workout` | `experience`, `location`, optional `equipment`, `training_days`, `duration` (forms implemented) | Workout |
+| `body_goal` | `primary_goal`, `height`, `current_weight`, `target_weight`, `activity_level`, `health_condition` (forms implemented) | Profile/Nutrition contracts as approved |
+| `mobile` | `number` (form implemented) | Profile / future auth verification |
+| `workout_intro` | `choice` (form implemented) | Onboarding workout gate |
+| `workout` | `experience`, `gym_access`, `location`, `focus_areas`, optional `equipment`, `training_days`, `duration`, `split`, optional `health_concerns`, optional `special_event_goal` (forms implemented) | Workout |
+| `targets` | `steps_target`, `sleep_target`, `water_target`, `recommendation_summary`, `goal_pace`, `nutrition_summary` (forms implemented) | Future Nutrition/Progress/Recovery contracts |
+| `source` | `channel`, `reason`, optional `referral_detail` (forms implemented) | Onboarding / future attribution contract |
 | `review` | `summary` (form implemented) | Onboarding orchestration only |
 
 The Workout section is skippable in version 1. A section being skippable does
@@ -82,22 +96,52 @@ Body Goal answers currently use:
 Workout answers currently use:
 
 - one experience ID from `fresh`, `beginner`, `intermediate`, or `advanced`,
-- one workout-location ID from `gym`, `home`, or `both`,
+- one workout-access ID from `gym`, `home`, or `both`,
+- one workout-location bias ID from `gym`, `home`, or `both`,
+- one or more focus-area IDs from `full_body`, `shoulders`, `arms`, `back`,
+  `chest`, `abs`, `glutes`, `legs`, and `cardio`,
 - optional equipment selections from `dumbbells`, `bench`, `mat`, `barbell`,
-  `bands`, and `kettlebell`,
+  `bands`, and `kettlebell` when home-capable setup is selected,
 - one or more training-day IDs from `monday` through `sunday`,
-- one duration minute value from `30`, `45`, `60`, `90`, or `120`.
+- one duration minute value from `30`, `45`, `60`, `90`, or `120`,
+- one workout-split ID from `auto`, `full_body`, `upper_lower`, `ppl`, or
+  `body_part`,
+- optional free-text workout health concerns,
+- optional free-text special-event goal.
+
+Target answers currently use:
+
+- one whole-number steps target in the range `2000..30000`,
+- one sleep-rhythm ID from `recover_early`, `balanced_evenings`, or
+  `flexible_late_schedule`,
+- one whole-number water target in milliliters in the range `500..6000`,
+- one required `Toggle(true)` confirmation for
+  `targets.recommendation_summary`,
+- one goal-pace ID from `relaxed`, `steady`, or `ambitious`,
+- one nutrition-summary ID from `protein_priority`, `balanced_plate`, or
+  `hydration_consistency`.
+
+Source answers currently use:
+
+- one discovery-source ID from `friend_referral`, `social_media`, `search`,
+  `app_store`, `coach_or_gym`, or `other`.
+- one source-reason ID from `workout_focus`, `nutrition_focus`, or
+  `complete_reset`,
+- an optional free-text referral/detail answer with trimmed length in
+  `2..80` when the user chooses to share it.
 
 Review currently uses:
 
 - the persisted local draft to render a read-only summary of Profile, Body
-  Goal, and Workout answers,
+  Goal, Workout, Targets, and Source answers,
 - a required `Toggle(true)` confirmation for `review.summary` before local
   completion is allowed.
 
 Welcome `Get Started` now opens onboarding and Welcome `Skip` still opens Main.
-The user-facing flow can now complete locally. This still must not be described
-as final product onboarding, because authenticated account handoff, backend
+The user-facing flow can now complete locally, finalize a subset of answers
+into the active local Profile, show a short local setup/ready completion path,
+and skip Welcome on future signed-out cold starts. This still must not be
+described as final product onboarding, because guest-to-auth handoff, backend
 finalization, and remote synchronization remain unimplemented.
 
 ## Stable Identity Rules
@@ -147,8 +191,10 @@ deliberate reset policy; a future flow version can replace it with an explicit
 migration.
 
 The checkpoint is currently device-local and is not scoped to an authenticated
-account. Entry and finalization work must define guest-to-account handoff and
-clear behavior before backend synchronization is added. A future backend
+account. Completed onboarding currently finalizes Profile-owned fields into the
+active local profile and marks that profile as onboarded. Entry and future
+finalization work must still define guest-to-account handoff and clear behavior
+before backend synchronization is added. A future backend
 implementation may compose with the local repository without changing screens.
 
 Finalization will map answers to their owning domain repositories. It must not
@@ -162,5 +208,5 @@ Profile, Nutrition, Workout, Health, or Recovery data.
 3. Onboarding graph, container, ViewModel, state, and actions. Completed.
 4. Profile, Body Goal, Workout, and Review sections delivered one at a time.
    Profile, Body Goal, Workout, and Review completed for the local flow.
-5. Backend finalization and optional dynamic flow only after Auth/API contracts
-   are approved.
+5. Guest-to-auth handoff, backend finalization, and optional dynamic flow only
+   after Auth/API contracts are approved.

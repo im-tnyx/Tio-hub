@@ -10,6 +10,7 @@ data class OnboardingUiState(
     val position: OnboardingPosition? = null,
     val currentAnswer: OnboardingAnswer? = null,
     val draftAnswers: Map<OnboardingStepId, OnboardingAnswer> = emptyMap(),
+    val completionStage: OnboardingCompletionStage? = null,
     val completedFraction: Float = 0f,
     val sectionNumber: Int = 0,
     val sectionCount: Int = 0,
@@ -21,6 +22,11 @@ data class OnboardingUiState(
     val validationError: OnboardingValidationError? = null,
     val hasPersistenceError: Boolean = false,
 )
+
+enum class OnboardingCompletionStage {
+    SettingUp,
+    Ready,
+}
 
 enum class OnboardingValidationError {
     RequiredAnswerInvalid,

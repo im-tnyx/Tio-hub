@@ -1,7 +1,9 @@
 package com.tnyx.core.ui.components.inputs
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
@@ -61,11 +63,14 @@ fun TnyxDatePickerDialog(
                     topStart = TnyxTheme.dimens.RadiusXL,
                     topEnd = TnyxTheme.dimens.RadiusXL,
                 ),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
                         .padding(TnyxTheme.dimens.SpaceL),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {

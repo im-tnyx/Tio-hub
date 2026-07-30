@@ -5,6 +5,8 @@ import com.tnyx.features.auth.domain.model.AuthResult
 interface AuthRepository {
     suspend fun signIn(email: String, password: String): AuthResult
 
+    suspend fun signInWithGoogle(): AuthResult
+
     suspend fun signInWithDemoAccount(): AuthResult
 
     suspend fun signUp(

@@ -4,24 +4,37 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tnyx.features.auth.domain.model.AuthResult
 import com.tnyx.features.auth.domain.repository.AuthRepository
+import com.tnyx.shared.auth.domain.repository.AuthSessionProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    sessionProvider: AuthSessionProvider,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState = _uiState.asStateFlow()
 
     private val _effect = MutableSharedFlow<LoginEffect>()
     val effect = _effect.asSharedFlow()
+
+    init {
+        viewModelScope.launch {
+            sessionProvider.observeSession()
+                .filterNotNull()
+                .collect {
+                    _effect.emit(LoginEffect.Authenticated)
+                }
+        }
+    }
 
     fun handleAction(action: LoginAction) {
         when (action) {
@@ -32,6 +45,7 @@ class LoginViewModel @Inject constructor(
                 it.copy(password = action.value, passwordError = null)
             }
             LoginAction.SignInClicked -> submit()
+            LoginAction.GoogleClicked -> signInWithGoogle()
             LoginAction.DemoAccountClicked -> signInWithDemoAccount()
             LoginAction.CreateAccountClicked -> emitEffect(LoginEffect.NavigateToSignup)
         }
@@ -66,7 +80,10 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(email = email, isLoading = true) }
             when (val result = authRepository.signIn(email = email, password = password)) {
-                is AuthResult.Authenticated -> _effect.emit(LoginEffect.Authenticated)
+                is AuthResult.Authenticated -> _uiState.update {
+                    it.copy(emailError = null, passwordError = null)
+                }
+                AuthResult.ExternalAuthStarted -> Unit
                 is AuthResult.Failure -> _uiState.update {
                     it.copy(passwordError = result.message)
                 }
@@ -78,11 +95,33 @@ class LoginViewModel @Inject constructor(
         }
     }
 
+    private fun signInWithGoogle() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, emailError = null, passwordError = null) }
+            when (val result = authRepository.signInWithGoogle()) {
+                AuthResult.ExternalAuthStarted -> Unit
+                is AuthResult.Authenticated -> _uiState.update {
+                    it.copy(emailError = null, passwordError = null)
+                }
+                is AuthResult.Failure -> _uiState.update {
+                    it.copy(emailError = result.message)
+                }
+                is AuthResult.VerificationRequired -> _uiState.update {
+                    it.copy(emailError = "Complete Google sign-in in the opened browser")
+                }
+            }
+            _uiState.update { it.copy(isLoading = false) }
+        }
+    }
+
     private fun signInWithDemoAccount() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, emailError = null, passwordError = null) }
             when (val result = authRepository.signInWithDemoAccount()) {
-                is AuthResult.Authenticated -> _effect.emit(LoginEffect.Authenticated)
+                is AuthResult.Authenticated -> _uiState.update {
+                    it.copy(emailError = null, passwordError = null)
+                }
+                AuthResult.ExternalAuthStarted -> Unit
                 is AuthResult.Failure -> _uiState.update {
                     it.copy(passwordError = result.message)
                 }

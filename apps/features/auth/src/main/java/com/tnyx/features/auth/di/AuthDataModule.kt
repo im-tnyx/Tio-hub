@@ -1,6 +1,6 @@
 package com.tnyx.features.auth.di
 
-import com.tnyx.features.auth.data.repository.FakeAuthRepository
+import com.tnyx.features.auth.data.repository.SupabaseAuthRepository
 import com.tnyx.features.auth.domain.repository.AuthRepository
 import dagger.Binds
 import dagger.Module
@@ -14,6 +14,6 @@ abstract class AuthDataModule {
     @Binds
     @Singleton
     abstract fun bindAuthRepository(
-        fakeAuthRepository: FakeAuthRepository
+        repository: SupabaseAuthRepository,
     ): AuthRepository
 }

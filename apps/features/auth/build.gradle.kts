@@ -34,6 +34,7 @@ dependencies {
     implementation(project(":core"))
 
     implementation(platform(libs.androidx.compose.bom))
+    implementation(platform(libs.supabase.bom))
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)
@@ -43,6 +44,7 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.supabase.auth)
 
     // Testing dependencies
     testImplementation(libs.junit)

@@ -15,6 +15,7 @@ sealed interface LoginAction {
     data class EmailChanged(val value: String) : LoginAction
     data class PasswordChanged(val value: String) : LoginAction
     data object SignInClicked : LoginAction
+    data object GoogleClicked : LoginAction
     data object DemoAccountClicked : LoginAction
     data object CreateAccountClicked : LoginAction
 }

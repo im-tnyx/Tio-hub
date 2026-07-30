@@ -2,6 +2,7 @@ package com.tnyx.features.auth.data.repository
 
 import com.tnyx.features.auth.domain.model.AuthResult
 import com.tnyx.features.auth.domain.repository.AuthRepository
+import com.tnyx.features.auth.domain.repository.ExternalAuthGateway
 import com.tnyx.shared.auth.domain.model.AuthSession
 import com.tnyx.shared.auth.domain.repository.MutableAuthSessionStore
 import java.nio.charset.StandardCharsets
@@ -12,9 +13,17 @@ import javax.inject.Singleton
 @Singleton
 class FakeAuthRepository @Inject constructor(
     private val sessionStore: MutableAuthSessionStore,
+    private val externalAuthGateway: ExternalAuthGateway,
 ) : AuthRepository {
     private val pendingDisplayNames = mutableMapOf<String, String>()
     private val knownDisplayNames = mutableMapOf<String, String>()
+
+    constructor(
+        sessionStore: MutableAuthSessionStore,
+    ) : this(
+        sessionStore = sessionStore,
+        externalAuthGateway = NoOpExternalAuthGateway,
+    )
 
     override suspend fun signIn(email: String, password: String): AuthResult {
         if (password.length < 6) {
@@ -41,6 +50,17 @@ class FakeAuthRepository @Inject constructor(
                 isDemo = true,
             ),
         )
+    }
+
+    override suspend fun signInWithGoogle(): AuthResult {
+        return runCatching {
+            externalAuthGateway.signInWithGoogle()
+            AuthResult.ExternalAuthStarted
+        }.getOrElse { error ->
+            AuthResult.Failure(
+                error.message ?: "Could not start Google sign-in right now",
+            )
+        }
     }
 
     override suspend fun signUp(
@@ -86,6 +106,7 @@ class FakeAuthRepository @Inject constructor(
     }
 
     override suspend fun signOut() {
+        runCatching { externalAuthGateway.signOut() }
         sessionStore.clearSession()
     }
 
@@ -106,4 +127,12 @@ class FakeAuthRepository @Inject constructor(
             namespacedEmail.toByteArray(StandardCharsets.UTF_8),
         ).toString()
     }
+}
+
+private object NoOpExternalAuthGateway : ExternalAuthGateway {
+    override suspend fun signInWithGoogle() {
+        error("Google sign-in is not configured in this test/runtime path")
+    }
+
+    override suspend fun signOut() = Unit
 }

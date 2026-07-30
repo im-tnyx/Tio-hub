@@ -54,6 +54,9 @@ class OtpVerificationViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             when (val result = authRepository.verifyOtp(email = state.email, code = state.code)) {
                 is AuthResult.Authenticated -> _effect.emit(OtpVerificationEffect.Authenticated)
+                AuthResult.ExternalAuthStarted -> _uiState.update {
+                    it.copy(statusMessage = "Complete Google sign-in from the login screen")
+                }
                 is AuthResult.VerificationRequired -> _uiState.update {
                     it.copy(statusMessage = "Verification code sent again")
                 }
@@ -77,6 +80,9 @@ class OtpVerificationViewModel @Inject constructor(
                     it.copy(codeError = result.message)
                 }
                 is AuthResult.Authenticated -> _effect.emit(OtpVerificationEffect.Authenticated)
+                AuthResult.ExternalAuthStarted -> _uiState.update {
+                    it.copy(statusMessage = "Complete Google sign-in from the login screen")
+                }
             }
             _uiState.update { it.copy(isLoading = false) }
         }

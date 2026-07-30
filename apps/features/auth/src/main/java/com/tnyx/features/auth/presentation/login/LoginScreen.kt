@@ -101,12 +101,13 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             TnyxSecondaryButton(
-                text = "Use demo account",
-                onPressed = { onAction(LoginAction.DemoAccountClicked) },
+                text = "Continue with Google",
+                onPressed = { onAction(LoginAction.GoogleClicked) },
                 variant = TnyxSecondaryVariant.Muted,
                 expand = true,
                 enabled = !state.isLoading
             )
+
         }
 
         Row(

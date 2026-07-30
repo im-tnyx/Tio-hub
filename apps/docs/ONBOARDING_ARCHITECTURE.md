@@ -1,7 +1,7 @@
 # Tio Android Onboarding Architecture
 
 Status: Active foundation
-Last verified: 2026-07-29
+Last verified: 2026-07-30
 Owner: Android Onboarding
 
 ## Truth Boundary
@@ -29,12 +29,14 @@ Implemented:
 - typed `RootRoute.Onboarding` destination and feature-owned navigation,
 - `Route + Screen + ViewModel + UiState + Action` presentation container,
 - serialized answer/save/navigation operations with validation and retry,
-- next, back, skippable-section, and local-completion behavior.
+- next, back, skippable-section, and local-completion behavior,
+- Profile name, gender, and date-of-birth step content,
+- Profile-specific answer validation and ISO date storage,
+- Welcome `Get Started` entry into `RootRoute.Onboarding`.
 
 Not implemented:
 
-- section-specific Profile, Body Goal, Workout, or Review forms,
-- Welcome or Splash entry into the onboarding destination,
+- Body Goal, Workout, and Review forms,
 - authenticated account handoff or business-repository finalization,
 - backend or Supabase synchronization,
 - conditional remote-config paths,
@@ -44,13 +46,23 @@ Not implemented:
 
 | Section ID | Initial steps | Business destination |
 |---|---|---|
-| `profile` | `name`, `gender`, `date_of_birth` | Profile |
+| `profile` | `name`, `gender`, `date_of_birth` (forms implemented) | Profile |
 | `body_goal` | `primary_goal`, `height`, `current_weight`, `target_weight`, `activity_level` | Profile/Nutrition contracts as approved |
 | `workout` | `experience`, `location`, optional `equipment`, `training_days`, `duration` | Workout |
 | `review` | `summary` | Onboarding orchestration only |
 
 The Workout section is skippable in version 1. A section being skippable does
 not transfer ownership of its answers to Onboarding.
+
+Profile answers currently use:
+
+- a 2-30 character text answer for `profile.name`,
+- `male`, `female`, or `prefer_not_to_say` for `profile.gender`,
+- an ISO `yyyy-MM-dd` past date for `profile.date_of_birth`.
+
+Welcome `Get Started` now opens onboarding and Welcome `Skip` still opens Main.
+The user-facing flow is partial: completing Profile advances to the unimplemented
+first Body Goal form. This must not be described as complete onboarding.
 
 ## Stable Identity Rules
 
@@ -113,5 +125,6 @@ Profile, Nutrition, Workout, Health, or Recovery data.
 2. Local draft/progress repository and resume tests. Completed.
 3. Onboarding graph, container, ViewModel, state, and actions. Completed.
 4. Profile, Body Goal, Workout, and Review sections delivered one at a time.
+   Profile completed; remaining sections pending.
 5. Backend finalization and optional dynamic flow only after Auth/API contracts
    are approved.

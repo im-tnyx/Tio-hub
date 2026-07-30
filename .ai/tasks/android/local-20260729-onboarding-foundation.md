@@ -1,7 +1,7 @@
 # Android Onboarding Foundation
 
 Status: In Progress
-Updated: 2026-07-29
+Updated: 2026-07-30
 
 ## Objective
 
@@ -42,19 +42,28 @@ dynamic flow without replacing stable section and step identities.
   next/back/skip behavior, local completion, and persistence retry handling.
 - Added ViewModel tests for fresh start, resume, answer persistence, boundaries,
   skip, exit, completion, validation, and read/write recovery.
+- Added usable Profile steps for name, gender, and date of birth using core
+  Tnyx input, card, button, theme, and date-picker primitives.
+- Added Profile-specific validation and stable persisted values: trimmed-length
+  name validation, gender IDs, and ISO date-of-birth answers.
+- Extended `TnyxDatePickerDialog` with reusable supporting text and bounded
+  minimum/maximum date inputs.
+- Split Welcome navigation so `Get Started` enters onboarding while `Skip`
+  continues directly to Main.
+- Added Profile validation and Welcome routing tests.
 
 ## Next
 
-- Implement one simple section at a time, starting with Profile.
-- Switch Welcome `Get Started` to the onboarding destination only when the
-  first required Profile section is usable.
+- Implement Body Goal steps: primary goal, height, current weight, target
+  weight, and activity level.
+- Keep Workout and Review delivery as later focused slices.
 
 ## Truth Boundary
 
-- A generic container is implemented, but no section-specific input form is
-  implemented by this checkpoint.
-- `RootRoute.Onboarding` is registered but intentionally not launched from
-  Welcome, preventing users from entering an incomplete required-step flow.
+- Profile name, gender, and date-of-birth forms are implemented.
+- Welcome `Get Started` now enters onboarding, but the flow becomes incomplete
+  at the first Body Goal step because that section is not implemented yet.
+- Welcome `Skip` retains the existing direct-to-Main behavior.
 - Local checkpoint persistence is device-owned and is not connected to an
   authenticated account or final business repositories.
 - No backend, Supabase synchronization, remote config, analytics, or business
@@ -64,4 +73,4 @@ dynamic flow without replacing stable section and step identities.
 
 - `./gradlew.bat :features:onboarding:testDebugUnitTest
   :app:testDebugUnitTest :app:compileDebugKotlin --no-configuration-cache`
-- Result: BUILD SUCCESSFUL; 51 tests, 0 failures, 0 errors.
+- Result: BUILD SUCCESSFUL; 57 tests, 0 failures, 0 errors.

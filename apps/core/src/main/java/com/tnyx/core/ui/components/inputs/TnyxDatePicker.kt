@@ -8,33 +8,44 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.tnyx.core.theme.TnyxTheme
+import com.tnyx.core.ui.components.buttons.TnyxPrimaryButton
 import java.time.LocalDate
-import java.util.*
 
 @Composable
 fun TnyxDatePickerDialog(
     title: String = "Select Date of Birth",
+    supportingText: String = "We use this data to personalize your experience",
     initialDate: LocalDate = LocalDate.of(1995, 6, 5),
+    minimumYear: Int = 1950,
+    maximumDate: LocalDate = LocalDate.now(),
     onDismiss: () -> Unit,
-    onConfirm: (LocalDate) -> Unit
+    onConfirm: (LocalDate) -> Unit,
 ) {
+    require(minimumYear <= maximumDate.year) {
+        "Date picker minimum year must not exceed maximum date year"
+    }
+    val minimumDate = remember(minimumYear) { LocalDate.of(minimumYear, 1, 1) }
+    val boundedInitialDate = remember(initialDate, minimumDate, maximumDate) {
+        initialDate.coerceIn(minimumDate, maximumDate)
+    }
     val days = remember { (1..31).map { it.toString().padStart(2, '0') } }
     val months = remember {
         listOf("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
     }
-    val currentYear = remember { Calendar.getInstance().get(Calendar.YEAR) }
-    val years = remember { (1950..currentYear).map { it.toString() } }
+    val years = remember(minimumYear, maximumDate.year) {
+        (minimumYear..maximumDate.year).map(Int::toString)
+    }
 
-    var selectedDayIndex by remember { mutableIntStateOf(initialDate.dayOfMonth - 1) }
-    var selectedMonthIndex by remember { mutableIntStateOf(initialDate.monthValue - 1) }
-    var selectedYearIndex by remember { mutableIntStateOf(years.indexOf(initialDate.year.toString()).coerceAtLeast(0)) }
+    var selectedDayIndex by remember { mutableIntStateOf(boundedInitialDate.dayOfMonth - 1) }
+    var selectedMonthIndex by remember { mutableIntStateOf(boundedInitialDate.monthValue - 1) }
+    var selectedYearIndex by remember {
+        mutableIntStateOf(years.indexOf(boundedInitialDate.year.toString()).coerceAtLeast(0))
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -46,13 +57,16 @@ fun TnyxDatePickerDialog(
         ) {
             Surface(
                 color = TnyxTheme.colors.surface,
-                shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+                shape = RoundedCornerShape(
+                    topStart = TnyxTheme.dimens.RadiusXL,
+                    topEnd = TnyxTheme.dimens.RadiusXL,
+                ),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp),
+                        .padding(TnyxTheme.dimens.SpaceL),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     // Header
@@ -73,13 +87,15 @@ fun TnyxDatePickerDialog(
                     }
 
                     Text(
-                        text = "We use this data to help personalize TnyX for you",
+                        text = supportingText,
                         style = TnyxTheme.typography.bodyMedium,
                         color = TnyxTheme.colors.textSecondary,
-                        modifier = Modifier.align(Alignment.Start).padding(vertical = 8.dp)
+                        modifier = Modifier
+                            .align(Alignment.Start)
+                            .padding(vertical = TnyxTheme.dimens.SpaceS)
                     )
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceXL))
 
                     // Column Labels
                     Row(modifier = Modifier.fillMaxWidth(0.7f)) {
@@ -114,7 +130,7 @@ fun TnyxDatePickerDialog(
                                 initialIndex = selectedMonthIndex,
                                 onItemSelected = { selectedMonthIndex = it },
                                 modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(0.dp)
+                                shape = RoundedCornerShape(TnyxTheme.dimens.SpaceNone)
                             )
 
                             WheelPicker(
@@ -130,11 +146,11 @@ fun TnyxDatePickerDialog(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(40.dp))
+                    Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceXXL))
 
-                    // Save Button
-                    Button(
-                        onClick = {
+                    TnyxPrimaryButton(
+                        text = "Save",
+                        onPressed = {
                             val finalDay = days[selectedDayIndex].toInt()
                             val finalMonth = selectedMonthIndex + 1
                             val finalYear = years[selectedYearIndex].toInt()
@@ -145,19 +161,13 @@ fun TnyxDatePickerDialog(
                                 LocalDate.of(finalYear, finalMonth, 1).plusMonths(1).minusDays(1)
                             }
 
-                            onConfirm(finalDate)
+                            onConfirm(finalDate.coerceIn(minimumDate, maximumDate))
                         },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                        shape = TnyxTheme.shapes.Material.medium,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = TnyxTheme.colors.primary,
-                            contentColor = TnyxTheme.colors.onPrimary
-                        )
-                    ) {
-                        Text("Save", style = TnyxTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    }
+                        expand = true,
+                        height = TnyxTheme.dimens.ButtonHeightLarge,
+                    )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
                 }
             }
         }

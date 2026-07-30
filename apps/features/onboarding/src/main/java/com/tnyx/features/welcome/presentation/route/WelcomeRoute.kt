@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun WelcomeRoute(
+    onNavigateToOnboarding: () -> Unit,
     onNavigateToHome: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToLegal: (title: String, url: String) -> Unit,
@@ -22,7 +23,8 @@ fun WelcomeRoute(
     LaunchedEffect(viewModel.effect) {
         viewModel.effect.collectLatest { effect ->
             when (effect) {
-                WelcomeEffect.NavigateToHome -> onNavigateToHome()
+                WelcomeEffect.NavigateToOnboarding -> onNavigateToOnboarding()
+                WelcomeEffect.NavigateToMain -> onNavigateToHome()
                 WelcomeEffect.NavigateToLogin -> onNavigateToLogin()
                 WelcomeEffect.ShowLanguageSelector -> { /* Handle language selector if needed via state or effect */ }
                 is WelcomeEffect.NavigateToLegal -> onNavigateToLegal(effect.title, effect.url)

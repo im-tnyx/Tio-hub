@@ -61,6 +61,11 @@ fun AppNavHost(
         }
 
         welcomeScreen(
+            onNavigateToOnboarding = {
+                navController.navigate(RootRoute.Onboarding) {
+                    launchSingleTop = true
+                }
+            },
             onNavigateToHome = {
                 navController.navigate(RootRoute.MainGraph) {
                     popUpTo(RootRoute.Welcome) { inclusive = true }
@@ -77,7 +82,7 @@ fun AppNavHost(
         onboardingScreen(
             onCompleted = {
                 navController.navigate(RootRoute.MainGraph) {
-                    popUpTo(RootRoute.Onboarding) { inclusive = true }
+                    popUpTo(RootRoute.Welcome) { inclusive = true }
                     launchSingleTop = true
                 }
             },

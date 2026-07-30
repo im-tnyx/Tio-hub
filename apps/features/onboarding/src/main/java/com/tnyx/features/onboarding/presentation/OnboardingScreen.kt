@@ -15,6 +15,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -22,6 +23,8 @@ import com.tnyx.core.theme.TnyxTheme
 import com.tnyx.core.ui.components.buttons.TnyxGhostButton
 import com.tnyx.core.ui.components.buttons.TnyxPrimaryButton
 import com.tnyx.core.ui.components.layouts.TnyxScreenHeader
+import com.tnyx.features.onboarding.domain.flow.OnboardingSectionIds
+import com.tnyx.features.onboarding.presentation.profile.ProfileStepContent
 
 @Composable
 fun OnboardingScreen(
@@ -131,28 +134,42 @@ private fun OnboardingContent(
             trackColor = TnyxTheme.colors.surfaceVariant,
         )
         Text(
-            text = position.stepId.value.toDisplayLabel(),
-            style = TnyxTheme.typography.headlineMedium,
-            color = TnyxTheme.colors.textPrimary,
-            fontWeight = FontWeight.Bold,
-        )
-        Text(
             text = "Step ${state.stepNumber} of ${state.totalSteps}",
             style = TnyxTheme.typography.bodyMedium,
             color = TnyxTheme.colors.textMuted,
         )
-        Text(
-            text = "The section-specific form will render in this container.",
-            style = TnyxTheme.typography.bodyLarge,
-            color = TnyxTheme.colors.textSecondary,
-        )
 
-        if (state.validationError == OnboardingValidationError.RequiredAnswerMissing) {
+        if (position.sectionId == OnboardingSectionIds.Profile) {
+            key(position.stepId.value) {
+                ProfileStepContent(
+                    stepId = position.stepId,
+                    answer = state.currentAnswer,
+                    showValidationError =
+                        state.validationError == OnboardingValidationError.RequiredAnswerInvalid,
+                    onAnswerChanged = { answer ->
+                        onAction(OnboardingAction.AnswerChanged(answer))
+                    },
+                )
+            }
+        } else {
             Text(
-                text = "Complete this step before continuing.",
-                style = TnyxTheme.typography.bodyMedium,
-                color = TnyxTheme.colors.error,
+                text = position.stepId.value.toDisplayLabel(),
+                style = TnyxTheme.typography.headlineMedium,
+                color = TnyxTheme.colors.textPrimary,
+                fontWeight = FontWeight.Bold,
             )
+            Text(
+                text = "The section-specific form will render in this container.",
+                style = TnyxTheme.typography.bodyLarge,
+                color = TnyxTheme.colors.textSecondary,
+            )
+            if (state.validationError == OnboardingValidationError.RequiredAnswerInvalid) {
+                Text(
+                    text = "Complete this step with a valid answer before continuing.",
+                    style = TnyxTheme.typography.bodyMedium,
+                    color = TnyxTheme.colors.error,
+                )
+            }
         }
 
         if (state.hasPersistenceError) {
@@ -184,7 +201,7 @@ private fun OnboardingContent(
                 else -> "Continue"
             },
             onPressed = { onAction(OnboardingAction.ContinueClicked) },
-            enabled = state.canContinue && !state.isSaving,
+            enabled = !state.isSaving,
             expand = true,
         )
     }

@@ -4,12 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tnyx.features.onboarding.domain.flow.DefaultOnboardingFlow
 import com.tnyx.features.onboarding.domain.flow.OnboardingCheckpointResolver
+import com.tnyx.features.onboarding.domain.flow.OnboardingStepIds
 import com.tnyx.features.onboarding.domain.model.OnboardingAnswer
 import com.tnyx.features.onboarding.domain.model.OnboardingCheckpoint
 import com.tnyx.features.onboarding.domain.model.OnboardingFlowDefinition
 import com.tnyx.features.onboarding.domain.model.OnboardingPosition
+import com.tnyx.features.onboarding.domain.model.OnboardingStepId
 import com.tnyx.features.onboarding.domain.repository.OnboardingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
@@ -118,7 +121,7 @@ class OnboardingViewModel @Inject constructor(
         val currentState = _uiState.value
         if (!currentState.canContinue) {
             _uiState.update {
-                it.copy(validationError = OnboardingValidationError.RequiredAnswerMissing)
+                it.copy(validationError = OnboardingValidationError.RequiredAnswerInvalid)
             }
             return
         }
@@ -235,7 +238,8 @@ class OnboardingViewModel @Inject constructor(
             .sumOf { definition -> definition.steps.size } +
             section.steps.indexOf(step)
         val currentAnswer = checkpoint.draft.answerFor(position.stepId)
-        val hasRequiredAnswer = !step.isRequired || currentAnswer.isMeaningful()
+        val hasRequiredAnswer = !step.isRequired ||
+            currentAnswer.isMeaningfulFor(position.stepId)
 
         _uiState.value = OnboardingUiState(
             isLoading = false,
@@ -263,6 +267,24 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
+    private fun OnboardingAnswer?.isMeaningfulFor(stepId: OnboardingStepId): Boolean {
+        return when (stepId) {
+            OnboardingStepIds.ProfileName -> {
+                this is OnboardingAnswer.Text && value.trim().length in PROFILE_NAME_LENGTH
+            }
+
+            OnboardingStepIds.ProfileGender -> {
+                this is OnboardingAnswer.Text && value in PROFILE_GENDER_IDS
+            }
+
+            OnboardingStepIds.ProfileDateOfBirth -> {
+                this is OnboardingAnswer.Text && value.isValidDateOfBirth()
+            }
+
+            else -> isMeaningful()
+        }
+    }
+
     private fun OnboardingAnswer?.isMeaningful(): Boolean {
         return when (this) {
             null -> false
@@ -271,5 +293,18 @@ class OnboardingViewModel @Inject constructor(
             is OnboardingAnswer.Selections -> values.isNotEmpty()
             is OnboardingAnswer.Toggle -> true
         }
+    }
+
+    private fun String.isValidDateOfBirth(): Boolean {
+        return runCatching { LocalDate.parse(this) }
+            .getOrNull()
+            ?.let { date -> !date.isBefore(EARLIEST_DATE_OF_BIRTH) && date.isBefore(LocalDate.now()) }
+            ?: false
+    }
+
+    private companion object {
+        val PROFILE_NAME_LENGTH = 2..30
+        val PROFILE_GENDER_IDS = setOf("male", "female", "prefer_not_to_say")
+        val EARLIEST_DATE_OF_BIRTH: LocalDate = LocalDate.of(1900, 1, 1)
     }
 }

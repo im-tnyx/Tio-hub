@@ -21,7 +21,7 @@ data class OnboardingUiState(
 )
 
 enum class OnboardingValidationError {
-    RequiredAnswerMissing,
+    RequiredAnswerInvalid,
 }
 
 sealed interface OnboardingAction {

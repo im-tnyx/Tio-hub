@@ -9,6 +9,7 @@ import com.tnyx.features.onboarding.domain.model.OnboardingDraft
 import com.tnyx.features.onboarding.domain.model.OnboardingPosition
 import com.tnyx.features.onboarding.domain.model.OnboardingProgress
 import com.tnyx.features.onboarding.domain.repository.OnboardingRepository
+import java.time.LocalDate
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -91,10 +92,70 @@ class OnboardingViewModelTest {
 
         assertEquals(OnboardingStepIds.ProfileName, viewModel.uiState.value.position?.stepId)
         assertEquals(
-            OnboardingValidationError.RequiredAnswerMissing,
+            OnboardingValidationError.RequiredAnswerInvalid,
             viewModel.uiState.value.validationError,
         )
         assertTrue(repository.savedCheckpoints.isEmpty())
+    }
+
+    @Test
+    fun profileNameRequiresTwoToThirtyCharacters() = runTest {
+        val repository = TestOnboardingRepository()
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Text("S")))
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Text("Santosh")))
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun profileGenderRequiresSupportedStableId() = runTest {
+        val genderPosition = position(
+            OnboardingSectionIds.Profile,
+            OnboardingStepIds.ProfileGender,
+        )
+        val repository = TestOnboardingRepository(checkpoint(position = genderPosition))
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Text("unknown")))
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(
+            OnboardingAction.AnswerChanged(OnboardingAnswer.Text("prefer_not_to_say")),
+        )
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun profileDateOfBirthRequiresSupportedPastDate() = runTest {
+        val dateOfBirthPosition = position(
+            OnboardingSectionIds.Profile,
+            OnboardingStepIds.ProfileDateOfBirth,
+        )
+        val repository = TestOnboardingRepository(checkpoint(position = dateOfBirthPosition))
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(
+            OnboardingAction.AnswerChanged(
+                OnboardingAnswer.Text(LocalDate.now().plusDays(1).toString()),
+            ),
+        )
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(
+            OnboardingAction.AnswerChanged(
+                OnboardingAnswer.Text(LocalDate.of(1990, 1, 1).toString()),
+            ),
+        )
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
     }
 
     @Test

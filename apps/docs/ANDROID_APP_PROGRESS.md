@@ -111,9 +111,12 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
   ViewModel, state, actions, and effects are wired.
 - [x] ViewModel serializes checkpoint operations and handles required answers,
   next/back/skip, local completion, and persistence retry.
-- [ ] Full modular onboarding runtime is not yet user-entered or product-complete.
-- [ ] Section-specific forms are not implemented, so Welcome intentionally does
-  not launch the onboarding destination yet.
+- [x] Profile name, gender, and date-of-birth forms render in the container and
+  persist stable typed answers.
+- [x] Welcome `Get Started` opens onboarding; Welcome `Skip` still opens Main.
+- [ ] Body Goal, Workout, and Review forms are not implemented, so onboarding
+  becomes incomplete after the Profile section.
+- [ ] Full modular onboarding runtime is not yet product-complete.
 - [ ] Authenticated account handoff, backend sync, and finalization are not yet
   repository-backed.
 
@@ -273,6 +276,16 @@ Rule: Future module folders may exist as checked-in ownership placeholders, but 
 ---
 
 ## ✅ Latest Validation
+
+### 2026-07-30: Profile Onboarding section and Welcome entry
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :app:testDebugUnitTest :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL; 57 tests, 0 failures, 0 errors.
+- [x] Scope: Profile name/gender/date-of-birth forms, step-specific validation,
+  bounded reusable date picker, and Welcome Get Started/Skip routing.
+- [x] Body Goal, Workout, Review, account handoff, backend/Supabase sync,
+  analytics, and business finalization remain incomplete or unchanged.
 
 ### 2026-07-29: Onboarding presentation container
 

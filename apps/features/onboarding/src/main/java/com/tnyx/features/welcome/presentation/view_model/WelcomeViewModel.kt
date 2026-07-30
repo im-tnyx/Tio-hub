@@ -27,13 +27,13 @@ class WelcomeViewModel @Inject constructor() : ViewModel() {
     fun handleAction(action: WelcomeAction) {
         when (action) {
             WelcomeAction.GetStartedClicked -> {
-                viewModelScope.launch { _effect.emit(WelcomeEffect.NavigateToHome) }
+                viewModelScope.launch { _effect.emit(WelcomeEffect.NavigateToOnboarding) }
             }
             WelcomeAction.SignInClicked -> {
                 viewModelScope.launch { _effect.emit(WelcomeEffect.NavigateToLogin) }
             }
             WelcomeAction.SkipForNowClicked -> {
-                viewModelScope.launch { _effect.emit(WelcomeEffect.NavigateToHome) }
+                viewModelScope.launch { _effect.emit(WelcomeEffect.NavigateToMain) }
             }
             WelcomeAction.LanguageSelectorClicked -> {
                 _uiState.update { it.copy(showLanguageSheet = true) }

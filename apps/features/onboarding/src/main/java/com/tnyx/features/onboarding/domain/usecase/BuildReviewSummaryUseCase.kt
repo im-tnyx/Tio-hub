@@ -134,13 +134,6 @@ class BuildReviewSummaryUseCase {
                         label = "Primary reason",
                         value = draftAnswers.sourceReasonValue(),
                     ),
-                    ReviewSummaryRow(
-                        label = "Referral detail",
-                        value = draftAnswers.textValue(
-                            stepId = OnboardingStepIds.SourceReferralDetail,
-                            fallback = "Not shared",
-                        ),
-                    ),
                 ),
             ),
         )

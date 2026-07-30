@@ -220,23 +220,6 @@ class ValidateOnboardingAnswerUseCaseTest {
     }
 
     @Test
-    fun validatesOptionalSourceReferralDetailShape() {
-        assertTrue(useCase(OnboardingStepIds.SourceReferralDetail, null))
-        assertFalse(
-            useCase(
-                OnboardingStepIds.SourceReferralDetail,
-                OnboardingAnswer.Text("x"),
-            ),
-        )
-        assertTrue(
-            useCase(
-                OnboardingStepIds.SourceReferralDetail,
-                OnboardingAnswer.Text("Coach Neha"),
-            ),
-        )
-    }
-
-    @Test
     fun validatesTargetsStepsTargetRange() {
         assertFalse(
             useCase(

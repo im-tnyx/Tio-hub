@@ -23,10 +23,12 @@ sealed interface InitializeOnboardingSessionResult {
 class InitializeOnboardingSessionUseCase @Inject constructor(
     private val resolveOnboardingInitialization: ResolveOnboardingInitializationUseCase,
     private val persistOnboardingCheckpoint: PersistOnboardingCheckpointUseCase,
+    private val restoreFlowUseCase: RestoreFlowUseCase,
 ) {
     constructor() : this(
         resolveOnboardingInitialization = ResolveOnboardingInitializationUseCase(),
         persistOnboardingCheckpoint = PersistOnboardingCheckpointUseCase(),
+        restoreFlowUseCase = RestoreFlowUseCase(NoOpInitializationResumeManager),
     )
 
     suspend operator fun invoke(
@@ -36,11 +38,15 @@ class InitializeOnboardingSessionUseCase @Inject constructor(
     ): InitializeOnboardingSessionResult {
         val currentProfile = profileRepository.getCurrentProfile().first()
         val storedCheckpoint = onboardingRepository.observeCheckpoint().first()
+        val restoredFlow = restoreFlowUseCase(
+            flow = flow,
+            storedCheckpoint = storedCheckpoint,
+        )
 
         return when (
             val result = resolveOnboardingInitialization(
                 hasCompletedOnboarding = currentProfile.hasCompletedOnboarding,
-                storedCheckpoint = storedCheckpoint,
+                storedCheckpoint = restoredFlow.checkpoint,
                 flow = flow,
             )
         ) {
@@ -49,7 +55,7 @@ class InitializeOnboardingSessionUseCase @Inject constructor(
             }
 
             is ResolveOnboardingInitializationResult.Ready -> {
-                if (result.shouldPersistCheckpoint) {
+                if (result.shouldPersistCheckpoint || restoredFlow.shouldPersistCheckpoint) {
                     when (persistOnboardingCheckpoint(result.checkpoint, onboardingRepository)) {
                         is PersistOnboardingCheckpointResult.Failure -> {
                             error("Failed to save checkpoint")
@@ -64,9 +70,17 @@ class InitializeOnboardingSessionUseCase @Inject constructor(
             is ResolveOnboardingInitializationResult.ResumeCompletedCheckpoint -> {
                 InitializeOnboardingSessionResult.ResumeCompletedCheckpoint(
                     checkpoint = result.checkpoint,
-                    persistCheckpoint = result.persistCheckpoint,
+                    persistCheckpoint = result.persistCheckpoint || restoredFlow.shouldPersistCheckpoint,
                 )
             }
         }
     }
+}
+
+private object NoOpInitializationResumeManager : com.tnyx.features.onboarding.domain.resume.ResumeManager {
+    override suspend fun restoreCheckpoint(): OnboardingCheckpoint? = null
+
+    override suspend fun saveCheckpoint(checkpoint: OnboardingCheckpoint) = Unit
+
+    override suspend fun clearCheckpoint() = Unit
 }

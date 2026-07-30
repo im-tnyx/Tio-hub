@@ -48,7 +48,6 @@ class BuildReviewSummaryUseCaseTest {
                 OnboardingStepIds.TargetsNutritionSummary to OnboardingAnswer.Text("protein_priority"),
                 OnboardingStepIds.SourceChannel to OnboardingAnswer.Text("friend_referral"),
                 OnboardingStepIds.SourceReason to OnboardingAnswer.Text("complete_reset"),
-                OnboardingStepIds.SourceReferralDetail to OnboardingAnswer.Text("@fitwithravi"),
             ),
         )
 
@@ -74,7 +73,6 @@ class BuildReviewSummaryUseCaseTest {
         assertEquals("Protein priority", sections[4].rows.first { it.label == "Nutrition focus" }.value)
         assertEquals("Friend referral", sections[5].rows.first { it.label == "Discovery channel" }.value)
         assertEquals("Complete reset", sections[5].rows.first { it.label == "Primary reason" }.value)
-        assertEquals("@fitwithravi", sections[5].rows.first { it.label == "Referral detail" }.value)
     }
 
     @Test
@@ -95,7 +93,6 @@ class BuildReviewSummaryUseCaseTest {
         assertEquals("Not set", sections[4].rows.first { it.label == "Steps target" }.value)
         assertEquals("Not set", sections[5].rows.first { it.label == "Discovery channel" }.value)
         assertEquals("Not set", sections[5].rows.first { it.label == "Primary reason" }.value)
-        assertEquals("Not shared", sections[5].rows.first { it.label == "Referral detail" }.value)
     }
 
     @Test

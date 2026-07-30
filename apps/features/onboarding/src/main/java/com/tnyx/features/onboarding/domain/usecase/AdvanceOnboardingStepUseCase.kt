@@ -1,11 +1,8 @@
 package com.tnyx.features.onboarding.domain.usecase
 
-import com.tnyx.features.onboarding.domain.flow.OnboardingSectionIds
-import com.tnyx.features.onboarding.domain.flow.OnboardingStepIds
-import com.tnyx.features.onboarding.domain.model.OnboardingAnswer
+import com.tnyx.features.onboarding.domain.engine.OnboardingStateMachine
 import com.tnyx.features.onboarding.domain.model.OnboardingCheckpoint
 import com.tnyx.features.onboarding.domain.model.OnboardingFlowDefinition
-import com.tnyx.features.onboarding.domain.model.OnboardingPosition
 import javax.inject.Inject
 
 sealed interface AdvanceOnboardingStepResult {
@@ -24,7 +21,7 @@ class AdvanceOnboardingStepUseCase @Inject constructor() {
         flow: OnboardingFlowDefinition,
     ): AdvanceOnboardingStepResult {
         val currentPosition = checkpoint.progress.position
-        val nextPosition = resolveNextPosition(checkpoint, flow, currentPosition)
+        val nextPosition = OnboardingStateMachine(flow).nextPosition(checkpoint)
 
         if (nextPosition == null) {
             return AdvanceOnboardingStepResult.Completed(
@@ -52,42 +49,5 @@ class AdvanceOnboardingStepUseCase @Inject constructor() {
                 ),
             ),
         )
-    }
-
-    private fun resolveNextPosition(
-        checkpoint: OnboardingCheckpoint,
-        flow: OnboardingFlowDefinition,
-        currentPosition: OnboardingPosition,
-    ): OnboardingPosition? {
-        if (currentPosition.stepId == OnboardingStepIds.WorkoutFocusAreas && hasGymOnlyAccess(checkpoint)) {
-            return flow.sections
-                .firstOrNull { section -> section.id == OnboardingSectionIds.Workout }
-                ?.steps
-                ?.firstOrNull { step -> step.id == OnboardingStepIds.WorkoutTrainingDays }
-                ?.let { step -> OnboardingPosition(OnboardingSectionIds.Workout, step.id) }
-        }
-
-        if (currentPosition.stepId != OnboardingStepIds.WorkoutIntroChoice) {
-            return flow.next(currentPosition)
-        }
-
-        val wantsWorkoutPlan = (checkpoint.draft.answerFor(OnboardingStepIds.WorkoutIntroChoice) as? OnboardingAnswer.Toggle)
-            ?.value
-            ?: return flow.next(currentPosition)
-
-        return if (wantsWorkoutPlan) {
-            flow.next(currentPosition)
-        } else {
-            flow.sections
-                .firstOrNull { section -> section.id == OnboardingSectionIds.Targets }
-                ?.steps
-                ?.firstOrNull()
-                ?.let { step -> OnboardingPosition(OnboardingSectionIds.Targets, step.id) }
-        }
-    }
-
-    private fun hasGymOnlyAccess(checkpoint: OnboardingCheckpoint): Boolean {
-        return (checkpoint.draft.answerFor(OnboardingStepIds.WorkoutGymAccess) as? OnboardingAnswer.Text)
-            ?.value == "gym"
     }
 }

@@ -362,26 +362,10 @@ class AdvanceOnboardingStepUseCaseTest {
     }
 
     @Test
-    fun advancesFromSourceReasonToReferralDetail() {
+    fun advancesFromSourceReasonToReview() {
         val checkpoint = checkpoint(
             sectionId = OnboardingSectionIds.Source,
             stepId = OnboardingStepIds.SourceReason,
-        )
-
-        val result = useCase(checkpoint, DefaultOnboardingFlow.definition)
-
-        result as AdvanceOnboardingStepResult.Next
-        assertEquals(
-            OnboardingStepIds.SourceReferralDetail,
-            result.checkpoint.progress.position.stepId,
-        )
-    }
-
-    @Test
-    fun advancesFromSourceToReview() {
-        val checkpoint = checkpoint(
-            sectionId = OnboardingSectionIds.Source,
-            stepId = OnboardingStepIds.SourceReferralDetail,
         )
 
         val result = useCase(checkpoint, DefaultOnboardingFlow.definition)

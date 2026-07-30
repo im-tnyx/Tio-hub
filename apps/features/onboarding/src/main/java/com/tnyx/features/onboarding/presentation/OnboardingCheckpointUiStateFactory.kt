@@ -20,6 +20,7 @@ class OnboardingCheckpointUiStateFactory @Inject constructor(
     operator fun invoke(
         checkpoint: OnboardingCheckpoint,
         flow: OnboardingFlowDefinition,
+        progressSourceCheckpoint: OnboardingCheckpoint = checkpoint,
         status: OnboardingCheckpointUiStatus = OnboardingCheckpointUiStatus.Ready,
     ): OnboardingUiState {
         return when (status) {
@@ -27,6 +28,7 @@ class OnboardingCheckpointUiStateFactory @Inject constructor(
                 uiStateFactory(
                     checkpoint = checkpoint,
                     flow = flow,
+                    progressSourceCheckpoint = progressSourceCheckpoint,
                 )
             }
 
@@ -34,6 +36,7 @@ class OnboardingCheckpointUiStateFactory @Inject constructor(
                 uiStateFactory(
                     checkpoint = checkpoint,
                     flow = flow,
+                    progressSourceCheckpoint = progressSourceCheckpoint,
                     isSaving = true,
                 )
             }
@@ -42,6 +45,7 @@ class OnboardingCheckpointUiStateFactory @Inject constructor(
                 uiStateFactory(
                     checkpoint = checkpoint,
                     flow = flow,
+                    progressSourceCheckpoint = progressSourceCheckpoint,
                     hasPersistenceError = true,
                 )
             }

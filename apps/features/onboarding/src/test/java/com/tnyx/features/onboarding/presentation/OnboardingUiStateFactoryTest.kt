@@ -64,8 +64,8 @@ class OnboardingUiStateFactoryTest {
         assertEquals(6, state.sectionNumber)
         assertEquals(8, state.sectionCount)
         assertEquals(13, state.stepNumber)
-        assertEquals(22, state.totalSteps)
-        assertEquals(13f / 22f, state.completedFraction, 0.0001f)
+        assertEquals(21, state.totalSteps)
+        assertEquals(13f / 21f, state.completedFraction, 0.0001f)
     }
 
     @Test
@@ -83,7 +83,7 @@ class OnboardingUiStateFactoryTest {
 
         assertEquals(6, state.sectionNumber)
         assertEquals(20, state.stepNumber)
-        assertEquals(32, state.totalSteps)
+        assertEquals(31, state.totalSteps)
     }
 
     @Test
@@ -100,7 +100,7 @@ class OnboardingUiStateFactoryTest {
 
         assertEquals(6, state.sectionNumber)
         assertEquals(17, state.stepNumber)
-        assertEquals(31, state.totalSteps)
+        assertEquals(30, state.totalSteps)
     }
 
     private fun checkpoint(

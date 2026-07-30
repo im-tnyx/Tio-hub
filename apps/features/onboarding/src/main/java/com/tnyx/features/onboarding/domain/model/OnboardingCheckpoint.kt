@@ -18,4 +18,5 @@ data class OnboardingProgress(
 data class OnboardingCheckpoint(
     val draft: OnboardingDraft = OnboardingDraft(),
     val progress: OnboardingProgress,
+    val routeContext: OnboardingRouteContext = OnboardingRouteContext(),
 )

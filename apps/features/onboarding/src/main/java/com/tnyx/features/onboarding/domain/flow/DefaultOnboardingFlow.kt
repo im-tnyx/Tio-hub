@@ -56,13 +56,11 @@ object OnboardingStepIds {
 
     val SourceChannel = OnboardingStepId("source.channel")
     val SourceReason = OnboardingStepId("source.reason")
-    val SourceReferralDetail = OnboardingStepId("source.referral_detail")
-
     val ReviewSummary = OnboardingStepId("review.summary")
 }
 
 object DefaultOnboardingFlow {
-    const val VERSION: Int = 14
+    const val VERSION: Int = 15
 
     val definition = OnboardingFlowDefinition(
         version = VERSION,
@@ -136,7 +134,6 @@ object DefaultOnboardingFlow {
                 steps = listOf(
                     required(OnboardingStepIds.SourceChannel),
                     required(OnboardingStepIds.SourceReason),
-                    optional(OnboardingStepIds.SourceReferralDetail),
                 ),
             ),
             OnboardingSectionDefinition(

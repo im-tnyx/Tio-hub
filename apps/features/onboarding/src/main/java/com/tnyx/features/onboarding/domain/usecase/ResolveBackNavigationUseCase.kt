@@ -1,8 +1,6 @@
 package com.tnyx.features.onboarding.domain.usecase
 
-import com.tnyx.features.onboarding.domain.flow.OnboardingSectionIds
-import com.tnyx.features.onboarding.domain.flow.OnboardingStepIds
-import com.tnyx.features.onboarding.domain.model.OnboardingAnswer
+import com.tnyx.features.onboarding.domain.engine.OnboardingStateMachine
 import com.tnyx.features.onboarding.domain.model.OnboardingCheckpoint
 import com.tnyx.features.onboarding.domain.model.OnboardingFlowDefinition
 import javax.inject.Inject
@@ -21,7 +19,7 @@ class ResolveBackNavigationUseCase @Inject constructor() {
         flow: OnboardingFlowDefinition,
     ): ResolveBackNavigationResult {
         val currentCheckpoint = checkpoint ?: return ResolveBackNavigationResult.Exit
-        val previousPosition = resolvePreviousPosition(currentCheckpoint, flow)
+        val previousPosition = OnboardingStateMachine(flow).previousPosition(currentCheckpoint)
             ?: return ResolveBackNavigationResult.Exit
 
         return ResolveBackNavigationResult.Previous(
@@ -32,40 +30,5 @@ class ResolveBackNavigationUseCase @Inject constructor() {
                 ),
             ),
         )
-    }
-
-    private fun resolvePreviousPosition(
-        checkpoint: OnboardingCheckpoint,
-        flow: OnboardingFlowDefinition,
-    ) = when {
-        checkpoint.progress.position.sectionId == OnboardingSectionIds.Targets &&
-            wantsToSkipWorkout(checkpoint) -> {
-            flow.sections
-                .firstOrNull { section -> section.id == OnboardingSectionIds.WorkoutIntro }
-                ?.steps
-                ?.firstOrNull()
-                ?.let { step -> com.tnyx.features.onboarding.domain.model.OnboardingPosition(OnboardingSectionIds.WorkoutIntro, step.id) }
-        }
-
-        checkpoint.progress.position.stepId == OnboardingStepIds.WorkoutTrainingDays &&
-            hasGymOnlyAccess(checkpoint) -> {
-            flow.sections
-                .firstOrNull { section -> section.id == OnboardingSectionIds.Workout }
-                ?.steps
-                ?.firstOrNull { step -> step.id == OnboardingStepIds.WorkoutFocusAreas }
-                ?.let { step -> com.tnyx.features.onboarding.domain.model.OnboardingPosition(OnboardingSectionIds.Workout, step.id) }
-        }
-
-        else -> flow.previous(checkpoint.progress.position)
-    }
-
-    private fun wantsToSkipWorkout(checkpoint: OnboardingCheckpoint): Boolean {
-        return (checkpoint.draft.answerFor(OnboardingStepIds.WorkoutIntroChoice) as? OnboardingAnswer.Toggle)
-            ?.value == false
-    }
-
-    private fun hasGymOnlyAccess(checkpoint: OnboardingCheckpoint): Boolean {
-        return (checkpoint.draft.answerFor(OnboardingStepIds.WorkoutGymAccess) as? OnboardingAnswer.Text)
-            ?.value == "gym"
     }
 }

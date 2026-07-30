@@ -134,9 +134,6 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
   selection.
 - [x] Source channel and reason forms render after Workout, persist stable
   typed source answers, and are included in review summary rendering.
-- [x] Source now includes an optional referral-detail step so invite, coach,
-  or discovery context can be captured without overloading the primary reason
-  answer.
 - [x] Review summary renders collected answers, requires explicit confirmation,
   and allows local onboarding completion.
 - [x] Successful local onboarding now shows a short setup state and a ready
@@ -145,6 +142,16 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
 - [x] Visible onboarding progress now follows the effective runtime path, so
   declining Workout Intro removes the workout section and gym-only access
   removes the optional equipment step from the denominator.
+- [x] Current-step answers no longer bump visible progress immediately; the
+  bar now stays stable while answering and updates with the committed next-step
+  transition.
+- [x] Single onboarding CTA/progress shell now uses step-aware visibility:
+  intro hides progress, and profile/body/mobile/workout steps reveal the same
+  footer CTA from step-ready timing instead of pinning it immediately on every
+  screen or coupling visible progress to answer selection.
+- [x] Onboarding checkpoint preparation now seeds live Profile values into the
+  local draft and can skip intro/mobile when signed-in bootstrap context
+  already exists, without adding extra intro screens or typing-only steps.
 - [x] Welcome `Get Started` opens onboarding; Welcome `Skip` still opens Main.
 - [x] The local onboarding shell now reaches completion without a placeholder
   step.
@@ -346,6 +353,19 @@ Rule: Future module folders may exist as checked-in ownership placeholders, but 
 - [x] Backend handoff, guest-to-auth migration, analytics, and non-Profile
   repository finalization remain incomplete or unchanged.
 
+### 2026-07-30: Profile-seeded onboarding bootstrap and hidden-path alignment
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :app:compileDebugKotlin --no-configuration-cache --no-daemon
+  -Dkotlin.compiler.execution.strategy=in-process`
+- [x] Result: BUILD SUCCESSFUL.
+- [x] Scope: onboarding now seeds available live Profile fields into the local
+  checkpoint draft, aligns hidden intro/mobile positions for signed-in or
+  prefilled users, and reuses the same effective-flow logic across progress UI
+  and state-machine navigation.
+- [x] Guest-to-auth handoff, backend sync, analytics, remote onboarding draft
+  storage, and extra intro/typing-heavy steps remain incomplete or unchanged.
+
 ### 2026-07-30: Targets/source bridge steps and Google auth foundation
 
 - [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
@@ -353,9 +373,9 @@ Rule: Future module folders may exist as checked-in ownership placeholders, but 
   :app:compileDebugKotlin --no-configuration-cache`
 - [x] Result: BUILD SUCCESSFUL.
 - [x] Scope: onboarding now includes `targets.recommendation_summary` and
-  optional `source.referral_detail`; Login now starts Google OAuth through
-  Supabase deeplink handling and a local session bridge without changing the
-  existing fake-email/demo auth path.
+  source attribution; Login now starts Google OAuth through Supabase deeplink
+  handling and a local session bridge without changing the existing
+  fake-email/demo auth path.
 - [x] Backend auth ownership, guest-to-auth handoff, backend sync, analytics,
   and non-Profile repository finalization remain incomplete or unchanged.
 

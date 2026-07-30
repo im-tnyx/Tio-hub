@@ -21,7 +21,7 @@ class OnboardingFlowDefinitionTest {
             listOf("intro", "profile", "body_goal", "mobile", "workout_intro", "workout", "targets", "source", "review"),
             flow.sections.map { section -> section.id.value },
         )
-        assertEquals(32, flow.totalSteps)
+        assertEquals(31, flow.totalSteps)
         assertEquals(
             OnboardingPosition(
                 sectionId = OnboardingSectionIds.Intro,
@@ -353,25 +353,13 @@ class OnboardingFlowDefinitionTest {
         )
         assertEquals(
             OnboardingPosition(
-                sectionId = OnboardingSectionIds.Source,
-                stepId = OnboardingStepIds.SourceReferralDetail,
-            ),
-            flow.next(
-                OnboardingPosition(
-                    sectionId = OnboardingSectionIds.Source,
-                    stepId = OnboardingStepIds.SourceReason,
-                ),
-            ),
-        )
-        assertEquals(
-            OnboardingPosition(
                 sectionId = OnboardingSectionIds.Review,
                 stepId = OnboardingStepIds.ReviewSummary,
             ),
             flow.next(
                 OnboardingPosition(
                     sectionId = OnboardingSectionIds.Source,
-                    stepId = OnboardingStepIds.SourceReferralDetail,
+                    stepId = OnboardingStepIds.SourceReason,
                 ),
             ),
         )

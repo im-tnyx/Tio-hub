@@ -1,33 +1,36 @@
 package com.tnyx.features.onboarding.presentation
 
-import com.tnyx.features.onboarding.domain.flow.OnboardingSectionIds
-import com.tnyx.features.onboarding.domain.flow.OnboardingStepIds
-import com.tnyx.features.onboarding.domain.model.OnboardingAnswer
+import com.tnyx.features.onboarding.domain.flow.containsPosition
 import com.tnyx.features.onboarding.domain.model.OnboardingCheckpoint
 import com.tnyx.features.onboarding.domain.model.OnboardingFlowDefinition
-import com.tnyx.features.onboarding.domain.model.OnboardingPosition
-import com.tnyx.features.onboarding.domain.model.OnboardingSectionDefinition
-import com.tnyx.features.onboarding.domain.model.OnboardingStepId
+import com.tnyx.features.onboarding.domain.usecase.BuildFlowUseCase
 import com.tnyx.features.onboarding.domain.usecase.ValidateOnboardingAnswerUseCase
+import com.tnyx.features.onboarding.domain.validator.StepValidator
 import javax.inject.Inject
 
 class OnboardingUiStateFactory @Inject constructor(
-    private val validateOnboardingAnswer: ValidateOnboardingAnswerUseCase,
+    private val buildFlowUseCase: BuildFlowUseCase,
+    private val stepValidator: StepValidator,
 ) {
     constructor() : this(
-        validateOnboardingAnswer = ValidateOnboardingAnswerUseCase(),
+        buildFlowUseCase = BuildFlowUseCase(),
+        stepValidator = StepValidator(ValidateOnboardingAnswerUseCase()),
     )
 
     operator fun invoke(
         checkpoint: OnboardingCheckpoint,
         flow: OnboardingFlowDefinition,
+        progressSourceCheckpoint: OnboardingCheckpoint = checkpoint,
         isSaving: Boolean = false,
         hasPersistenceError: Boolean = false,
     ): OnboardingUiState {
         val position = checkpoint.progress.position
-        val effectiveSections = flow
-            .effectiveSections(checkpoint.draft.answers)
+        val effectiveSections = buildFlowUseCase(flow, checkpoint)
             .takeIf { sections -> sections.containsPosition(position) }
+            ?: flow.sections
+        val progressPosition = progressSourceCheckpoint.progress.position
+        val effectiveProgressSections = buildFlowUseCase(flow, progressSourceCheckpoint)
+            .takeIf { sections -> sections.containsPosition(progressPosition) }
             ?: flow.sections
         val sectionIndex = effectiveSections.indexOfFirst { section -> section.id == position.sectionId }
         val section = effectiveSections[sectionIndex]
@@ -37,9 +40,20 @@ class OnboardingUiStateFactory @Inject constructor(
             .sumOf { definition -> definition.steps.size } +
             section.steps.indexOf(step)
         val totalSteps = effectiveSections.sumOf { definition -> definition.steps.size }
+        val progressSectionIndex = effectiveProgressSections.indexOfFirst { section ->
+            section.id == progressPosition.sectionId
+        }
+        val progressSection = effectiveProgressSections[progressSectionIndex]
+        val progressStep = progressSection.steps.first { definition ->
+            definition.id == progressPosition.stepId
+        }
+        val progressStepIndex = effectiveProgressSections
+            .take(progressSectionIndex)
+            .sumOf { definition -> definition.steps.size } +
+            progressSection.steps.indexOf(progressStep)
+        val progressTotalSteps = effectiveProgressSections.sumOf { definition -> definition.steps.size }
         val currentAnswer = checkpoint.draft.answerFor(position.stepId)
-        val hasRequiredAnswer = !step.isRequired ||
-            validateOnboardingAnswer(position.stepId, currentAnswer)
+        val hasRequiredAnswer = stepValidator.isStepValid(step, currentAnswer)
 
         return OnboardingUiState(
             isLoading = false,
@@ -47,7 +61,7 @@ class OnboardingUiStateFactory @Inject constructor(
             position = position,
             currentAnswer = currentAnswer,
             draftAnswers = checkpoint.draft.answers,
-            completedFraction = (stepIndex + 1).toFloat() / totalSteps.toFloat(),
+            completedFraction = (progressStepIndex + 1).toFloat() / progressTotalSteps.toFloat(),
             sectionNumber = sectionIndex + 1,
             sectionCount = effectiveSections.size,
             stepNumber = stepIndex + 1,
@@ -58,41 +72,5 @@ class OnboardingUiStateFactory @Inject constructor(
             validationError = null,
             hasPersistenceError = hasPersistenceError,
         )
-    }
-
-    private fun OnboardingFlowDefinition.effectiveSections(
-        draftAnswers: Map<OnboardingStepId, OnboardingAnswer>,
-    ): List<OnboardingSectionDefinition> {
-        val wantsToSkipWorkout = (draftAnswers[OnboardingStepIds.WorkoutIntroChoice] as? OnboardingAnswer.Toggle)
-            ?.value == false
-        val gymOnlyAccess = (draftAnswers[OnboardingStepIds.WorkoutGymAccess] as? OnboardingAnswer.Text)
-            ?.value == "gym"
-
-        val visibleSections = if (wantsToSkipWorkout) {
-            sections.filterNot { section -> section.id == OnboardingSectionIds.Workout }
-        } else {
-            sections
-        }
-
-        if (!gymOnlyAccess) return visibleSections
-
-        return visibleSections.map { section ->
-            if (section.id != OnboardingSectionIds.Workout) {
-                section
-            } else {
-                section.copy(
-                    steps = section.steps.filterNot { step -> step.id == OnboardingStepIds.WorkoutEquipment },
-                )
-            }
-        }
-    }
-
-    private fun List<OnboardingSectionDefinition>.containsPosition(
-        position: OnboardingPosition,
-    ): Boolean {
-        return any { section ->
-            section.id == position.sectionId &&
-                section.steps.any { step -> step.id == position.stepId }
-        }
     }
 }

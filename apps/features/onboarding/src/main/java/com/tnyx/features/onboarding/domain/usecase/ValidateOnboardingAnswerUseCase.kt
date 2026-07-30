@@ -127,11 +127,6 @@ class ValidateOnboardingAnswerUseCase @Inject constructor() {
                 answer is OnboardingAnswer.Text && answer.value in SOURCE_REASON_IDS
             }
 
-            OnboardingStepIds.SourceReferralDetail -> {
-                answer == null ||
-                    (answer is OnboardingAnswer.Text && answer.value.trim().length in REFERRAL_DETAIL_LENGTH)
-            }
-
             OnboardingStepIds.ReviewSummary -> {
                 answer is OnboardingAnswer.Toggle && answer.value
             }
@@ -250,7 +245,6 @@ class ValidateOnboardingAnswerUseCase @Inject constructor() {
             "nutrition_focus",
             "complete_reset",
         )
-        val REFERRAL_DETAIL_LENGTH = 2..80
         val GOAL_PACE_IDS = setOf(
             "relaxed",
             "steady",

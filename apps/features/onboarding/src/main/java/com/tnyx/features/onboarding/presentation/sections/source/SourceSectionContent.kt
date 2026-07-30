@@ -6,7 +6,6 @@ import com.tnyx.features.onboarding.domain.flow.OnboardingStepIds
 import com.tnyx.features.onboarding.domain.model.OnboardingAnswer
 import com.tnyx.features.onboarding.domain.model.OnboardingStepId
 import com.tnyx.features.onboarding.presentation.sections.source.steps.SourceChannelStep
-import com.tnyx.features.onboarding.presentation.sections.source.steps.SourceReferralDetailStep
 import com.tnyx.features.onboarding.presentation.sections.source.steps.SourceReasonStep
 
 @Composable
@@ -32,15 +31,6 @@ internal fun SourceSectionContent(
             SourceReasonStep(
                 answer = answer,
                 showValidationError = showValidationError,
-                onAnswerChanged = onAnswerChanged,
-                modifier = modifier,
-            )
-        }
-
-        OnboardingStepIds.SourceReferralDetail -> {
-            SourceReferralDetailStep(
-                answer = answer,
-                draftAnswers = draftAnswers,
                 onAnswerChanged = onAnswerChanged,
                 modifier = modifier,
             )

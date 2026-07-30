@@ -257,14 +257,11 @@ Single Source of Truth:
   BMI, और BMR derive करता है; duplicate body values `profiles` में store नहीं होते।
 - `auth_identities` direct client access deny करता है और future Firebase/provider
   linking के लिए backend-only boundary है।
-- Current Android runtime `ProfileRepository` को local persistent
-  `RoomProfileRepository` से bind करता है। `FakeAuthRepository` app-owned
-  DataStore session publish करता है; Profile active fake user ID से keyed है,
-  account switch पर isolated रहता है, और logout clean guest identity पर लौटता
-  है। Auth identity और local Profile fields app restart survive करते हैं।
-  Personal Information name और normalized username Room में persist करता है;
-  avatar app-internal file में रहता है। Live Supabase objects schema foundation
-  हैं; remote Profile/avatar synchronization future backend repository से आएगी।
+- Current Android runtime `ProfileRepository` को `SupabaseProfileRepository`
+  से bind करता है। Active auth path Supabase-backed है, profile summary remote
+  rows से read होती है, और avatar live `tio-profile` bucket + `profiles.avatar_url`
+  के through persist होता है। This is still not a full backend-mediated final
+  architecture, but Profile truth is no longer local-only.
 
 ---
 

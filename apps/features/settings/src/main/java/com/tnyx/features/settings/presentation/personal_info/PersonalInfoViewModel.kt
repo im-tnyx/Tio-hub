@@ -6,11 +6,15 @@ import com.tnyx.core.ui.components.inputs.Country
 import com.tnyx.core.ui.components.inputs.cmToFeetInches
 import com.tnyx.core.ui.components.inputs.countryForMobile
 import com.tnyx.core.ui.components.inputs.feetInchesToCm
+import com.tnyx.core.ui.components.inputs.nationalMobileNumber
 import com.tnyx.shared.auth.domain.repository.AuthSessionProvider
 import com.tnyx.shared.profile.domain.model.UserProfile
 import com.tnyx.shared.profile.domain.repository.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,10 +53,26 @@ class PersonalInfoViewModel @Inject constructor(
                                 membershipTier = profile.membershipTier,
                             )
                         } else {
+                            val selectedCountry = countryForMobile(profile.mobile)
+                            val heightCmText = profile.height
+                                .takeIf { it > 0 }
+                                ?.toString()
+                                .orEmpty()
+                            val (heightFeet, heightInches) = profile.height
+                                .takeIf { it > 0 }
+                                ?.let { cmToFeetInches(it.toFloat()) }
+                                ?: (5 to 7)
                             state.copy(
                                 fullName = profile.displayName,
                                 username = profile.username,
                                 email = sessionProvider.currentSession()?.email.orEmpty(),
+                                phoneNumber = nationalMobileNumber(profile.mobile, selectedCountry),
+                                selectedCountry = selectedCountry,
+                                gender = profile.gender,
+                                dobMillis = profile.dob.toEpochMillisOrZero(),
+                                heightCm = heightCmText,
+                                heightFeet = heightFeet.toString(),
+                                heightInches = heightInches.toString(),
                                 avatarUrl = profile.avatarUrl,
                                 membershipTier = profile.membershipTier,
                             )
@@ -294,15 +314,29 @@ class PersonalInfoViewModel @Inject constructor(
             return
         }
 
+        val normalizedHeightCm = state.resolveHeightCm()
+        if (state.hasHeightInput() && normalizedHeightCm == null) {
+            update {
+                it.copy(saveError = "Height is invalid. Check the value and try again.")
+            }
+            return
+        }
+
         val profile = activeProfile
         if (profile == null) {
             update { it.copy(saveError = "Profile is not ready. Try again.") }
             return
         }
 
+        val selectedCountry = state.selectedCountry ?: countryForMobile(profile.mobile)
+        val nationalNumber = state.phoneNumber.filter(Char::isDigit).take(15)
         val updatedProfile = profile.copy(
             displayName = state.fullName.trim(),
             username = normalizedUsername,
+            mobile = if (nationalNumber.isBlank()) "" else "${selectedCountry.code}$nationalNumber",
+            gender = state.gender.trim(),
+            dob = state.dobMillis.toIsoDateOrEmpty(),
+            height = normalizedHeightCm?.toInt() ?: 0,
         )
 
         viewModelScope.launch {
@@ -339,6 +373,45 @@ class PersonalInfoViewModel @Inject constructor(
 
     private inline fun update(block: (PersonalInfoUiState) -> PersonalInfoUiState) {
         _uiState.update(block)
+    }
+
+    private fun PersonalInfoUiState.hasHeightInput(): Boolean {
+        return if (heightUnit == "ft") {
+            heightFeet.isNotBlank() || heightInches.isNotBlank()
+        } else {
+            heightCm.isNotBlank()
+        }
+    }
+
+    private fun PersonalInfoUiState.resolveHeightCm(): Float? {
+        return if (heightUnit == "ft") {
+            if (!hasHeightInput()) {
+                null
+            } else {
+                feetInchesToCm(heightFeet, heightInches)
+            }
+        } else {
+            heightCm.trim().takeIf(String::isNotBlank)?.toFloatOrNull()
+        }
+    }
+
+    private fun String.toEpochMillisOrZero(): Long {
+        val normalized = trim()
+        if (normalized.isBlank()) return 0L
+        return runCatching {
+            LocalDate.parse(normalized)
+                .atStartOfDay(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli()
+        }.getOrDefault(0L)
+    }
+
+    private fun Long.toIsoDateOrEmpty(): String {
+        if (this <= 0L) return ""
+        return Instant.ofEpochMilli(this)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+            .toString()
     }
 
     private companion object {

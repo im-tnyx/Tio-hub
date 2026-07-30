@@ -29,6 +29,8 @@ import com.tnyx.core.ui.components.inputs.TnyxTextField
 import com.tnyx.features.onboarding.domain.flow.OnboardingStepIds
 import com.tnyx.features.onboarding.domain.model.OnboardingAnswer
 import com.tnyx.features.onboarding.domain.model.OnboardingStepId
+import com.tnyx.features.onboarding.presentation.common.OnboardingStepHeading
+import com.tnyx.features.onboarding.presentation.common.OnboardingValidationMessage
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -81,7 +83,7 @@ private fun ProfileNameStep(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceL),
     ) {
-        StepHeading(
+        OnboardingStepHeading(
             title = "What should we call you?",
             description = "Use the name you want to see across your Tio experience.",
         )
@@ -123,7 +125,7 @@ private fun ProfileGenderStep(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceM),
     ) {
-        StepHeading(
+        OnboardingStepHeading(
             title = "How do you identify?",
             description = "This helps Tio personalize guidance while keeping your profile respectful.",
         )
@@ -159,7 +161,7 @@ private fun ProfileGenderStep(
             }
         }
         if (showValidationError) {
-            ValidationMessage("Select one option to continue")
+            OnboardingValidationMessage("Select one option to continue")
         }
     }
 }
@@ -183,7 +185,7 @@ private fun ProfileDateOfBirthStep(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceL),
     ) {
-        StepHeading(
+        OnboardingStepHeading(
             title = "When were you born?",
             description = "Your date of birth helps tailor age-aware fitness and nutrition guidance.",
         )
@@ -224,7 +226,7 @@ private fun ProfileDateOfBirthStep(
             color = TnyxTheme.colors.textMuted,
         )
         if (showValidationError) {
-            ValidationMessage("Choose a valid past date")
+            OnboardingValidationMessage("Choose a valid past date")
         }
     }
 
@@ -242,37 +244,6 @@ private fun ProfileDateOfBirthStep(
             },
         )
     }
-}
-
-@Composable
-private fun StepHeading(
-    title: String,
-    description: String,
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceS),
-    ) {
-        Text(
-            text = title,
-            style = TnyxTheme.typography.headlineMedium,
-            color = TnyxTheme.colors.textPrimary,
-            fontWeight = FontWeight.Bold,
-        )
-        Text(
-            text = description,
-            style = TnyxTheme.typography.bodyLarge,
-            color = TnyxTheme.colors.textSecondary,
-        )
-    }
-}
-
-@Composable
-private fun ValidationMessage(message: String) {
-    Text(
-        text = message,
-        style = TnyxTheme.typography.bodyMedium,
-        color = TnyxTheme.colors.error,
-    )
 }
 
 private enum class GenderOption(

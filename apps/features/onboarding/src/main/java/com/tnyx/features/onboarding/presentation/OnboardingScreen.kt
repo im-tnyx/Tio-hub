@@ -1,9 +1,10 @@
 package com.tnyx.features.onboarding.presentation
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -24,6 +25,7 @@ import com.tnyx.core.ui.components.buttons.TnyxGhostButton
 import com.tnyx.core.ui.components.buttons.TnyxPrimaryButton
 import com.tnyx.core.ui.components.layouts.TnyxScreenHeader
 import com.tnyx.features.onboarding.domain.flow.OnboardingSectionIds
+import com.tnyx.features.onboarding.presentation.bodygoal.BodyGoalStepContent
 import com.tnyx.features.onboarding.presentation.profile.ProfileStepContent
 
 @Composable
@@ -112,6 +114,7 @@ private fun OnboardingContent(
     modifier: Modifier = Modifier,
 ) {
     val position = requireNotNull(state.position)
+    val scrollState = rememberScrollState()
 
     Column(
         modifier = modifier
@@ -139,52 +142,75 @@ private fun OnboardingContent(
             color = TnyxTheme.colors.textMuted,
         )
 
-        if (position.sectionId == OnboardingSectionIds.Profile) {
-            key(position.stepId.value) {
-                ProfileStepContent(
-                    stepId = position.stepId,
-                    answer = state.currentAnswer,
-                    showValidationError =
-                        state.validationError == OnboardingValidationError.RequiredAnswerInvalid,
-                    onAnswerChanged = { answer ->
-                        onAction(OnboardingAction.AnswerChanged(answer))
-                    },
-                )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(scrollState),
+            verticalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceM),
+        ) {
+            when (position.sectionId) {
+                OnboardingSectionIds.Profile -> {
+                    key(position.stepId.value) {
+                        ProfileStepContent(
+                            stepId = position.stepId,
+                            answer = state.currentAnswer,
+                            showValidationError =
+                                state.validationError == OnboardingValidationError.RequiredAnswerInvalid,
+                            onAnswerChanged = { answer ->
+                                onAction(OnboardingAction.AnswerChanged(answer))
+                            },
+                        )
+                    }
+                }
+
+                OnboardingSectionIds.BodyGoal -> {
+                    key(position.stepId.value) {
+                        BodyGoalStepContent(
+                            stepId = position.stepId,
+                            answer = state.currentAnswer,
+                            showValidationError =
+                                state.validationError == OnboardingValidationError.RequiredAnswerInvalid,
+                            onAnswerChanged = { answer ->
+                                onAction(OnboardingAction.AnswerChanged(answer))
+                            },
+                        )
+                    }
+                }
+
+                else -> {
+                    Text(
+                        text = position.stepId.value.toDisplayLabel(),
+                        style = TnyxTheme.typography.headlineMedium,
+                        color = TnyxTheme.colors.textPrimary,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        text = "The section-specific form will render in this container.",
+                        style = TnyxTheme.typography.bodyLarge,
+                        color = TnyxTheme.colors.textSecondary,
+                    )
+                    if (state.validationError == OnboardingValidationError.RequiredAnswerInvalid) {
+                        Text(
+                            text = "Complete this step with a valid answer before continuing.",
+                            style = TnyxTheme.typography.bodyMedium,
+                            color = TnyxTheme.colors.error,
+                        )
+                    }
+                }
             }
-        } else {
-            Text(
-                text = position.stepId.value.toDisplayLabel(),
-                style = TnyxTheme.typography.headlineMedium,
-                color = TnyxTheme.colors.textPrimary,
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                text = "The section-specific form will render in this container.",
-                style = TnyxTheme.typography.bodyLarge,
-                color = TnyxTheme.colors.textSecondary,
-            )
-            if (state.validationError == OnboardingValidationError.RequiredAnswerInvalid) {
+
+            if (state.hasPersistenceError) {
                 Text(
-                    text = "Complete this step with a valid answer before continuing.",
+                    text = "Your progress could not be saved. Try again.",
                     style = TnyxTheme.typography.bodyMedium,
                     color = TnyxTheme.colors.error,
                 )
+                TnyxGhostButton(
+                    text = "Retry",
+                    onPressed = { onAction(OnboardingAction.Retry) },
+                )
             }
         }
-
-        if (state.hasPersistenceError) {
-            Text(
-                text = "Your progress could not be saved. Try again.",
-                style = TnyxTheme.typography.bodyMedium,
-                color = TnyxTheme.colors.error,
-            )
-            TnyxGhostButton(
-                text = "Retry",
-                onPressed = { onAction(OnboardingAction.Retry) },
-            )
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
 
         if (state.canSkipSection) {
             TnyxGhostButton(

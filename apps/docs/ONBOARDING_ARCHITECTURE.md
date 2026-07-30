@@ -32,11 +32,15 @@ Implemented:
 - next, back, skippable-section, and local-completion behavior,
 - Profile name, gender, and date-of-birth step content,
 - Profile-specific answer validation and ISO date storage,
+- Body Goal primary-goal, height, current-weight, target-weight, and
+  activity-level step content,
+- Body Goal-specific validation and stable persisted goal/activity IDs,
+- scroll-safe content handling for longer onboarding forms,
 - Welcome `Get Started` entry into `RootRoute.Onboarding`.
 
 Not implemented:
 
-- Body Goal, Workout, and Review forms,
+- Workout and Review forms,
 - authenticated account handoff or business-repository finalization,
 - backend or Supabase synchronization,
 - conditional remote-config paths,
@@ -47,7 +51,7 @@ Not implemented:
 | Section ID | Initial steps | Business destination |
 |---|---|---|
 | `profile` | `name`, `gender`, `date_of_birth` (forms implemented) | Profile |
-| `body_goal` | `primary_goal`, `height`, `current_weight`, `target_weight`, `activity_level` | Profile/Nutrition contracts as approved |
+| `body_goal` | `primary_goal`, `height`, `current_weight`, `target_weight`, `activity_level` (forms implemented) | Profile/Nutrition contracts as approved |
 | `workout` | `experience`, `location`, optional `equipment`, `training_days`, `duration` | Workout |
 | `review` | `summary` | Onboarding orchestration only |
 
@@ -60,9 +64,19 @@ Profile answers currently use:
 - `male`, `female`, or `prefer_not_to_say` for `profile.gender`,
 - an ISO `yyyy-MM-dd` past date for `profile.date_of_birth`.
 
+Body Goal answers currently use:
+
+- one primary-goal ID from `build_muscle`, `lose_weight`, `keep_fit`,
+  `boost_strength`, or `manage_stress`,
+- a bounded height decimal in centimeters (`80.0..260.0`),
+- bounded current and target weight decimals in kilograms (`20.0..400.0`),
+- one activity-level ID from `sedentary`, `light`, `active`, `very_active`,
+  or `dynamic`.
+
 Welcome `Get Started` now opens onboarding and Welcome `Skip` still opens Main.
-The user-facing flow is partial: completing Profile advances to the unimplemented
-first Body Goal form. This must not be described as complete onboarding.
+The user-facing flow is partial: completing Body Goal advances to the
+unimplemented first Workout form. This must not be described as complete
+onboarding.
 
 ## Stable Identity Rules
 
@@ -125,6 +139,6 @@ Profile, Nutrition, Workout, Health, or Recovery data.
 2. Local draft/progress repository and resume tests. Completed.
 3. Onboarding graph, container, ViewModel, state, and actions. Completed.
 4. Profile, Body Goal, Workout, and Review sections delivered one at a time.
-   Profile completed; remaining sections pending.
+   Profile and Body Goal completed; Workout and Review pending.
 5. Backend finalization and optional dynamic flow only after Auth/API contracts
    are approved.

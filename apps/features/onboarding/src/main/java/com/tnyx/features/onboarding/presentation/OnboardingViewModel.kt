@@ -281,6 +281,23 @@ class OnboardingViewModel @Inject constructor(
                 this is OnboardingAnswer.Text && value.isValidDateOfBirth()
             }
 
+            OnboardingStepIds.BodyGoalPrimaryGoal -> {
+                this is OnboardingAnswer.Text && value in PRIMARY_GOAL_IDS
+            }
+
+            OnboardingStepIds.BodyGoalHeight -> {
+                this is OnboardingAnswer.Decimal && value in HEIGHT_CM_RANGE
+            }
+
+            OnboardingStepIds.BodyGoalCurrentWeight,
+            OnboardingStepIds.BodyGoalTargetWeight -> {
+                this is OnboardingAnswer.Decimal && value in WEIGHT_KG_RANGE
+            }
+
+            OnboardingStepIds.BodyGoalActivityLevel -> {
+                this is OnboardingAnswer.Text && value in ACTIVITY_LEVEL_IDS
+            }
+
             else -> isMeaningful()
         }
     }
@@ -305,6 +322,22 @@ class OnboardingViewModel @Inject constructor(
     private companion object {
         val PROFILE_NAME_LENGTH = 2..30
         val PROFILE_GENDER_IDS = setOf("male", "female", "prefer_not_to_say")
+        val PRIMARY_GOAL_IDS = setOf(
+            "build_muscle",
+            "lose_weight",
+            "keep_fit",
+            "boost_strength",
+            "manage_stress",
+        )
+        val ACTIVITY_LEVEL_IDS = setOf(
+            "sedentary",
+            "light",
+            "active",
+            "very_active",
+            "dynamic",
+        )
+        val HEIGHT_CM_RANGE = 80.0..260.0
+        val WEIGHT_KG_RANGE = 20.0..400.0
         val EARLIEST_DATE_OF_BIRTH: LocalDate = LocalDate.of(1900, 1, 1)
     }
 }

@@ -113,9 +113,12 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
   next/back/skip, local completion, and persistence retry.
 - [x] Profile name, gender, and date-of-birth forms render in the container and
   persist stable typed answers.
+- [x] Body Goal primary goal, height, current weight, target weight, and
+  activity level forms render in the container and persist stable typed
+  answers.
 - [x] Welcome `Get Started` opens onboarding; Welcome `Skip` still opens Main.
-- [ ] Body Goal, Workout, and Review forms are not implemented, so onboarding
-  becomes incomplete after the Profile section.
+- [ ] Workout and Review forms are not implemented, so onboarding becomes
+  incomplete after the Body Goal section.
 - [ ] Full modular onboarding runtime is not yet product-complete.
 - [ ] Authenticated account handoff, backend sync, and finalization are not yet
   repository-backed.
@@ -277,6 +280,18 @@ Rule: Future module folders may exist as checked-in ownership placeholders, but 
 
 ## ✅ Latest Validation
 
+### 2026-07-30: Body Goal onboarding section
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :app:testDebugUnitTest :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL; onboarding 38 tests, app 25 tests, 0 failures,
+  0 errors.
+- [x] Scope: Body Goal goal/activity selections, numeric body-stat steps,
+  scroll-safe onboarding shell, ViewModel validation, and Body Goal boundary
+  progression into Workout.
+- [x] Workout, Review, account handoff, backend/Supabase sync, analytics, and
+  business finalization remain incomplete or unchanged.
+
 ### 2026-07-30: Profile Onboarding section and Welcome entry
 
 - [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
@@ -426,5 +441,5 @@ Known warning:
 
 ---
 
-**Last Updated:** 2026-07-29
-**Current Focus:** Re-prove the dense Stage 3 editor compile/tests, then complete device smoke for RPE, add-set, Previous copy, history, and force-stop recovery before Stage 4 exercise catalog and approved media work begins.
+**Last Updated:** 2026-07-30
+**Current Focus:** Complete Workout onboarding forms next, then finish Review so the onboarding shell can reach a real local completion state before any backend/account handoff work.

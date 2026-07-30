@@ -159,6 +159,146 @@ class OnboardingViewModelTest {
     }
 
     @Test
+    fun bodyGoalPrimaryGoalRequiresSupportedStableId() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.BodyGoal,
+                    OnboardingStepIds.BodyGoalPrimaryGoal,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Text("unknown")))
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(
+            OnboardingAction.AnswerChanged(OnboardingAnswer.Text("build_muscle")),
+        )
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun bodyGoalHeightRequiresSupportedRange() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.BodyGoal,
+                    OnboardingStepIds.BodyGoalHeight,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Decimal(50.0)))
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Decimal(170.0)))
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun bodyGoalCurrentWeightRequiresSupportedRange() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.BodyGoal,
+                    OnboardingStepIds.BodyGoalCurrentWeight,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Decimal(10.0)))
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Decimal(72.5)))
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun bodyGoalTargetWeightRequiresSupportedRange() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.BodyGoal,
+                    OnboardingStepIds.BodyGoalTargetWeight,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Decimal(0.0)))
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Decimal(68.0)))
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun bodyGoalActivityLevelRequiresSupportedStableId() = runTest {
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = position(
+                    OnboardingSectionIds.BodyGoal,
+                    OnboardingStepIds.BodyGoalActivityLevel,
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Text("unknown")))
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.canContinue)
+
+        viewModel.handleAction(OnboardingAction.AnswerChanged(OnboardingAnswer.Text("active")))
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.canContinue)
+    }
+
+    @Test
+    fun bodyGoalFinalStepContinuesToWorkoutSection() = runTest {
+        val currentPosition = position(
+            OnboardingSectionIds.BodyGoal,
+            OnboardingStepIds.BodyGoalActivityLevel,
+        )
+        val repository = TestOnboardingRepository(
+            checkpoint(
+                position = currentPosition,
+                draft = OnboardingDraft().withAnswer(
+                    currentPosition.stepId,
+                    OnboardingAnswer.Text("active"),
+                ),
+            ),
+        )
+        val viewModel = initializedViewModel(repository)
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            OnboardingStepIds.WorkoutExperience,
+            viewModel.uiState.value.position?.stepId,
+        )
+        assertTrue(
+            repository.checkpoint
+                ?.progress
+                ?.completedSectionIds
+                .orEmpty()
+                .contains(OnboardingSectionIds.BodyGoal),
+        )
+    }
+
+    @Test
     fun continueAcrossSectionBoundaryMarksPreviousSectionCompleted() = runTest {
         val currentPosition = position(
             OnboardingSectionIds.Profile,

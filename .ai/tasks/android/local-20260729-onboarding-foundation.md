@@ -51,18 +51,28 @@ dynamic flow without replacing stable section and step identities.
 - Split Welcome navigation so `Get Started` enters onboarding while `Skip`
   continues directly to Main.
 - Added Profile validation and Welcome routing tests.
+- Added usable Body Goal steps for primary goal, height, current weight,
+  target weight, and activity level using existing Tnyx card, input, and theme
+  primitives.
+- Added Body Goal-specific validation and stable persisted values for goal IDs,
+  activity-level IDs, and bounded numeric body stats.
+- Made the onboarding content area scroll-safe so longer section forms fit
+  without pushing the primary action off-screen.
+- Added Body Goal validation and section-boundary navigation tests.
 
 ## Next
 
-- Implement Body Goal steps: primary goal, height, current weight, target
-  weight, and activity level.
-- Keep Workout and Review delivery as later focused slices.
+- Implement Workout steps: experience, location, optional equipment, training
+  days, and duration.
+- Keep Review delivery as the final focused slice after Workout.
 
 ## Truth Boundary
 
 - Profile name, gender, and date-of-birth forms are implemented.
+- Body Goal primary goal, height, current weight, target weight, and activity
+  level forms are implemented.
 - Welcome `Get Started` now enters onboarding, but the flow becomes incomplete
-  at the first Body Goal step because that section is not implemented yet.
+  at the first Workout step because that section is not implemented yet.
 - Welcome `Skip` retains the existing direct-to-Main behavior.
 - Local checkpoint persistence is device-owned and is not connected to an
   authenticated account or final business repositories.
@@ -73,4 +83,5 @@ dynamic flow without replacing stable section and step identities.
 
 - `./gradlew.bat :features:onboarding:testDebugUnitTest
   :app:testDebugUnitTest :app:compileDebugKotlin --no-configuration-cache`
-- Result: BUILD SUCCESSFUL; 57 tests, 0 failures, 0 errors.
+- Result: BUILD SUCCESSFUL; onboarding 38 tests, app 25 tests, 0 failures,
+  0 errors.

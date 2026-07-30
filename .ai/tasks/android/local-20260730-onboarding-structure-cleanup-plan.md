@@ -35,6 +35,9 @@ basic UI for now, but upgrade later without another structural rewrite.
   active local profile as onboarded.
 - Signed-out users with a completed local profile now skip Welcome on cold
   start.
+- Checkpoint preparation can now seed existing Profile data into the draft and
+  align hidden intro/mobile positions for signed-in or prefilled users without
+  adding more intro screens or typing-only source steps.
 
 ## Current Checkpoint
 
@@ -126,6 +129,9 @@ basic UI for now, but upgrade later without another structural rewrite.
 - Moved initialization branching into a dedicated use case and moved UI-state
   assembly into a dedicated presentation factory.
 - Moved retry branching and answer draft mutation into dedicated use cases.
+- Added checkpoint-preparation bootstrap use cases so current Profile answers
+  can prefill onboarding draft state before recommendation seeding, route
+  context sync, and visible-flow alignment.
 - Removed the old root placeholder-style section fallback copy from the main
   onboarding screen.
 
@@ -481,6 +487,13 @@ Latest run for the completion states slice:
 
 - `./gradlew.bat :features:onboarding:testDebugUnitTest
   :app:compileDebugKotlin --no-configuration-cache`
+- Result: BUILD SUCCESSFUL
+
+Latest run for the profile-seeded bootstrap slice:
+
+- `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :app:compileDebugKotlin --no-configuration-cache --no-daemon
+  -Dkotlin.compiler.execution.strategy=in-process`
 - Result: BUILD SUCCESSFUL
 
 ## Truth Boundary

@@ -1,7 +1,7 @@
 # TNYX Android: Nutrition Feature Reference
 
 Document Status: Source-aligned nutrition reference
-Last Verified: 2026-06-27
+Last Verified: 2026-07-30
 Owner: Android Engineering
 Truth Boundary: This document describes checked-in Android source under `apps/features/nutrition` and shared reusable UI under `apps/core`. Runtime source remains final truth.
 
@@ -35,7 +35,11 @@ Not implemented by this change:
 - Meal add/edit/delete API writes.
 - Food search/catalog backend integration.
 
-Important boundary: current `MealDiaryViewModel` still creates sample meals in memory. UI behavior improved, but nutrition data source is not production truth yet.
+Important boundary: `MealDiaryViewModel` now reads through a repository
+boundary instead of owning sample meals directly. The current app bootstrap
+repository reads live Supabase nutrition targets when a real Supabase session
+exists, but diary meals are intentionally empty until meal-log tables and
+write flows land.
 
 ---
 
@@ -460,31 +464,32 @@ Current behavior:
 Current behavior:
 
 - Holds `MutableStateFlow<MealDiaryUiState>`.
-- Initializes seven `weekDays` around `LocalDate.now()`.
-- Initializes sample meals in memory:
-  - `Avocado Toast`
-  - `Grilled Chicken Salad`
-- Initializes sample macro totals:
-  - calories consumed: `460`
-  - protein consumed: `42.0`
-  - carbs consumed: `35.0`
-  - fats consumed: `18.0`
-- Handles date selection by updating `selectedDate` only.
+- Loads selected-date diary data through `NutritionRepository`.
+- Builds `weekDays` around the selected date.
+- Recomputes consumed macro totals from repository meals instead of storing
+  hardcoded totals in the ViewModel.
+- Reloads selected-date data when the user picks another date.
 - Emits navigation/overview effects for meal click, add meal, and overview request.
 
 Current data boundary:
 
-- Meal data is not loaded from Supabase.
-- Meal data is not loaded from backend API.
-- Meal data is not persisted locally.
-- Date selection does not reload date-specific meals yet.
-- Add meal effect exists, but add meal persistence is not wired here.
+- `MealDiaryViewModel` no longer owns hardcoded meals as business truth.
+- The current app bootstrap repository can read target values from
+  `user_nutrition_profiles` when a real Supabase auth session exists.
+- Diary meals are now empty until a real `meal_logs` slice exists.
+- Meal data is not loaded from real `meal_logs` tables yet.
+- Meal data is not loaded from backend API yet.
+- Add meal effect exists, but add/edit/delete persistence is not wired here.
+- Water, vitamin, and mineral progress no longer use seeded fake values.
 
 Why this matters:
 
 - UI is now closer to production visual quality.
-- Data source is still demo/sample.
-- Do not mark nutrition as persistent or backend-backed until repository/API/Supabase integration lands.
+- ViewModel is no longer the hardcoded source of truth.
+- Data source now reflects real profile targets without fake diary content, but
+  it is still not full persistent meal-log truth.
+- Do not mark nutrition as persistent or backend-backed until meal-log
+  repository/API/Supabase integration lands.
 
 ---
 
@@ -589,7 +594,8 @@ Minimum future slice:
 - Add RLS and ownership rules.
 - Add local/dev seed data.
 - Add repository contracts.
-- Replace `MealDiaryViewModel` sample meals with repository data.
+- Keep `MealDiaryViewModel` on repository data and replace seeded repository
+  meals with real persistence when tables land.
 - Keep screens dumb.
 - Validate signed-in/signed-out access.
 
@@ -612,11 +618,14 @@ Important security rule:
 
 Source-observed notes:
 
-- `MealDiaryViewModel` still owns hardcoded sample meals.
-- `DateSelected` updates state but does not reload meals for that date.
+- `MealDiaryViewModel` now reloads selected-date data through
+  `NutritionRepository`.
+- The current repository returns empty diary meals until live meal tables
+  exist.
 - `AddMealClicked` emits an effect, but actual add meal screen/persistence is not validated here.
 - `NutritionNutrientCard` accepts `icon: Any`, which is flexible but weakly typed.
-- `progress` defaults to `0f`; real consumed/goal progress should be calculated by ViewModel/domain mapper.
+- Water, vitamin, and mineral progress are bootstrap repository values backed
+  by the current bootstrap boundary, not fully persisted diary truth.
 - `MealGroupHeader` is private in `MealDiaryScreen.kt`; if multiple screens need the same grouping UI, move it to `meal_diary/widgets` or nutrition shared widgets.
 - Current nutrition domain models are in `features/nutrition/domain/models`; cross-phone/watch reuse should move stable domain contracts into `apps/shared` later.
 - Current UI polish does not mean nutrition feature is production data-complete.
@@ -694,7 +703,8 @@ Update this document when any of these change:
 - Meal diary runtime behavior changes.
 - Calendar behavior/API changes.
 - `MealDiaryUiState`, actions, or effects change.
-- Nutrition data source changes from sample data to repository/API/Supabase.
+- Nutrition data source changes between seeded bootstrap, repository, API, or
+  Supabase-backed targets.
 - Nutrition folder structure changes.
 - New reusable nutrition widgets are promoted to `core` or `presentation/shared/widgets`.
 - Security/persistence boundary changes.

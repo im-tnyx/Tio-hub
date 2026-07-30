@@ -2,34 +2,54 @@ package com.tnyx.features.nutrition.presentation.targets
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tnyx.features.nutrition.domain.models.NutritionTargetsSnapshot
+import com.tnyx.features.nutrition.domain.repository.NutritionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+import javax.inject.Inject
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @HiltViewModel
-class NutritionTargetsViewModel @Inject constructor() : ViewModel() {
+class NutritionTargetsViewModel @Inject constructor(
+    private val nutritionRepository: NutritionRepository,
+) : ViewModel() {
     private val _uiState = MutableStateFlow(NutritionTargetsUiState())
     val uiState = _uiState.asStateFlow()
 
     private val _effect = MutableSharedFlow<NutritionTargetsEffect>()
     val effect = _effect.asSharedFlow()
 
+    init {
+        loadTargets()
+    }
+
     fun handleAction(action: NutritionTargetsAction) {
         when (action) {
             NutritionTargetsAction.BackClicked -> emitEffect(NutritionTargetsEffect.NavigateBack)
             is NutritionTargetsAction.DynamicCaloriesChanged -> {
-                _uiState.update { it.copy(dynamicCaloriesEnabled = action.enabled) }
+                persistUpdatedState(
+                    updatedState = _uiState.value.copy(dynamicCaloriesEnabled = action.enabled),
+                    successMessage = if (action.enabled) {
+                        "Dynamic calories enabled."
+                    } else {
+                        "Dynamic calories disabled."
+                    },
+                    successLabel = "Updated just now",
+                )
             }
             is NutritionTargetsAction.EditTargetClicked -> {
                 _uiState.update { state ->
                     state.copy(
                         activeEditField = action.field,
-                        editValue = state.valueFor(action.field)
+                        editValue = state.valueFor(action.field),
                     )
                 }
             }
@@ -44,6 +64,29 @@ class NutritionTargetsViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+    private fun loadTargets() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            runCatching { nutritionRepository.getNutritionTargets() }
+                .onSuccess { targets ->
+                    _uiState.value = targets.toUiState()
+                }
+                .onFailure {
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            isLoading = false,
+                            lastUpdatedLabel = "Sync failed",
+                        )
+                    }
+                    _effect.emit(
+                        NutritionTargetsEffect.ShowMessage(
+                            "Nutrition targets could not be loaded.",
+                        ),
+                    )
+                }
+        }
+    }
+
     private fun saveEditedTarget() {
         val state = _uiState.value
         val field = state.activeEditField ?: return
@@ -54,7 +97,7 @@ class NutritionTargetsViewModel @Inject constructor() : ViewModel() {
             return
         }
 
-        _uiState.update {
+        val updatedState = state.let {
             when (field) {
                 NutritionTargetField.Calories -> it.copy(caloriesTarget = numericValue.toInt())
                 NutritionTargetField.CalorieSurplus -> it.copy(calorieSurplusTarget = numericValue.toInt())
@@ -64,41 +107,82 @@ class NutritionTargetsViewModel @Inject constructor() : ViewModel() {
                 NutritionTargetField.Fiber -> it.copy(fiberTarget = numericValue)
                 NutritionTargetField.Water -> it.copy(waterTargetLitres = numericValue)
                 NutritionTargetField.GlassSize -> it.copy(glassSizeMl = numericValue.toInt())
-
-                // नए फील्ड्स यहाँ जोड़े गए हैं:
                 NutritionTargetField.Steps -> it.copy(stepsTarget = numericValue.toInt())
                 NutritionTargetField.TargetWeight -> it.copy(targetWeight = numericValue)
-                NutritionTargetField.SleepSchedule -> it.copy(sleepTargetHours = numericValue.toCleanString())
-            }.copy(
-                activeEditField = null,
-                editValue = "",
-                lastUpdatedLabel = "Updated just now"
-            )
-        }
-        emitEffect(NutritionTargetsEffect.ShowMessage("${field.title} updated."))
+                NutritionTargetField.SleepSchedule -> {
+                    val sleepTargetHours = numericValue.toCleanString()
+                    it.copy(
+                        sleepTargetHours = sleepTargetHours,
+                        formattedWakeTime = it.recalculateWakeTime(sleepTargetHours),
+                    )
+                }
+            }
+        }.copy(
+            activeEditField = null,
+            editValue = "",
+        )
+
+        persistUpdatedState(
+            updatedState = updatedState,
+            successMessage = "${field.title} updated.",
+            successLabel = "Updated just now",
+        )
     }
 
     private fun recalculateTargets() {
-        _uiState.update {
-            it.copy(
-                dynamicCaloriesEnabled = true,
-                caloriesTarget = 2580,
-                calorieSurplusTarget = 250,
-                proteinTarget = 145.0,
-                carbsTarget = 275.0,
-                fatTarget = 72.0,
-                fiberTarget = 32.0,
-                waterTargetLitres = 3.3,
+        val currentState = _uiState.value
+        val calculatedCalories = (
+            currentState.proteinTarget * 4.0 +
+                currentState.carbsTarget * 4.0 +
+                currentState.fatTarget * 9.0
+            ).roundToInt()
 
-                // अगर आप चाहें तो Recalculate पर नए फील्ड्स भी अपडेट कर सकते हैं
-                stepsTarget = 10000,
-                targetWeight = 70.0,
-                sleepTargetHours = "8.0",
-
-                lastUpdatedLabel = "Recalculated just now"
+        if (calculatedCalories <= 0) {
+            emitEffect(
+                NutritionTargetsEffect.ShowMessage(
+                    "Set macros first to recalculate calories.",
+                ),
             )
+            return
         }
-        emitEffect(NutritionTargetsEffect.ShowMessage("Targets recalculated."))
+
+        persistUpdatedState(
+            updatedState = currentState.copy(
+                dynamicCaloriesEnabled = true,
+                caloriesTarget = calculatedCalories,
+            ),
+            successMessage = "Targets recalculated.",
+            successLabel = "Recalculated just now",
+        )
+    }
+
+    private fun persistUpdatedState(
+        updatedState: NutritionTargetsUiState,
+        successMessage: String,
+        successLabel: String,
+    ) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSaving = true) }
+            runCatching {
+                nutritionRepository.updateNutritionTargets(updatedState.toSnapshot())
+            }.onSuccess {
+                _uiState.value = updatedState.copy(
+                    isLoading = false,
+                    isSaving = false,
+                    lastUpdatedLabel = successLabel,
+                )
+                _effect.emit(NutritionTargetsEffect.ShowMessage(successMessage))
+            }.onFailure {
+                _uiState.update { currentState ->
+                    currentState.copy(isSaving = false)
+                }
+                _effect.emit(
+                    NutritionTargetsEffect.ShowMessage(
+                        "Nutrition targets could not be updated.",
+                    ),
+                )
+            }
+        }
     }
 
     private fun emitEffect(effect: NutritionTargetsEffect) {
@@ -115,13 +199,75 @@ class NutritionTargetsViewModel @Inject constructor() : ViewModel() {
             NutritionTargetField.Fiber -> fiberTarget.toCleanString()
             NutritionTargetField.Water -> waterTargetLitres.toCleanString()
             NutritionTargetField.GlassSize -> glassSizeMl.toString()
-
-            // नए फील्ड्स यहाँ जोड़े गए हैं:
             NutritionTargetField.Steps -> stepsTarget.toString()
             NutritionTargetField.TargetWeight -> targetWeight.toCleanString()
             NutritionTargetField.SleepSchedule -> sleepTargetHours
         }
 
-    private fun Double.toCleanString(): String =
-        if (this % 1.0 == 0.0) toInt().toString() else toString()
+    private fun NutritionTargetsSnapshot.toUiState(): NutritionTargetsUiState {
+        return NutritionTargetsUiState(
+            isLoading = false,
+            isSaving = false,
+            dynamicCaloriesEnabled = dynamicCaloriesEnabled,
+            caloriesTarget = caloriesTarget,
+            calorieSurplusTarget = calorieSurplusTarget,
+            proteinTarget = proteinTarget,
+            carbsTarget = carbsTarget,
+            fatTarget = fatTarget,
+            fiberTarget = fiberTarget,
+            waterTargetLitres = waterTargetLitres,
+            glassSizeMl = glassSizeMl,
+            lastUpdatedLabel = "Synced",
+            stepsTarget = stepsTarget,
+            targetWeight = targetWeight,
+            sleepTargetHours = sleepTargetHours,
+            formattedSleepTime = formattedSleepTime,
+            formattedWakeTime = formattedWakeTime,
+        )
+    }
+
+    private fun NutritionTargetsUiState.toSnapshot(): NutritionTargetsSnapshot {
+        return NutritionTargetsSnapshot(
+            dynamicCaloriesEnabled = dynamicCaloriesEnabled,
+            caloriesTarget = caloriesTarget,
+            calorieSurplusTarget = calorieSurplusTarget,
+            proteinTarget = proteinTarget,
+            carbsTarget = carbsTarget,
+            fatTarget = fatTarget,
+            fiberTarget = fiberTarget,
+            waterTargetLitres = waterTargetLitres,
+            glassSizeMl = glassSizeMl,
+            stepsTarget = stepsTarget,
+            targetWeight = targetWeight,
+            sleepTargetHours = sleepTargetHours,
+            formattedSleepTime = formattedSleepTime,
+            formattedWakeTime = formattedWakeTime,
+        )
+    }
+
+    private fun NutritionTargetsUiState.recalculateWakeTime(updatedSleepHours: String): String {
+        val bedTime = parseUiTime(formattedSleepTime) ?: return formattedWakeTime
+        val duration = updatedSleepHours.toDoubleOrNull()?.takeIf { it > 0.0 } ?: return formattedWakeTime
+        return bedTime
+            .plusMinutes((duration * 60.0).roundToInt().toLong())
+            .format(uiTimeFormatter)
+    }
+
+    private fun parseUiTime(value: String): LocalTime? {
+        val normalized = value.trim()
+        if (normalized.isBlank()) return null
+        return runCatching { LocalTime.parse(normalized, uiTimeFormatter) }.getOrNull()
+    }
+
+    private fun Double.toCleanString(): String {
+        return if (this % 1.0 == 0.0) {
+            toInt().toString()
+        } else {
+            String.format(Locale.US, "%.1f", this)
+        }
+    }
+
+    private companion object {
+        val uiTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.US)
+    }
 }

@@ -59,20 +59,27 @@ dynamic flow without replacing stable section and step identities.
 - Made the onboarding content area scroll-safe so longer section forms fit
   without pushing the primary action off-screen.
 - Added Body Goal validation and section-boundary navigation tests.
+- Added usable Workout steps for experience, location, optional equipment,
+  training days, and duration using shared onboarding choice cards.
+- Added Workout-specific validation and stable persisted values for experience
+  IDs, workout-location IDs, training-day IDs, and duration minute values.
+- Added Workout validation and section-boundary navigation tests.
 
 ## Next
 
-- Implement Workout steps: experience, location, optional equipment, training
-  days, and duration.
-- Keep Review delivery as the final focused slice after Workout.
+- Implement the Review step so onboarding can reach a real local completion
+  state.
+- Keep backend/account handoff deferred until Review is in place.
 
 ## Truth Boundary
 
 - Profile name, gender, and date-of-birth forms are implemented.
 - Body Goal primary goal, height, current weight, target weight, and activity
   level forms are implemented.
+- Workout experience, location, optional equipment, training days, and duration
+  forms are implemented.
 - Welcome `Get Started` now enters onboarding, but the flow becomes incomplete
-  at the first Workout step because that section is not implemented yet.
+  at the Review step because that section is not implemented yet.
 - Welcome `Skip` retains the existing direct-to-Main behavior.
 - Local checkpoint persistence is device-owned and is not connected to an
   authenticated account or final business repositories.
@@ -83,5 +90,5 @@ dynamic flow without replacing stable section and step identities.
 
 - `./gradlew.bat :features:onboarding:testDebugUnitTest
   :app:testDebugUnitTest :app:compileDebugKotlin --no-configuration-cache`
-- Result: BUILD SUCCESSFUL; onboarding 38 tests, app 25 tests, 0 failures,
+- Result: BUILD SUCCESSFUL; onboarding 44 tests, app 25 tests, 0 failures,
   0 errors.

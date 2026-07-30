@@ -13,7 +13,7 @@ Last Updated: 2026-07-30
 - Do not preload `.ai/tasks/` or `.ai/archive/`.
 - Backend runtime remains deferred. Onboarding now has stable flow contracts,
   local checkpoint persistence, a typed container, usable Profile steps, and
-  usable Body Goal steps. Welcome enters onboarding; Workout and Review forms
-  remain follow-up slices.
+  usable Body Goal and Workout steps. Welcome enters onboarding; Review remains
+  the final follow-up slice.
 - Preserve all pre-existing user changes and live-schema documentation.
 - Update this pointer when switching the primary objective.

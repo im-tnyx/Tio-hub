@@ -298,6 +298,24 @@ class OnboardingViewModel @Inject constructor(
                 this is OnboardingAnswer.Text && value in ACTIVITY_LEVEL_IDS
             }
 
+            OnboardingStepIds.WorkoutExperience -> {
+                this is OnboardingAnswer.Text && value in WORKOUT_EXPERIENCE_IDS
+            }
+
+            OnboardingStepIds.WorkoutLocation -> {
+                this is OnboardingAnswer.Text && value in WORKOUT_LOCATION_IDS
+            }
+
+            OnboardingStepIds.WorkoutTrainingDays -> {
+                this is OnboardingAnswer.Selections &&
+                    values.isNotEmpty() &&
+                    values.all(WORKOUT_TRAINING_DAY_IDS::contains)
+            }
+
+            OnboardingStepIds.WorkoutDuration -> {
+                this is OnboardingAnswer.Decimal && value in WORKOUT_DURATION_MINUTES
+            }
+
             else -> isMeaningful()
         }
     }
@@ -335,6 +353,33 @@ class OnboardingViewModel @Inject constructor(
             "active",
             "very_active",
             "dynamic",
+        )
+        val WORKOUT_EXPERIENCE_IDS = setOf(
+            "fresh",
+            "beginner",
+            "intermediate",
+            "advanced",
+        )
+        val WORKOUT_LOCATION_IDS = setOf(
+            "gym",
+            "home",
+            "both",
+        )
+        val WORKOUT_TRAINING_DAY_IDS = setOf(
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday",
+        )
+        val WORKOUT_DURATION_MINUTES = setOf(
+            30.0,
+            45.0,
+            60.0,
+            90.0,
+            120.0,
         )
         val HEIGHT_CM_RANGE = 80.0..260.0
         val WEIGHT_KG_RANGE = 20.0..400.0

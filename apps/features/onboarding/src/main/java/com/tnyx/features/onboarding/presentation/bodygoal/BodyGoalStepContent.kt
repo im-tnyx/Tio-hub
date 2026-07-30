@@ -2,27 +2,22 @@ package com.tnyx.features.onboarding.presentation.bodygoal
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import com.tnyx.core.theme.TnyxTheme
-import com.tnyx.core.ui.components.cards.TnyxCard
-import com.tnyx.core.ui.components.cards.TnyxCardVariant
 import com.tnyx.core.ui.components.inputs.TnyxTextField
 import com.tnyx.features.onboarding.domain.flow.OnboardingStepIds
 import com.tnyx.features.onboarding.domain.model.OnboardingAnswer
 import com.tnyx.features.onboarding.domain.model.OnboardingStepId
+import com.tnyx.features.onboarding.presentation.common.OnboardingChoiceCard
+import com.tnyx.features.onboarding.presentation.common.OnboardingSelectionMode
 import com.tnyx.features.onboarding.presentation.common.OnboardingStepHeading
 import com.tnyx.features.onboarding.presentation.common.OnboardingValidationMessage
 import java.math.BigDecimal
@@ -93,7 +88,7 @@ private fun BodyGoalPrimaryGoalStep(
             description = "Choose one primary direction so Tio can shape your targets around it.",
         )
         PrimaryGoalOption.entries.forEach { option ->
-            SelectionCard(
+            OnboardingChoiceCard(
                 title = option.label,
                 description = option.description,
                 selected = selectedId == option.id,
@@ -190,7 +185,7 @@ private fun BodyGoalActivityLevelStep(
             description = "Your day-to-day movement helps Tio estimate calories, recovery, and effort.",
         )
         ActivityLevelOption.entries.forEach { option ->
-            SelectionCard(
+            OnboardingChoiceCard(
                 title = option.label,
                 description = option.description,
                 badge = option.badge,
@@ -252,60 +247,6 @@ private fun DecimalInputStep(
             errorMessage = validationMessage,
             helperMessage = helperMessage,
         )
-    }
-}
-
-@Composable
-private fun SelectionCard(
-    title: String,
-    description: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    badge: String? = null,
-) {
-    TnyxCard(
-        modifier = modifier.fillMaxWidth(),
-        variant = TnyxCardVariant.Outlined,
-        onClick = onClick,
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceM),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            RadioButton(
-                selected = selected,
-                onClick = null,
-                colors = RadioButtonDefaults.colors(
-                    selectedColor = TnyxTheme.colors.primary,
-                    unselectedColor = TnyxTheme.colors.textMuted,
-                ),
-            )
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceXXS),
-            ) {
-                Text(
-                    text = title,
-                    style = TnyxTheme.typography.titleMedium,
-                    color = TnyxTheme.colors.textPrimary,
-                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                )
-                if (!badge.isNullOrBlank()) {
-                    Text(
-                        text = badge,
-                        style = TnyxTheme.typography.labelMedium,
-                        color = TnyxTheme.colors.primary,
-                    )
-                }
-                Text(
-                    text = description,
-                    style = TnyxTheme.typography.bodyMedium,
-                    color = TnyxTheme.colors.textSecondary,
-                )
-            }
-        }
     }
 }
 

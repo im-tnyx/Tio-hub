@@ -116,9 +116,11 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
 - [x] Body Goal primary goal, height, current weight, target weight, and
   activity level forms render in the container and persist stable typed
   answers.
+- [x] Workout experience, location, optional equipment, training days, and
+  duration forms render in the container and persist stable typed answers.
 - [x] Welcome `Get Started` opens onboarding; Welcome `Skip` still opens Main.
-- [ ] Workout and Review forms are not implemented, so onboarding becomes
-  incomplete after the Body Goal section.
+- [ ] Review is not implemented, so onboarding becomes incomplete after the
+  Workout section.
 - [ ] Full modular onboarding runtime is not yet product-complete.
 - [ ] Authenticated account handoff, backend sync, and finalization are not yet
   repository-backed.
@@ -279,6 +281,18 @@ Rule: Future module folders may exist as checked-in ownership placeholders, but 
 ---
 
 ## ✅ Latest Validation
+
+### 2026-07-30: Workout onboarding section
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :app:testDebugUnitTest :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL; onboarding 44 tests, app 25 tests, 0 failures,
+  0 errors.
+- [x] Scope: Workout experience/location/equipment/training-days/duration
+  forms, shared onboarding choice cards, ViewModel validation, and Workout
+  boundary progression into Review.
+- [x] Review, account handoff, backend/Supabase sync, analytics, and business
+  finalization remain incomplete or unchanged.
 
 ### 2026-07-30: Body Goal onboarding section
 
@@ -442,4 +456,4 @@ Known warning:
 ---
 
 **Last Updated:** 2026-07-30
-**Current Focus:** Complete Workout onboarding forms next, then finish Review so the onboarding shell can reach a real local completion state before any backend/account handoff work.
+**Current Focus:** Complete the Review step so the onboarding shell can reach a real local completion state before any backend/account handoff work.

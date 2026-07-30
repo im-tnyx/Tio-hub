@@ -27,6 +27,7 @@ import com.tnyx.core.ui.components.layouts.TnyxScreenHeader
 import com.tnyx.features.onboarding.domain.flow.OnboardingSectionIds
 import com.tnyx.features.onboarding.presentation.bodygoal.BodyGoalStepContent
 import com.tnyx.features.onboarding.presentation.profile.ProfileStepContent
+import com.tnyx.features.onboarding.presentation.workout.WorkoutStepContent
 
 @Composable
 fun OnboardingScreen(
@@ -166,6 +167,20 @@ private fun OnboardingContent(
                 OnboardingSectionIds.BodyGoal -> {
                     key(position.stepId.value) {
                         BodyGoalStepContent(
+                            stepId = position.stepId,
+                            answer = state.currentAnswer,
+                            showValidationError =
+                                state.validationError == OnboardingValidationError.RequiredAnswerInvalid,
+                            onAnswerChanged = { answer ->
+                                onAction(OnboardingAction.AnswerChanged(answer))
+                            },
+                        )
+                    }
+                }
+
+                OnboardingSectionIds.Workout -> {
+                    key(position.stepId.value) {
+                        WorkoutStepContent(
                             stepId = position.stepId,
                             answer = state.currentAnswer,
                             showValidationError =

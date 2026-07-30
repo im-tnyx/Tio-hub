@@ -35,12 +35,17 @@ Implemented:
 - Body Goal primary-goal, height, current-weight, target-weight, and
   activity-level step content,
 - Body Goal-specific validation and stable persisted goal/activity IDs,
+- Workout experience, location, optional equipment, training-days, and
+  duration step content,
+- Workout-specific validation and stable persisted workout IDs and duration
+  minute values,
+- shared onboarding choice cards for single-select and multi-select steps,
 - scroll-safe content handling for longer onboarding forms,
 - Welcome `Get Started` entry into `RootRoute.Onboarding`.
 
 Not implemented:
 
-- Workout and Review forms,
+- Review form,
 - authenticated account handoff or business-repository finalization,
 - backend or Supabase synchronization,
 - conditional remote-config paths,
@@ -52,7 +57,7 @@ Not implemented:
 |---|---|---|
 | `profile` | `name`, `gender`, `date_of_birth` (forms implemented) | Profile |
 | `body_goal` | `primary_goal`, `height`, `current_weight`, `target_weight`, `activity_level` (forms implemented) | Profile/Nutrition contracts as approved |
-| `workout` | `experience`, `location`, optional `equipment`, `training_days`, `duration` | Workout |
+| `workout` | `experience`, `location`, optional `equipment`, `training_days`, `duration` (forms implemented) | Workout |
 | `review` | `summary` | Onboarding orchestration only |
 
 The Workout section is skippable in version 1. A section being skippable does
@@ -73,10 +78,18 @@ Body Goal answers currently use:
 - one activity-level ID from `sedentary`, `light`, `active`, `very_active`,
   or `dynamic`.
 
+Workout answers currently use:
+
+- one experience ID from `fresh`, `beginner`, `intermediate`, or `advanced`,
+- one workout-location ID from `gym`, `home`, or `both`,
+- optional equipment selections from `dumbbells`, `bench`, `mat`, `barbell`,
+  `bands`, and `kettlebell`,
+- one or more training-day IDs from `monday` through `sunday`,
+- one duration minute value from `30`, `45`, `60`, `90`, or `120`.
+
 Welcome `Get Started` now opens onboarding and Welcome `Skip` still opens Main.
-The user-facing flow is partial: completing Body Goal advances to the
-unimplemented first Workout form. This must not be described as complete
-onboarding.
+The user-facing flow is partial: completing Workout advances to the
+unimplemented Review form. This must not be described as complete onboarding.
 
 ## Stable Identity Rules
 
@@ -139,6 +152,6 @@ Profile, Nutrition, Workout, Health, or Recovery data.
 2. Local draft/progress repository and resume tests. Completed.
 3. Onboarding graph, container, ViewModel, state, and actions. Completed.
 4. Profile, Body Goal, Workout, and Review sections delivered one at a time.
-   Profile and Body Goal completed; Workout and Review pending.
+   Profile, Body Goal, and Workout completed; Review pending.
 5. Backend finalization and optional dynamic flow only after Auth/API contracts
    are approved.

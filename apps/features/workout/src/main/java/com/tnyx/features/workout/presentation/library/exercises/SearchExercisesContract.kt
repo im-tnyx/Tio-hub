@@ -13,6 +13,7 @@ data class SearchExercisesUiState(
 sealed interface SearchExercisesAction {
     data class QueryChanged(val query: String) : SearchExercisesAction
     data object SearchIconClicked : SearchExercisesAction
+    data object SearchModeDismissed : SearchExercisesAction
     data object FilterIconClicked : SearchExercisesAction
     data object CreateIconClicked : SearchExercisesAction
     data object BackClicked : SearchExercisesAction

@@ -8,6 +8,7 @@ import com.tnyx.features.workout.presentation.WorkoutHistoryRoute
 import com.tnyx.features.workout.presentation.WorkoutRoute
 import com.tnyx.features.workout.presentation.library.ExerciseLibraryRoute
 import com.tnyx.features.workout.presentation.library.createexercise.CreateExerciseRoute
+import com.tnyx.features.workout.presentation.library.exercises.SearchExercisesRoute
 import com.tnyx.routing.routes.MainRoute
 import kotlinx.serialization.Serializable
 
@@ -31,10 +32,20 @@ fun NavGraphBuilder.workoutGraph(
         composable<WorkoutDestination.Library> {
             ExerciseLibraryRoute(
                 onNavigateBack = { navController.popBackStack() },
-                onSearchClick = {},
+                onSearchClick = {
+                    navController.navigate(WorkoutDestination.SearchExercises)
+                },
                 onCreateProgramClick = {},
                 onCreateRoutineClick = {},
                 onCreateExerciseClick = {
+                    navController.navigate(WorkoutDestination.CreateExercise)
+                }
+            )
+        }
+        composable<WorkoutDestination.SearchExercises> {
+            SearchExercisesRoute(
+                onNavigateBack = { navController.popBackStack() },
+                onCreateClick = {
                     navController.navigate(WorkoutDestination.CreateExercise)
                 }
             )
@@ -58,6 +69,9 @@ sealed interface WorkoutDestination {
 
     @Serializable
     data object Library : WorkoutDestination
+
+    @Serializable
+    data object SearchExercises : WorkoutDestination
 
     @Serializable
     data object CreateExercise : WorkoutDestination

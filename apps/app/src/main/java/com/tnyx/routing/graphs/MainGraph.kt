@@ -64,7 +64,9 @@ fun NavGraphBuilder.mainGraph(
     composable<MainRoute.WorkoutLibrary> {
         ExerciseLibraryRoute(
             onNavigateBack = { navController.popBackStack() },
-            onSearchClick = {},
+            onSearchClick = {
+                navController.navigate(WorkoutDestination.SearchExercises)
+            },
             onCreateProgramClick = {},
             onCreateRoutineClick = {},
             onCreateExerciseClick = {

@@ -33,7 +33,7 @@ Not implemented by this change:
 - Auth-owned user nutrition data.
 - RLS-tested nutrition tables.
 - Meal add/edit/delete API writes.
-- Food search/catalog backend integration.
+- Food search/catalog backend integration (documented in `NUTRITION_SEARCH_ARCHITECTURE.md`: FatSecret India, Edamam NLP, Open Food Facts, USDA Fallback).
 
 Important boundary: `MealDiaryViewModel` now reads through a repository
 boundary instead of owning sample meals directly. The current app bootstrap

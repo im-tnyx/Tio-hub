@@ -7,11 +7,15 @@ import androidx.compose.ui.Modifier
 fun ExerciseLibraryRoute(
     onNavigateBack: () -> Unit,
     onSearchClick: () -> Unit,
+    onCreateProgramClick: () -> Unit,
+    onCreateRoutineClick: () -> Unit,
     onCreateExerciseClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     ExerciseLibraryScreen(
         onSearchClick = onSearchClick,
+        onCreateProgramClick = onCreateProgramClick,
+        onCreateRoutineClick = onCreateRoutineClick,
         onCreateExerciseClick = onCreateExerciseClick,
         modifier = modifier
     )

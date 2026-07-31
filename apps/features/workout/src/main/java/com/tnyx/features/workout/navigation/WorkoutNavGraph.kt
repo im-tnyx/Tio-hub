@@ -30,6 +30,8 @@ fun NavGraphBuilder.workoutGraph(
             ExerciseLibraryRoute(
                 onNavigateBack = { navController.popBackStack() },
                 onSearchClick = {},
+                onCreateProgramClick = {},
+                onCreateRoutineClick = {},
                 onCreateExerciseClick = {}
             )
         }

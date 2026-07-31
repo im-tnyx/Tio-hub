@@ -6,20 +6,25 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tnyx.core.theme.TnyxTheme
+import com.tnyx.features.workout.presentation.library.widgets.LibraryActionBottomSheet
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExerciseLibraryScreen(
     onSearchClick: () -> Unit = {},
+    onCreateProgramClick: () -> Unit = {},
+    onCreateRoutineClick: () -> Unit = {},
     onCreateExerciseClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+    var showActionBottomSheet by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -42,10 +47,10 @@ fun ExerciseLibraryScreen(
                             modifier = Modifier.size(24.dp)
                         )
                     }
-                    IconButton(onClick = onCreateExerciseClick) {
+                    IconButton(onClick = { showActionBottomSheet = true }) {
                         Icon(
                             imageVector = Icons.Outlined.Add,
-                            contentDescription = "Create exercise",
+                            contentDescription = "Open creation menu",
                             tint = TnyxTheme.colors.textPrimary,
                             modifier = Modifier.size(26.dp)
                         )
@@ -64,6 +69,15 @@ fun ExerciseLibraryScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(TnyxTheme.colors.background)
+        )
+
+        // Creation Menu Bottom Sheet (+ Icon Trigger)
+        LibraryActionBottomSheet(
+            visible = showActionBottomSheet,
+            onDismissRequest = { showActionBottomSheet = false },
+            onCreateProgramClick = onCreateProgramClick,
+            onCreateRoutineClick = onCreateRoutineClick,
+            onCreateExerciseClick = onCreateExerciseClick
         )
     }
 }

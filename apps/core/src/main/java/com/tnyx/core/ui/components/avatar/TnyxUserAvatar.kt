@@ -66,10 +66,10 @@ enum class TnyxAvatarSize(
         fallbackIconSize = 20.dp,
     ),
     Large(
-        containerSize = 76.dp,
-        imageSize = 64.dp,
-        badgeSize = 22.dp,
-        fallbackIconSize = 32.dp,
+        containerSize = 80.dp,
+        imageSize = 72.dp,
+        badgeSize = 24.dp,
+        fallbackIconSize = 36.dp,
     ),
     XLarge(
         containerSize = 280.dp,

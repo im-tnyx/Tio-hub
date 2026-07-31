@@ -40,18 +40,14 @@ import com.tnyx.features.nutrition.R
 import kotlin.math.PI
 
 private const val EXPAND_DURATION_MS = 420
-private val FAB_SIZE: Dp = 56.dp
-private val SUB_FAB_SIZE: Dp = 48.dp
-private val TRAVEL_DISTANCE: Dp = 76.dp
+private val FAB_SIZE: Dp = 36.dp
+private val SUB_FAB_SIZE: Dp = 36.dp
+private val ICON_SIZE: Dp = 26.dp
+private val TRAVEL_DISTANCE: Dp = 56.dp
 
 /**
- * Expandable Meal FAB — uses custom vector drawables (ic_fab_main, ic_mic, ic_camera, ic_keyboard).
- *
- * Collapsed: circular button with ic_fab_main icon, bottom-right.
- * Expanded:  main icon switches to close (×) with scale+fade animation;
- *            3 sub-action buttons (ic_mic, ic_camera, ic_keyboard) fan out in 420 ms
- *            with translate + fade + scale + rotate transitions.
- *            Tapping the backdrop collapses the FAB.
+ * Expandable Meal FAB — updated to shape size 36.dp and icon size 26.dp.
+ * Uses custom vector drawables (ic_fab_main, ic_mic, ic_camera, ic_keyboard).
  */
 @Composable
 fun ExpandableMealFab(
@@ -93,6 +89,7 @@ fun ExpandableMealFab(
             iconColor = iconColor,
             borderColor = subBorderColor,
             size = SUB_FAB_SIZE,
+            iconSize = ICON_SIZE,
             onClick = onMicClicked,
             modifier = Modifier.align(Alignment.BottomEnd),
         )
@@ -108,6 +105,7 @@ fun ExpandableMealFab(
             iconColor = iconColor,
             borderColor = subBorderColor,
             size = SUB_FAB_SIZE,
+            iconSize = ICON_SIZE,
             onClick = onCameraClicked,
             modifier = Modifier.align(Alignment.BottomEnd),
         )
@@ -123,6 +121,7 @@ fun ExpandableMealFab(
             iconColor = iconColor,
             borderColor = subBorderColor,
             size = SUB_FAB_SIZE,
+            iconSize = ICON_SIZE,
             onClick = onSearchClicked,
             modifier = Modifier.align(Alignment.BottomEnd),
         )
@@ -132,7 +131,7 @@ fun ExpandableMealFab(
             onClick = onToggle,
             shape = CircleShape,
             color = if (isExpanded) Color.Transparent else containerColor,
-            shadowElevation = if (isExpanded) 0.dp else 6.dp,
+            shadowElevation = if (isExpanded) 0.dp else 4.dp,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .size(FAB_SIZE)
@@ -153,14 +152,14 @@ fun ExpandableMealFab(
                             imageVector = Icons.Rounded.Close,
                             contentDescription = null,
                             tint = if (isDark) Color.White else Color(0xFF111111),
-                            modifier = Modifier.size(24.dp),
+                            modifier = Modifier.size(20.dp),
                         )
                     } else {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_fab_main),
                             contentDescription = null,
                             tint = iconColor,
-                            modifier = Modifier.size(28.dp),
+                            modifier = Modifier.size(ICON_SIZE),
                         )
                     }
                 }
@@ -180,6 +179,7 @@ private fun AnimatedSubFab(
     iconColor: Color,
     borderColor: Color,
     size: Dp,
+    iconSize: Dp,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -212,7 +212,7 @@ private fun AnimatedSubFab(
                 painter = painterResource(id = drawableResId),
                 contentDescription = null,
                 tint = iconColor,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(iconSize),
             )
         }
     }

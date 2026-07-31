@@ -1,4 +1,4 @@
-package com.tnyx.features.profile.presentation.widgets
+package com.tnyx.core.ui.components.sheets
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import com.tnyx.core.theme.TnyxTheme
 import com.tnyx.core.ui.components.buttons.TnyxPrimaryButton
 import com.tnyx.core.ui.components.buttons.TnyxSecondaryButton
-import com.tnyx.core.ui.components.sheets.TnyxModalBottomSheet
 
 @Composable
 fun ImageSourceBottomSheet(

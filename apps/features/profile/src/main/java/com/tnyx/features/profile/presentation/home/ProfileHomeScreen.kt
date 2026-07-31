@@ -26,7 +26,7 @@ import com.tnyx.core.ui.components.avatar.TnyxAvatarSize
 import com.tnyx.core.ui.components.avatar.TnyxUserAvatar
 import com.tnyx.core.ui.components.layouts.TnyxScreenHeader
 
-import com.tnyx.features.profile.presentation.widgets.ImageSourceBottomSheet
+import com.tnyx.core.ui.components.sheets.ImageSourceBottomSheet
 
 @Composable
 fun ProfileHomeScreen(

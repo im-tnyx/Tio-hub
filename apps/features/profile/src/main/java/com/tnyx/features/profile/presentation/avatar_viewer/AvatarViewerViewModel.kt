@@ -47,6 +47,18 @@ class AvatarViewerViewModel @Inject constructor(
         _uiState.update { it.copy(isEditSheetVisible = false) }
     }
 
+    fun uploadAvatar(jpegBytes: ByteArray) {
+        if (jpegBytes.isEmpty()) return
+        viewModelScope.launch {
+            try {
+                profileRepository.updateAvatar(jpegBytes)
+                dismissEditSheet()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     fun openDeleteSheet() {
         _uiState.update { it.copy(isDeleteSheetVisible = true) }
     }

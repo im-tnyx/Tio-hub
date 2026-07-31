@@ -31,7 +31,7 @@ import com.tnyx.core.ui.components.buttons.TnyxPrimaryButton
 import com.tnyx.core.ui.components.buttons.TnyxSecondaryButton
 import com.tnyx.core.ui.components.layouts.TnyxScreenHeader
 import com.tnyx.core.ui.components.sheets.TnyxModalBottomSheet
-import com.tnyx.features.profile.presentation.widgets.ImageSourceBottomSheet
+import com.tnyx.core.ui.components.sheets.ImageSourceBottomSheet
 
 @Composable
 fun AvatarViewerScreen(

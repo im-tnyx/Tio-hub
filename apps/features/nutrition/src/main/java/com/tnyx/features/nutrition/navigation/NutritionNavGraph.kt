@@ -6,6 +6,7 @@ import androidx.navigation.navigation
 import com.tnyx.features.nutrition.presentation.meal_diary.MealDiaryRoute
 import com.tnyx.features.nutrition.presentation.meal_editor.MealEditorRoute
 import com.tnyx.features.nutrition.presentation.meal_item_editor.MealItemEditorRoute
+import com.tnyx.features.nutrition.presentation.search.MealSearchRoute
 import com.tnyx.features.nutrition.presentation.targets.NutritionTargetsRoute
 import com.tnyx.routing.routes.MainRoute
 
@@ -19,12 +20,24 @@ fun NavGraphBuilder.nutritionGraph(
         composable<NutritionScreen.MealDiary> {
             MealDiaryRoute(
                 onNavigateToMealDetail = { mealId ->
-                    navController.navigate(NutritionScreen.MealEditor(mealId))
+                    navController.navigate(NutritionScreen.MealEditor(mealId = mealId))
                 },
-                onNavigateToAddMeal = {
-                    navController.navigate(NutritionScreen.MealEditor())
+                onNavigateToSearch = { date ->
+                    navController.navigate(NutritionScreen.MealSearch(date = date.toString()))
+                },
+                onNavigateToAddMeal = { date ->
+                    navController.navigate(NutritionScreen.MealEditor(date = date.toString()))
                 },
                 onShowOverview = onShowOverview
+            )
+        }
+
+        composable<NutritionScreen.MealSearch> {
+            MealSearchRoute(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToMealEditor = { date, initialItem ->
+                    navController.navigate(NutritionScreen.MealEditor(date = date.toString()))
+                }
             )
         }
 
@@ -57,7 +70,10 @@ sealed interface NutritionScreen {
     data object MealDiary : NutritionScreen
 
     @kotlinx.serialization.Serializable
-    data class MealEditor(val mealId: String? = null) : NutritionScreen
+    data class MealSearch(val date: String? = null) : NutritionScreen
+
+    @kotlinx.serialization.Serializable
+    data class MealEditor(val mealId: String? = null, val date: String? = null) : NutritionScreen
 
     @kotlinx.serialization.Serializable
     data class MealItemEditor(val itemId: String) : NutritionScreen

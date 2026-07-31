@@ -3,26 +3,39 @@ package com.tnyx.features.nutrition.presentation.meal_editor
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tnyx.features.nutrition.domain.models.MealItem
+import androidx.navigation.toRoute
 import com.tnyx.features.nutrition.domain.models.NutritionMeal
+import com.tnyx.features.nutrition.domain.repository.NutritionRepository
+import com.tnyx.features.nutrition.navigation.NutritionScreen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
 class MealEditorViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
+    private val nutritionRepository: NutritionRepository,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(MealEditorUiState(
-        meal = NutritionMeal(
-            id = savedStateHandle.get<String>("mealId").orEmpty(),
-            name = "",
-            type = "BREAKFAST",
-            items = emptyList(),
-            description = "",
-        ),
-    ))
+
+    private val route = savedStateHandle.toRoute<NutritionScreen.MealEditor>()
+    private val mealId = route.mealId
+    private val logDate: LocalDate = route.date
+        ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+        ?: LocalDate.now()
+
+    private val _uiState = MutableStateFlow(
+        MealEditorUiState(
+            meal = NutritionMeal(
+                id = mealId.orEmpty(),
+                name = "",
+                type = "BREAKFAST",
+                items = emptyList(),
+                description = "",
+            ),
+        )
+    )
     val uiState = _uiState.asStateFlow()
 
     private val _effect = MutableSharedFlow<MealEditorEffect>()
@@ -37,23 +50,45 @@ class MealEditorViewModel @Inject constructor(
                 _uiState.update { it.copy(meal = it.meal.copy(type = action.category)) }
             }
             is MealEditorAction.ItemDeleted -> {
-                _uiState.update { it.copy(meal = it.meal.copy(items = it.meal.items.filter { item -> item.id != action.itemId })) }
+                val itemId = action.itemId
+                _uiState.update {
+                    it.copy(meal = it.meal.copy(items = it.meal.items.filter { item -> item.id != itemId }))
+                }
+                viewModelScope.launch {
+                    runCatching { nutritionRepository.deleteMealLogItem(itemId) }
+                }
             }
             is MealEditorAction.ItemQuantityChanged -> {
-                _uiState.update { 
+                _uiState.update {
                     it.copy(meal = it.meal.copy(items = it.meal.items.map { item ->
                         if (item.id == action.itemId) item.copy(quantity = action.quantity) else item
                     }))
                 }
             }
             MealEditorAction.AddItemClicked -> {
-                // Navigate to search or add item screen
+                viewModelScope.launch {
+                    _effect.emit(MealEditorEffect.NavigateToItemEditor(""))
+                }
             }
             MealEditorAction.SaveClicked -> {
                 viewModelScope.launch {
                     _uiState.update { it.copy(isSaving = true) }
-                    // Simulate API call
+                    runCatching {
+                        nutritionRepository.saveMealLog(logDate, _uiState.value.meal)
+                    }
+                    _uiState.update { it.copy(isSaving = false) }
                     _effect.emit(MealEditorEffect.NavigateBack)
+                }
+            }
+            MealEditorAction.DeleteMealClicked -> {
+                val id = _uiState.value.meal.id
+                if (id.isNotBlank()) {
+                    viewModelScope.launch {
+                        runCatching { nutritionRepository.deleteMealLog(id) }
+                        _effect.emit(MealEditorEffect.NavigateBack)
+                    }
+                } else {
+                    viewModelScope.launch { _effect.emit(MealEditorEffect.NavigateBack) }
                 }
             }
             MealEditorAction.BackClicked -> {

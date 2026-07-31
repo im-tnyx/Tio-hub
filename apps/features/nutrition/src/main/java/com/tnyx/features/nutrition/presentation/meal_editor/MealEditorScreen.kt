@@ -10,9 +10,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,30 +35,49 @@ fun MealEditorScreen(
     state: MealEditorUiState,
     onAction: (MealEditorAction) -> Unit
 ) {
+    val isExistingMeal = state.meal.id.isNotBlank()
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Edit your meal") },
+                title = {
+                    Text(
+                        text = if (isExistingMeal) "Edit your meal" else "Log new meal",
+                        style = TnyxTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = TnyxTheme.colors.textPrimary,
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { onAction(MealEditorAction.BackClicked) }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = TnyxTheme.colors.textPrimary,
+                        )
                     }
                 },
                 actions = {
                     IconButton(onClick = { onAction(MealEditorAction.ShareClicked) }) {
-                        Icon(Icons.Outlined.Share, contentDescription = "Share")
+                        Icon(
+                            imageVector = Icons.Outlined.Share,
+                            contentDescription = "Share",
+                            tint = TnyxTheme.colors.textPrimary,
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = TnyxTheme.colors.background,
-                    titleContentColor = TnyxTheme.colors.textPrimary
+                    titleContentColor = TnyxTheme.colors.textPrimary,
                 )
             )
         },
         bottomBar = {
             MealEditorBottomBar(
                 category = state.meal.type,
+                isExistingMeal = isExistingMeal,
+                isSaving = state.isSaving,
                 onCategoryChanged = { onAction(MealEditorAction.CategoryChanged(it)) },
+                onDelete = { onAction(MealEditorAction.DeleteMealClicked) },
                 onSave = { onAction(MealEditorAction.SaveClicked) }
             )
         },
@@ -80,7 +102,7 @@ fun MealEditorScreen(
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = state.meal.name,
+                            text = state.meal.name.ifBlank { "New Meal" },
                             style = TnyxTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = TnyxTheme.colors.textPrimary,
@@ -114,7 +136,7 @@ fun MealEditorScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     Text(
-                        text = if (state.meal.description.isNotEmpty()) state.meal.description else "Add a description...",
+                        text = if (state.meal.description.isNotEmpty()) state.meal.description else "Add a description for this meal...",
                         style = TnyxTheme.typography.bodySmall,
                         color = TnyxTheme.colors.textSecondary,
                         maxLines = 4
@@ -124,12 +146,7 @@ fun MealEditorScreen(
             
             Spacer(modifier = Modifier.height(24.dp))
             
-            // Macro Grid (Simplified for editor)
-            // TODO: Add MealEditMacroGrid
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Items Section
+            // Items Section Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -144,29 +161,44 @@ fun MealEditorScreen(
                 
                 Surface(
                     shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, TnyxTheme.colors.textPrimary.copy(alpha = 0.1f)),
+                    border = BorderStroke(1.dp, TnyxTheme.colors.textPrimary.copy(alpha = 0.15f)),
                     color = Color.Transparent,
                     modifier = Modifier.clickable { onAction(MealEditorAction.AddItemClicked) }
                 ) {
                     Text(
                         text = "Add Item +",
                         style = TnyxTheme.typography.labelLarge,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        color = TnyxTheme.colors.textSecondary,
-                        fontWeight = FontWeight.Medium
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                        color = TnyxTheme.colors.textPrimary,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            state.meal.items.forEach { item ->
-                MealItemTile(
-                    item = item,
-                    onDelete = { onAction(MealEditorAction.ItemDeleted(item.id)) },
-                    onTap = { /* Navigate to item editor */ },
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
+            if (state.meal.items.isEmpty()) {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = TnyxTheme.colors.surfaceVariant,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "No items added yet. Tap 'Add Item +' to add food items to this meal.",
+                        style = TnyxTheme.typography.bodyMedium,
+                        color = TnyxTheme.colors.textSecondary,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            } else {
+                state.meal.items.forEach { item ->
+                    MealItemTile(
+                        item = item,
+                        onDelete = { onAction(MealEditorAction.ItemDeleted(item.id)) },
+                        onTap = { /* Navigate to item editor */ },
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                }
             }
         }
     }
@@ -226,43 +258,64 @@ private fun ImagePickerPlaceholder() {
 @Composable
 private fun MealEditorBottomBar(
     category: String,
+    isExistingMeal: Boolean,
+    isSaving: Boolean,
     onCategoryChanged: (String) -> Unit,
+    onDelete: () -> Unit,
     onSave: () -> Unit
 ) {
     var showDropdown by remember { mutableStateOf(false) }
     val categories = listOf("BREAKFAST", "LUNCH", "DINNER", "SNACKS")
 
     Surface(
-        color = TnyxTheme.colors.background,
+        color = TnyxTheme.colors.surface,
         tonalElevation = 8.dp,
         border = BorderStroke(0.5.dp, TnyxTheme.colors.textPrimary.copy(alpha = 0.1f))
     ) {
         Column(
             modifier = Modifier
                 .navigationBarsPadding()
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
+            // Category & Date Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box {
-                    Text(
-                        text = category,
-                        style = TnyxTheme.typography.bodyMedium,
-                        color = TnyxTheme.colors.textPrimary,
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .clickable { showDropdown = true }
-                            .padding(vertical = 8.dp)
-                    )
+                            .padding(vertical = 4.dp, horizontal = 4.dp)
+                    ) {
+                        Text(
+                            text = category.ifBlank { "BREAKFAST" },
+                            style = TnyxTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                            color = TnyxTheme.colors.textPrimary,
+                        )
+                        Icon(
+                            imageVector = Icons.Rounded.ArrowDropDown,
+                            contentDescription = "Select category",
+                            tint = TnyxTheme.colors.textPrimary,
+                        )
+                    }
+
                     DropdownMenu(
                         expanded = showDropdown,
                         onDismissRequest = { showDropdown = false }
                     ) {
                         categories.forEach { cat ->
                             DropdownMenuItem(
-                                text = { Text(cat) },
+                                text = {
+                                    Text(
+                                        text = cat,
+                                        style = TnyxTheme.typography.bodyMedium.copy(
+                                            fontWeight = if (cat == category) FontWeight.Bold else FontWeight.Normal
+                                        ),
+                                    )
+                                },
                                 onClick = {
                                     onCategoryChanged(cat)
                                     showDropdown = false
@@ -271,37 +324,73 @@ private fun MealEditorBottomBar(
                         }
                     }
                 }
-                
-                // Date placeholder
-                Text(
-                    text = "Feb 5, 20:35",
-                    style = TnyxTheme.typography.bodySmall,
-                    color = TnyxTheme.colors.textSecondary
-                )
+
+                // Date Indicator
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.CalendarMonth,
+                        contentDescription = "Date",
+                        modifier = Modifier.size(16.dp),
+                        tint = TnyxTheme.colors.textSecondary,
+                    )
+                    Text(
+                        text = "Today",
+                        style = TnyxTheme.typography.bodySmall,
+                        color = TnyxTheme.colors.textSecondary,
+                    )
+                }
             }
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            Row(modifier = Modifier.fillMaxWidth()) {
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Action Buttons Row (Delete/Cancel + Save)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 OutlinedButton(
-                    onClick = { /* Add hint */ },
+                    onClick = onDelete,
                     modifier = Modifier
                         .weight(1f)
-                        .height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, TnyxTheme.colors.textPrimary.copy(alpha = 0.1f))
+                        .height(44.dp),
+                    shape = CircleShape,
+                    border = BorderStroke(1.dp, if (isExistingMeal) TnyxTheme.colors.error.copy(alpha = 0.4f) else TnyxTheme.colors.textPrimary.copy(alpha = 0.15f)),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = if (isExistingMeal) TnyxTheme.colors.error else TnyxTheme.colors.textPrimary
+                    )
                 ) {
-                    Text("Add Hint", color = TnyxTheme.colors.textPrimary)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        if (isExistingMeal) {
+                            Icon(
+                                imageVector = Icons.Outlined.Delete,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                        Text(
+                            text = if (isExistingMeal) "Delete" else "Cancel",
+                            style = TnyxTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                    }
                 }
-                
-                Spacer(modifier = Modifier.width(12.dp))
-                
+
                 TnyxPrimaryButton(
-                    text = "Save Meal",
+                    text = if (isSaving) "Saving..." else "Save Meal",
                     onPressed = onSave,
-                    modifier = Modifier.weight(1f)
+                    enabled = !isSaving,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
                 )
             }
         }
     }
 }
+

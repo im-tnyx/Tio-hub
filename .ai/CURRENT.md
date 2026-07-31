@@ -2,9 +2,9 @@
 
 Status: In Progress
 Active Task: `.ai/tasks/android/local-20260730-nutrition-repository-bootstrap.md`
-Branch: codex/android-onboarding-foundation
-Platform Scope: android-supabase-sync-baseline
-Last Updated: 2026-07-30
+Branch: feat/android-meal-log-persistence
+Platform Scope: android-meal-log-persistence
+Last Updated: 2026-07-31
 
 ## Usage
 

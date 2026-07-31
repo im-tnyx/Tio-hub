@@ -1,6 +1,8 @@
 package com.tnyx.data.nutrition
 
 import com.tnyx.features.nutrition.domain.models.MealDiarySnapshot
+import com.tnyx.features.nutrition.domain.models.MealItem
+import com.tnyx.features.nutrition.domain.models.NutritionMeal
 import com.tnyx.features.nutrition.domain.models.NutritionTargetsSnapshot
 import com.tnyx.features.nutrition.domain.repository.NutritionRepository
 import com.tnyx.shared.auth.domain.repository.AuthSessionProvider
@@ -11,6 +13,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import java.util.UUID
 import javax.inject.Inject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -28,8 +31,11 @@ class NutritionBootstrapRepository @Inject constructor(
     private val supabaseClient: SupabaseClient,
 ) : NutritionRepository {
 
+    // ── Diary ──────────────────────────────────────────────────────────────
+
     override suspend fun getMealDiary(date: LocalDate): MealDiarySnapshot {
         val goals = getNutritionTargets()
+        val meals = fetchMealLogsForDate(date)
 
         return MealDiarySnapshot(
             selectedDate = date,
@@ -44,9 +50,32 @@ class NutritionBootstrapRepository @Inject constructor(
             waterGoalLiters = goals.waterTargetLitres,
             vitaminsProgress = 0.0,
             mineralsProgress = 0.0,
-            meals = emptyList(),
+            meals = meals,
         )
     }
+
+    private suspend fun fetchMealLogsForDate(date: LocalDate): List<NutritionMeal> {
+        val userId = supabaseClient.auth.currentUserOrNull()?.id
+            ?: return emptyList()
+
+        return runCatching {
+            val logs = supabaseClient.from("meal_logs").select {
+                filter {
+                    eq("user_id", userId)
+                    eq("log_date", date.toString())
+                }
+            }.decodeList<MealLogDto>()
+
+            logs.map { log ->
+                val items = supabaseClient.from("meal_log_items").select {
+                    filter { eq("meal_log_id", log.id) }
+                }.decodeList<MealLogItemDto>()
+                log.toNutritionMeal(items)
+            }
+        }.getOrElse { emptyList() }
+    }
+
+    // ── Nutrition Targets ──────────────────────────────────────────────────
 
     override suspend fun getNutritionTargets(): NutritionTargetsSnapshot {
         val localSession = sessionProvider.currentSession()
@@ -108,6 +137,103 @@ class NutritionBootstrapRepository @Inject constructor(
         }
     }
 
+    // ── Meal Log CRUD ──────────────────────────────────────────────────────
+
+    override suspend fun saveMealLog(date: LocalDate, meal: NutritionMeal): NutritionMeal {
+        val userId = requireUserId()
+        val id = meal.id.ifBlank { UUID.randomUUID().toString() }
+
+        supabaseClient.from("meal_logs").upsert(
+            MealLogDto(
+                id = id,
+                user_id = userId,
+                log_date = date.toString(),
+                meal_type = meal.type,
+                name = meal.name,
+                image_url = meal.imageUrl,
+            )
+        ) { onConflict = "id" }
+
+        return meal.copy(id = id)
+    }
+
+    override suspend fun deleteMealLog(mealId: String) {
+        val userId = requireUserId()
+        supabaseClient.from("meal_logs").delete {
+            filter {
+                eq("id", mealId)
+                eq("user_id", userId)
+            }
+        }
+    }
+
+    override suspend fun saveMealLogItem(mealLogId: String, item: MealItem): MealItem {
+        val userId = requireUserId()
+        val id = item.id.ifBlank { UUID.randomUUID().toString() }
+
+        supabaseClient.from("meal_log_items").upsert(
+            MealLogItemDto(
+                id = id,
+                meal_log_id = mealLogId,
+                user_id = userId,
+                name = item.name,
+                quantity = item.quantity,
+                unit = item.unit,
+                calories = item.calories,
+                protein = item.protein,
+                carbs = item.carbs,
+                fats = item.fats,
+                fiber = item.fiber,
+                sugar = item.sugar,
+                trans_fat = item.transFat,
+                saturated_fat = item.saturatedFat,
+            )
+        ) { onConflict = "id" }
+
+        return item.copy(id = id)
+    }
+
+    override suspend fun updateMealLogItem(item: MealItem) {
+        val userId = requireUserId()
+        supabaseClient.from("meal_log_items").update(
+            mapOf(
+                "name" to item.name,
+                "quantity" to item.quantity,
+                "unit" to item.unit,
+                "calories" to item.calories,
+                "protein" to item.protein,
+                "carbs" to item.carbs,
+                "fats" to item.fats,
+                "fiber" to item.fiber,
+                "sugar" to item.sugar,
+                "trans_fat" to item.transFat,
+                "saturated_fat" to item.saturatedFat,
+            )
+        ) {
+            filter {
+                eq("id", item.id)
+                eq("user_id", userId)
+            }
+        }
+    }
+
+    override suspend fun deleteMealLogItem(itemId: String) {
+        val userId = requireUserId()
+        supabaseClient.from("meal_log_items").delete {
+            filter {
+                eq("id", itemId)
+                eq("user_id", userId)
+            }
+        }
+    }
+
+    // ── Helpers ────────────────────────────────────────────────────────────
+
+    private fun requireUserId(): String {
+        return supabaseClient.auth.currentUserOrNull()?.id
+            ?: error("A signed-in Supabase user is required for meal log operations")
+    }
+
     private fun UserNutritionProfileDto.toTargetsSnapshot(): NutritionTargetsSnapshot {
         val bedTime = parseDbTime(bed_time) ?: parseUiTime(DEFAULT_SLEEP_LABEL)!!
         val wakeTime = parseDbTime(wake_up_time) ?: parseUiTime(DEFAULT_WAKE_LABEL)!!
@@ -161,6 +287,8 @@ class NutritionBootstrapRepository @Inject constructor(
     }
 }
 
+// ── Top-level helpers ──────────────────────────────────────────────────────
+
 private fun NutritionTargetsSnapshot.hasConfiguredTargets(): Boolean {
     return caloriesTarget > 0 ||
         proteinTarget > 0.0 ||
@@ -189,6 +317,8 @@ private fun nutritionTargetsDefaults(): NutritionTargetsSnapshot {
     )
 }
 
+// ── DTOs ───────────────────────────────────────────────────────────────────
+
 @Serializable
 private data class UserNutritionProfileDto(
     val water_target_ml: Double? = null,
@@ -212,3 +342,54 @@ private data class MacroTargetsDto(
     val glass_size_ml: Int? = null,
     val sleep_target_hours: Double? = null,
 )
+
+@Serializable
+private data class MealLogDto(
+    val id: String,
+    val user_id: String,
+    val log_date: String,
+    val meal_type: String,
+    val name: String,
+    val image_url: String? = null,
+) {
+    fun toNutritionMeal(items: List<MealLogItemDto>): NutritionMeal = NutritionMeal(
+        id = id,
+        name = name,
+        type = meal_type,
+        imageUrl = image_url,
+        items = items.map { it.toMealItem() },
+    )
+}
+
+@Serializable
+private data class MealLogItemDto(
+    val id: String,
+    val meal_log_id: String,
+    val user_id: String,
+    val name: String,
+    val quantity: Double = 1.0,
+    val unit: String = "serving",
+    val calories: Int = 0,
+    val protein: Double = 0.0,
+    val carbs: Double = 0.0,
+    val fats: Double = 0.0,
+    val fiber: Double = 0.0,
+    val sugar: Double = 0.0,
+    val trans_fat: Double = 0.0,
+    val saturated_fat: Double = 0.0,
+) {
+    fun toMealItem(): MealItem = MealItem(
+        id = id,
+        name = name,
+        calories = calories,
+        protein = protein,
+        quantity = quantity,
+        unit = unit,
+        carbs = carbs,
+        fats = fats,
+        fiber = fiber,
+        sugar = sugar,
+        transFat = trans_fat,
+        saturatedFat = saturated_fat,
+    )
+}

@@ -5,12 +5,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
+import java.time.LocalDate
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun MealDiaryRoute(
     onNavigateToMealDetail: (String) -> Unit,
-    onNavigateToAddMeal: () -> Unit,
+    onNavigateToSearch: (LocalDate) -> Unit,
+    onNavigateToAddMeal: (LocalDate) -> Unit,
     onShowOverview: (String) -> Unit,
     viewModel: MealDiaryViewModel = hiltViewModel()
 ) {
@@ -20,7 +22,8 @@ fun MealDiaryRoute(
         viewModel.effect.collectLatest { effect ->
             when (effect) {
                 is MealDiaryEffect.NavigateToMealDetail -> onNavigateToMealDetail(effect.mealId)
-                MealDiaryEffect.NavigateToAddMeal -> onNavigateToAddMeal()
+                is MealDiaryEffect.NavigateToSearch -> onNavigateToSearch(effect.date)
+                is MealDiaryEffect.NavigateToAddMeal -> onNavigateToAddMeal(effect.date)
                 is MealDiaryEffect.ShowOverview -> onShowOverview(effect.target)
             }
         }

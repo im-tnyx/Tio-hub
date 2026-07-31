@@ -32,7 +32,10 @@ data class MealDiaryUiState(
 
     // Logged Meals
     val meals: List<NutritionMeal> = emptyList(),
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+
+    // Expandable FAB state
+    val isFabExpanded: Boolean = false,
 ) {
     val isHistoryEmpty: Boolean get() = meals.isEmpty()
 }
@@ -41,11 +44,19 @@ sealed class MealDiaryAction {
     data class DateSelected(val date: LocalDate) : MealDiaryAction()
     data class MealClicked(val meal: NutritionMeal) : MealDiaryAction()
     data class OverviewRequested(val target: String) : MealDiaryAction()
-    data object AddMealClicked : MealDiaryAction()
+
+    // FAB actions
+    data object FabToggled : MealDiaryAction()
+    data object FabCollapsed : MealDiaryAction()
+    data object AddMealClicked : MealDiaryAction()        // Search / keyboard
+    data object AddMealVoiceClicked : MealDiaryAction()   // Mic (future)
+    data object AddMealCameraClicked : MealDiaryAction()  // Camera (future)
 }
 
 sealed class MealDiaryEffect {
     data class NavigateToMealDetail(val mealId: String) : MealDiaryEffect()
-    data object NavigateToAddMeal : MealDiaryEffect()
+    data class NavigateToSearch(val date: LocalDate) : MealDiaryEffect()
+    data class NavigateToAddMeal(val date: LocalDate) : MealDiaryEffect()
     data class ShowOverview(val target: String) : MealDiaryEffect()
 }
+

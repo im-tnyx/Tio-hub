@@ -17,6 +17,7 @@ import com.tnyx.core.ui.shell.presentation.action.ShellAction
 import com.tnyx.core.ui.shell.presentation.shell.TnyxShell
 import com.tnyx.core.ui.shell.presentation.state.ShellUiState
 import com.tnyx.features.nutrition.navigation.NutritionScreen
+import com.tnyx.features.workout.navigation.WorkoutDestination
 import com.tnyx.routing.graphs.mainGraph
 import com.tnyx.routing.routes.MainRoute
 import com.tnyx.routing.routes.ProfileRoute
@@ -41,8 +42,11 @@ fun MainScreen(
     val currentDestination = navBackStackEntry?.destination
 
     val selectedTab = when {
-        currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.WorkoutGraph::class) } == true -> ShellTab.Workout
         currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.WorkoutLibrary::class) } == true -> ShellTab.WorkoutLibrary
+        currentDestination?.hierarchy?.any { it.hasRoute(WorkoutDestination.Library::class) } == true -> ShellTab.WorkoutLibrary
+        currentDestination?.hierarchy?.any { it.hasRoute(WorkoutDestination.SearchExercises::class) } == true -> ShellTab.WorkoutLibrary
+        currentDestination?.hierarchy?.any { it.hasRoute(WorkoutDestination.CreateExercise::class) } == true -> ShellTab.WorkoutLibrary
+        currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.WorkoutGraph::class) } == true -> ShellTab.Workout
         currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.Home::class) } == true -> ShellTab.Home
         currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.NutritionGraph::class) } == true -> ShellTab.Nutrition
         currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.MealPlan::class) } == true -> ShellTab.MealPlan
@@ -57,6 +61,7 @@ fun MainScreen(
         currentDestination?.hasRoute<NutritionScreen.MealItemEditor>() == true -> false
         currentDestination?.hasRoute<NutritionScreen.Targets>() == true -> false
         currentDestination?.hasRoute<SettingsRoute.PersonalInfo>() == true -> false
+        currentDestination?.hasRoute<WorkoutDestination.SearchExercises>() == true -> false
         else -> true
     }
 

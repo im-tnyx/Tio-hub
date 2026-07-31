@@ -1,5 +1,8 @@
 package com.tnyx.features.workout.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -42,7 +45,10 @@ fun NavGraphBuilder.workoutGraph(
                 }
             )
         }
-        composable<WorkoutDestination.SearchExercises> {
+        composable<WorkoutDestination.SearchExercises>(
+            enterTransition = { slideInVertically(animationSpec = tween(300)) { it } },
+            popExitTransition = { slideOutVertically(animationSpec = tween(300)) { it } },
+        ) {
             SearchExercisesRoute(
                 onNavigateBack = { navController.popBackStack() },
                 onCreateClick = {

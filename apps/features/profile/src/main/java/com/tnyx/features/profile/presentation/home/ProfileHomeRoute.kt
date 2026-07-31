@@ -23,6 +23,14 @@ fun ProfileHomeRoute(
             when (action) {
                 ProfileHomeAction.EditProfileClicked -> onOpenEditProfile()
                 ProfileHomeAction.AvatarClicked -> onOpenAvatarViewer()
+                ProfileHomeAction.ChangePhotoClicked -> viewModel.openBottomSheet()
+                ProfileHomeAction.DismissBottomSheet -> viewModel.dismissBottomSheet()
+                ProfileHomeAction.CameraClicked -> {
+                    viewModel.dismissBottomSheet()
+                }
+                ProfileHomeAction.GalleryClicked -> {
+                    viewModel.dismissBottomSheet()
+                }
                 ProfileHomeAction.AddProgressPhotosClicked -> { /* TODO: Navigate to add photos */ }
                 ProfileHomeAction.SettingsClicked -> onOpenSettings()
                 ProfileHomeAction.BackClicked -> onNavigateBack()

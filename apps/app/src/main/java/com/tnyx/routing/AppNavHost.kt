@@ -134,6 +134,7 @@ fun AppNavHost(
             },
             onOpenPersonalInfo = {
                 navController.navigate(SettingsRoute.Graph)
+                navController.navigate(SettingsRoute.PersonalInfo)
             },
             onNavigateBack = {
                 navController.popBackStack()

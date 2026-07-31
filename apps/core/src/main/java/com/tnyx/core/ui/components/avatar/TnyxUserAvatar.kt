@@ -30,6 +30,8 @@ import coil.compose.SubcomposeAsyncImageContent
 import com.tnyx.core.theme.TnyxTheme
 import com.tnyx.shared.profile.domain.model.MembershipTier
 
+import androidx.compose.ui.graphics.RectangleShape
+
 private val PremiumHexagonShape = GenericShape { size, _ ->
     moveTo(size.width * 0.25f, 0f)
     lineTo(size.width * 0.75f, 0f)
@@ -38,6 +40,11 @@ private val PremiumHexagonShape = GenericShape { size, _ ->
     lineTo(size.width * 0.25f, size.height)
     lineTo(0f, size.height * 0.5f)
     close()
+}
+
+enum class TnyxAvatarShape {
+    Circle,
+    Square,
 }
 
 enum class TnyxAvatarSize(
@@ -79,15 +86,19 @@ fun TnyxUserAvatar(
     membershipTier: MembershipTier,
     modifier: Modifier = Modifier,
     size: TnyxAvatarSize = TnyxAvatarSize.Medium,
+    shape: TnyxAvatarShape = TnyxAvatarShape.Circle,
     onClick: (() -> Unit)? = null,
     showEditBadge: Boolean = false,
     onEditClick: (() -> Unit)? = null,
 ) {
-    val frameShape = when (membershipTier) {
-        MembershipTier.Premium -> PremiumHexagonShape
-        MembershipTier.Free,
-        MembershipTier.Plus,
-        -> CircleShape
+    val frameShape = when {
+        membershipTier == MembershipTier.Premium -> PremiumHexagonShape
+        shape == TnyxAvatarShape.Square -> RectangleShape
+        else -> CircleShape
+    }
+    val innerImageShape = when (shape) {
+        TnyxAvatarShape.Square -> RectangleShape
+        TnyxAvatarShape.Circle -> CircleShape
     }
     val frameBrush = when (membershipTier) {
         MembershipTier.Free -> SolidColor(TnyxTheme.colors.surfaceVariant)
@@ -132,7 +143,7 @@ fun TnyxUserAvatar(
             Box(
                 modifier = Modifier
                     .size(size.imageSize)
-                    .clip(CircleShape)
+                    .clip(innerImageShape)
                     .background(TnyxTheme.colors.surface),
                 contentAlignment = Alignment.Center,
             ) {

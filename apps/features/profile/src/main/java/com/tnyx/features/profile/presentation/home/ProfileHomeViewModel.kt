@@ -70,6 +70,14 @@ class ProfileHomeViewModel @Inject constructor(
         }
     }
 
+    fun openBottomSheet() {
+        _uiState.update { it.copy(isBottomSheetVisible = true) }
+    }
+
+    fun dismissBottomSheet() {
+        _uiState.update { it.copy(isBottomSheetVisible = false) }
+    }
+
     private fun formatStatus(dobString: String, gender: String): String {
         val age = calculateAge(dobString) ?: return gender.lowercase().ifBlank { "" }
         val normalizedGender = gender.lowercase()

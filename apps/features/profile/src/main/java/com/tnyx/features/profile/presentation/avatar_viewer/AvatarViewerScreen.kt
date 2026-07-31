@@ -29,11 +29,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import com.tnyx.core.theme.TnyxTheme
+import com.tnyx.core.ui.components.avatar.TnyxAvatarShape
 import com.tnyx.core.ui.components.avatar.TnyxAvatarSize
 import com.tnyx.core.ui.components.avatar.TnyxUserAvatar
+import com.tnyx.core.ui.components.buttons.TnyxPrimaryButton
+import com.tnyx.core.ui.components.buttons.TnyxSecondaryButton
 import com.tnyx.core.ui.components.layouts.TnyxScreenHeader
 import com.tnyx.core.ui.components.sheets.TnyxModalBottomSheet
 import com.tnyx.shared.profile.domain.model.MembershipTier
+
+import com.tnyx.features.profile.presentation.widgets.ImageSourceBottomSheet
 
 @Composable
 fun AvatarViewerScreen(
@@ -92,65 +97,17 @@ fun AvatarViewerScreen(
                     displayName = uiState.displayName,
                     membershipTier = MembershipTier.Free,
                     size = TnyxAvatarSize.XLarge,
+                    shape = TnyxAvatarShape.Square,
                 )
             }
         }
 
-        TnyxModalBottomSheet(
+        ImageSourceBottomSheet(
             visible = uiState.isBottomSheetVisible,
             onDismissRequest = { onAction(AvatarViewerAction.DismissBottomSheet) },
+            onCameraClick = { onAction(AvatarViewerAction.CameraClicked) },
+            onGalleryClick = { onAction(AvatarViewerAction.GalleryClicked) },
             title = "Change Profile Photo",
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onAction(AvatarViewerAction.CameraClicked) }
-                    .padding(vertical = TnyxTheme.dimens.SpaceM),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.PhotoCamera,
-                    contentDescription = "Camera",
-                    tint = TnyxTheme.colors.textPrimary,
-                    modifier = Modifier.size(TnyxTheme.dimens.IconM),
-                )
-                Spacer(modifier = Modifier.width(TnyxTheme.dimens.SpaceM))
-                Text(
-                    text = "Camera",
-                    style = TnyxTheme.typography.bodyLarge,
-                    color = TnyxTheme.colors.textPrimary,
-                    fontWeight = FontWeight.Medium,
-                )
-            }
-
-            HorizontalDivider(
-                color = TnyxTheme.colors.surfaceVariant,
-                thickness = TnyxTheme.dimens.BorderThin,
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onAction(AvatarViewerAction.GalleryClicked) }
-                    .padding(vertical = TnyxTheme.dimens.SpaceM),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.PhotoLibrary,
-                    contentDescription = "Gallery",
-                    tint = TnyxTheme.colors.textPrimary,
-                    modifier = Modifier.size(TnyxTheme.dimens.IconM),
-                )
-                Spacer(modifier = Modifier.width(TnyxTheme.dimens.SpaceM))
-                Text(
-                    text = "Gallery",
-                    style = TnyxTheme.typography.bodyLarge,
-                    color = TnyxTheme.colors.textPrimary,
-                    fontWeight = FontWeight.Medium,
-                )
-            }
-
-            Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
-        }
+        )
     }
 }

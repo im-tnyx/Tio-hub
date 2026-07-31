@@ -118,7 +118,7 @@ private fun ProfileIdentity(
             displayName = state.displayName,
             membershipTier = state.membershipTier,
             size = TnyxAvatarSize.Large,
-            onClick = onEditProfile,
+            showEditBadge = true,
         )
 
         Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceSM))

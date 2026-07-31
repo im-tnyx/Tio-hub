@@ -125,7 +125,7 @@ fun MainScreen(
                     rootNavController.navigate(SettingsRoute.Graph)
                 },
                 onOpenPersonalInfo = {
-                    rootNavController.navigate(SettingsRoute.PersonalInfo)
+                    rootNavController.navigate(SettingsRoute.Graph)
                 },
             )
         }

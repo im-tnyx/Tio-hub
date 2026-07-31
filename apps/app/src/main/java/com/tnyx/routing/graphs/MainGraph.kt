@@ -20,7 +20,9 @@ import com.tnyx.features.home.presentation.home.HomeRoute
 import com.tnyx.features.nutrition.navigation.nutritionGraph
 import com.tnyx.features.profile.presentation.home.ProfileHomeRoute
 import com.tnyx.features.progress.navigation.progressGraph
+import com.tnyx.features.workout.navigation.WorkoutDestination
 import com.tnyx.features.workout.navigation.workoutGraph
+import com.tnyx.features.workout.presentation.library.ExerciseLibraryRoute
 import com.tnyx.routing.routes.MainRoute
 
 /**
@@ -60,9 +62,14 @@ fun NavGraphBuilder.mainGraph(
     workoutGraph(navController = navController)
 
     composable<MainRoute.WorkoutLibrary> {
-        TopLevelFoundationScreen(
-            title = "Library",
-            description = "Exercises, saved routines, programs and templates live here.",
+        ExerciseLibraryRoute(
+            onNavigateBack = { navController.popBackStack() },
+            onSearchClick = {},
+            onCreateProgramClick = {},
+            onCreateRoutineClick = {},
+            onCreateExerciseClick = {
+                navController.navigate(WorkoutDestination.CreateExercise)
+            }
         )
     }
 

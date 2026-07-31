@@ -40,14 +40,25 @@ import com.tnyx.features.nutrition.R
 import kotlin.math.PI
 
 private const val EXPAND_DURATION_MS = 420
-private val FAB_SIZE: Dp = 36.dp
-private val SUB_FAB_SIZE: Dp = 36.dp
-private val ICON_SIZE: Dp = 26.dp
-private val TRAVEL_DISTANCE: Dp = 56.dp
+
+// Exact Flutter ExpandableMealFab tokens:
+// _buttonSize = aiButtonSize (48.0) * 1.25 = 60.dp
+// _mainIconSize = 60.0 * 0.55 = 33.dp
+// _subIconSize = 60.0 * 0.45 = 27.dp
+// _travelDistance = 60.0 * 0.85 + 12.0 = 63.dp
+private val FAB_SIZE: Dp = 60.dp
+private val SUB_FAB_SIZE: Dp = 60.dp
+private val MAIN_ICON_SIZE: Dp = 33.dp
+private val SUB_ICON_SIZE: Dp = 27.dp
+private val TRAVEL_DISTANCE: Dp = 63.dp
 
 /**
- * Expandable Meal FAB — updated to shape size 36.dp and icon size 26.dp.
- * Uses custom vector drawables (ic_fab_main, ic_mic, ic_camera, ic_keyboard).
+ * Expandable Meal FAB — exact 1:1 match with Flutter ExpandableMealFab shape & icon tokens.
+ *
+ * Button Shape Size: 60.dp
+ * Main Icon Size: 33.dp
+ * Sub Icon Size: 27.dp
+ * Travel Distance: 63.dp
  */
 @Composable
 fun ExpandableMealFab(
@@ -89,7 +100,7 @@ fun ExpandableMealFab(
             iconColor = iconColor,
             borderColor = subBorderColor,
             size = SUB_FAB_SIZE,
-            iconSize = ICON_SIZE,
+            iconSize = SUB_ICON_SIZE,
             onClick = onMicClicked,
             modifier = Modifier.align(Alignment.BottomEnd),
         )
@@ -105,7 +116,7 @@ fun ExpandableMealFab(
             iconColor = iconColor,
             borderColor = subBorderColor,
             size = SUB_FAB_SIZE,
-            iconSize = ICON_SIZE,
+            iconSize = SUB_ICON_SIZE,
             onClick = onCameraClicked,
             modifier = Modifier.align(Alignment.BottomEnd),
         )
@@ -121,7 +132,7 @@ fun ExpandableMealFab(
             iconColor = iconColor,
             borderColor = subBorderColor,
             size = SUB_FAB_SIZE,
-            iconSize = ICON_SIZE,
+            iconSize = SUB_ICON_SIZE,
             onClick = onSearchClicked,
             modifier = Modifier.align(Alignment.BottomEnd),
         )
@@ -152,14 +163,14 @@ fun ExpandableMealFab(
                             imageVector = Icons.Rounded.Close,
                             contentDescription = null,
                             tint = if (isDark) Color.White else Color(0xFF111111),
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(24.dp),
                         )
                     } else {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_fab_main),
                             contentDescription = null,
                             tint = iconColor,
-                            modifier = Modifier.size(ICON_SIZE),
+                            modifier = Modifier.size(MAIN_ICON_SIZE),
                         )
                     }
                 }

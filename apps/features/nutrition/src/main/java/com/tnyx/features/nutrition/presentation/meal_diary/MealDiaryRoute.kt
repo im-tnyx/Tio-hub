@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun MealDiaryRoute(
     onNavigateToMealDetail: (String) -> Unit,
+    onNavigateToSearch: (LocalDate) -> Unit,
     onNavigateToAddMeal: (LocalDate) -> Unit,
     onShowOverview: (String) -> Unit,
     viewModel: MealDiaryViewModel = hiltViewModel()
@@ -21,6 +22,7 @@ fun MealDiaryRoute(
         viewModel.effect.collectLatest { effect ->
             when (effect) {
                 is MealDiaryEffect.NavigateToMealDetail -> onNavigateToMealDetail(effect.mealId)
+                is MealDiaryEffect.NavigateToSearch -> onNavigateToSearch(effect.date)
                 is MealDiaryEffect.NavigateToAddMeal -> onNavigateToAddMeal(effect.date)
                 is MealDiaryEffect.ShowOverview -> onShowOverview(effect.target)
             }

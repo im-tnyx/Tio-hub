@@ -55,6 +55,8 @@ sealed class MealDiaryAction {
 
 sealed class MealDiaryEffect {
     data class NavigateToMealDetail(val mealId: String) : MealDiaryEffect()
+    data class NavigateToSearch(val date: LocalDate) : MealDiaryEffect()
     data class NavigateToAddMeal(val date: LocalDate) : MealDiaryEffect()
     data class ShowOverview(val target: String) : MealDiaryEffect()
 }
+

@@ -64,20 +64,15 @@ class MealDiaryViewModel @Inject constructor(
             MealDiaryAction.FabCollapsed -> {
                 _uiState.update { it.copy(isFabExpanded = false) }
             }
-            MealDiaryAction.AddMealClicked -> {
+            MealDiaryAction.AddMealClicked,
+            MealDiaryAction.AddMealVoiceClicked,
+            MealDiaryAction.AddMealCameraClicked -> {
                 _uiState.update { it.copy(isFabExpanded = false) }
                 viewModelScope.launch {
-                    _effect.emit(MealDiaryEffect.NavigateToAddMeal(_uiState.value.selectedDate))
+                    _effect.emit(MealDiaryEffect.NavigateToSearch(_uiState.value.selectedDate))
                 }
             }
-            MealDiaryAction.AddMealVoiceClicked -> {
-                // Voice meal entry — future implementation
-                _uiState.update { it.copy(isFabExpanded = false) }
-            }
-            MealDiaryAction.AddMealCameraClicked -> {
-                // Camera meal scan — future implementation
-                _uiState.update { it.copy(isFabExpanded = false) }
-            }
+
         }
     }
 

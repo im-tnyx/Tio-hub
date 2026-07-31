@@ -1,5 +1,6 @@
 package com.tnyx.features.nutrition.presentation.meal_diary.widgets
 
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -19,7 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.PhotoCamera
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -30,22 +30,14 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
-import com.tnyx.core.theme.TnyxTheme
-import androidx.compose.material.icons.rounded.KeyboardAlt
-import androidx.compose.material.icons.rounded.Mic
-import androidx.compose.material.icons.rounded.Restaurant
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import com.tnyx.core.theme.TnyxTheme
+import com.tnyx.features.nutrition.R
 import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.roundToInt
-import kotlin.math.sin
 
 private const val EXPAND_DURATION_MS = 420
 private val FAB_SIZE: Dp = 56.dp
@@ -53,17 +45,13 @@ private val SUB_FAB_SIZE: Dp = 48.dp
 private val TRAVEL_DISTANCE: Dp = 76.dp
 
 /**
- * Expandable Meal FAB — matches Flutter ExpandableMealFab UX exactly.
+ * Expandable Meal FAB — uses custom vector drawables (ic_fab_main, ic_mic, ic_camera, ic_keyboard).
  *
- * Collapsed: circular button with restaurant/meal icon, bottom-right.
+ * Collapsed: circular button with ic_fab_main icon, bottom-right.
  * Expanded:  main icon switches to close (×) with scale+fade animation;
- *            3 sub-action buttons (Mic, Camera, Search) fan out in 420 ms
+ *            3 sub-action buttons (ic_mic, ic_camera, ic_keyboard) fan out in 420 ms
  *            with translate + fade + scale + rotate transitions.
  *            Tapping the backdrop collapses the FAB.
- *
- * Colors follow Flutter's inverseContainerColor pattern:
- *   dark theme  → white container, black icon
- *   light theme → black container, white icon
  */
 @Composable
 fun ExpandableMealFab(
@@ -97,7 +85,7 @@ fun ExpandableMealFab(
         // ── Sub-action: Mic (top-left diagonal) ───────────────────────────
         AnimatedSubFab(
             isExpanded = isExpanded,
-            icon = Icons.Rounded.Mic,
+            drawableResId = R.drawable.ic_mic,
             contentDescription = "Add meal by voice",
             targetOffsetX = -TRAVEL_DISTANCE,
             targetOffsetY = -TRAVEL_DISTANCE,
@@ -112,7 +100,7 @@ fun ExpandableMealFab(
         // ── Sub-action: Camera (directly above) ───────────────────────────
         AnimatedSubFab(
             isExpanded = isExpanded,
-            icon = Icons.Rounded.PhotoCamera,
+            drawableResId = R.drawable.ic_camera,
             contentDescription = "Add meal by photo",
             targetOffsetX = 0.dp,
             targetOffsetY = -TRAVEL_DISTANCE,
@@ -127,7 +115,7 @@ fun ExpandableMealFab(
         // ── Sub-action: Search / Keyboard (left) ──────────────────────────
         AnimatedSubFab(
             isExpanded = isExpanded,
-            icon = Icons.Rounded.KeyboardAlt,
+            drawableResId = R.drawable.ic_keyboard,
             contentDescription = "Add meal by search",
             targetOffsetX = -TRAVEL_DISTANCE,
             targetOffsetY = 0.dp,
@@ -169,7 +157,7 @@ fun ExpandableMealFab(
                         )
                     } else {
                         Icon(
-                            imageVector = Icons.Rounded.Restaurant,
+                            painter = painterResource(id = R.drawable.ic_fab_main),
                             contentDescription = null,
                             tint = iconColor,
                             modifier = Modifier.size(28.dp),
@@ -184,7 +172,7 @@ fun ExpandableMealFab(
 @Composable
 private fun AnimatedSubFab(
     isExpanded: Boolean,
-    icon: ImageVector,
+    @DrawableRes drawableResId: Int,
     contentDescription: String,
     targetOffsetX: Dp,
     targetOffsetY: Dp,
@@ -221,10 +209,10 @@ private fun AnimatedSubFab(
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
-                imageVector = icon,
+                painter = painterResource(id = drawableResId),
                 contentDescription = null,
                 tint = iconColor,
-                modifier = Modifier.size(22.dp),
+                modifier = Modifier.size(24.dp),
             )
         }
     }

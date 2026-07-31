@@ -62,6 +62,7 @@ fun MainScreen(
         currentDestination?.hasRoute<NutritionScreen.Targets>() == true -> false
         currentDestination?.hasRoute<SettingsRoute.PersonalInfo>() == true -> false
         currentDestination?.hasRoute<WorkoutDestination.SearchExercises>() == true -> false
+        currentDestination?.hasRoute<ProfileRoute.AvatarViewer>() == true -> false
         else -> true
     }
 

@@ -46,4 +46,5 @@ sealed interface ProfileHomeAction {
     data object AddProgressPhotosClicked : ProfileHomeAction
     data object HealthConnectionsClicked : ProfileHomeAction
     data object RefreshProfile : ProfileHomeAction
+    data object AvatarClicked : ProfileHomeAction
 }

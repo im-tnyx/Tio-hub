@@ -128,6 +128,7 @@ fun AppNavHost(
         )
 
         profileGraph(
+            navController = navController,
             onOpenSettings = {
                 navController.navigate(SettingsRoute.Graph)
             },

@@ -11,6 +11,7 @@ fun ProfileHomeRoute(
     onOpenEditProfile: () -> Unit,
     onNavigateBack: () -> Unit,
     showBackButton: Boolean,
+    onOpenAvatarViewer: () -> Unit = {},
     viewModel: ProfileHomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -21,6 +22,7 @@ fun ProfileHomeRoute(
         onAction = { action ->
             when (action) {
                 ProfileHomeAction.EditProfileClicked -> onOpenEditProfile()
+                ProfileHomeAction.AvatarClicked -> onOpenAvatarViewer()
                 ProfileHomeAction.AddProgressPhotosClicked -> { /* TODO: Navigate to add photos */ }
                 ProfileHomeAction.SettingsClicked -> onOpenSettings()
                 ProfileHomeAction.BackClicked -> onNavigateBack()

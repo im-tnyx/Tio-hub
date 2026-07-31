@@ -81,10 +81,19 @@ fun NavGraphBuilder.mainGraph(
         ProfileHomeRoute(
             onOpenSettings = onOpenSettings,
             onOpenEditProfile = onOpenPersonalInfo,
+            onOpenAvatarViewer = {
+                navController.navigate(com.tnyx.routing.routes.ProfileRoute.AvatarViewer)
+            },
             onNavigateBack = {
                 // You is a top-level tab. Its header intentionally has no Back action.
             },
             showBackButton = false,
+        )
+    }
+
+    composable<com.tnyx.routing.routes.ProfileRoute.AvatarViewer> {
+        com.tnyx.features.profile.presentation.avatar_viewer.AvatarViewerRoute(
+            onNavigateBack = { navController.popBackStack() },
         )
     }
 }

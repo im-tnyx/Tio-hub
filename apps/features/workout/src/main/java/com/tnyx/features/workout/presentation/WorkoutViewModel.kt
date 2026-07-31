@@ -49,6 +49,7 @@ class WorkoutViewModel @Inject constructor(
             WorkoutAction.RpeDismissed -> _uiState.update { it.copy(rpePicker = null) }
             WorkoutAction.FinishWorkoutClicked -> runCommand(coordinator::finishWorkout)
             WorkoutAction.HistoryClicked,
+            WorkoutAction.LibraryClicked,
             WorkoutAction.BackClicked,
             -> Unit
         }

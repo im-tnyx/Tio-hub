@@ -121,5 +121,6 @@ sealed interface WorkoutAction {
 
     data object FinishWorkoutClicked : WorkoutAction
     data object HistoryClicked : WorkoutAction
+    data object LibraryClicked : WorkoutAction
     data object BackClicked : WorkoutAction
 }

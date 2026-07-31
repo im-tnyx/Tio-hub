@@ -20,6 +20,7 @@ fun NavGraphBuilder.workoutGraph(
         composable<WorkoutDestination.Home> {
             WorkoutRoute(
                 onOpenHistory = { navController.navigate(WorkoutDestination.History) },
+                onOpenLibrary = { navController.navigate(WorkoutDestination.Library) },
             )
         }
         composable<WorkoutDestination.History> {

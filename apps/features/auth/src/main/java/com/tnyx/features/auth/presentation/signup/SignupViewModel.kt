@@ -73,6 +73,9 @@ class SignupViewModel @Inject constructor(
             _uiState.update { it.copy(name = name, email = email, isLoading = true) }
             when (val result = authRepository.signUp(name = name, email = email, password = password)) {
                 is AuthResult.Authenticated -> _effect.emit(SignupEffect.Authenticated)
+                AuthResult.ExternalAuthStarted -> _uiState.update {
+                    it.copy(emailError = "Complete Google sign-in from the login screen")
+                }
                 is AuthResult.VerificationRequired -> _effect.emit(SignupEffect.NavigateToOtp(result.email))
                 is AuthResult.Failure -> _uiState.update {
                     it.copy(passwordError = result.message)

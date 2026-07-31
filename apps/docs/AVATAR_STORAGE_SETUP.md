@@ -1,16 +1,14 @@
 # Avatar Storage Setup
 
-Last updated: 2026-07-29
+Last updated: 2026-07-30
 
 ## Current Runtime
 
-- Android currently binds `ProfileRepository` to `RoomProfileRepository`.
-- Selecting an avatar stores a JPEG under app-internal storage and persists its
-  local file URI in the per-user Room Profile row.
-- The local avatar survives process restart but does not upload or synchronize
-  to Supabase.
-- The inactive `SupabaseProfileRepository` remains prototype/reference code and
-  is not the approved production data path.
+- Android now binds `ProfileRepository` to `SupabaseProfileRepository`.
+- Selecting an avatar uploads `avatar.jpg` to the live `tio-profile` bucket
+  under the authenticated user's object path.
+- The repository updates `public.profiles.avatar_url` after a successful upload.
+- Avatar state is no longer local-only profile truth.
 
 ## Live Storage Foundation
 

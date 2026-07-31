@@ -13,21 +13,34 @@ At the beginning of a work session:
 1. Read [`AGENTS.md`](../AGENTS.md).
 2. Read [`CURRENT.md`](CURRENT.md).
 3. When `Active Task` is not `none`, read only the referenced task file.
-4. For app work, read [`apps/AGENTS.md`](../apps/AGENTS.md).
-5. Read only the relevant canonical docs and runtime source.
+4. Read only the `core/` files listed under that task's `Required Context` section.
+5. For app work, read [`apps/AGENTS.md`](../apps/AGENTS.md).
+6. Read only the relevant canonical docs and runtime source named by the task.
 
 Do not preload every task, archive record, app document, or reference archive.
+Do not load all `core/` files — load only those listed in the active task's `Required Context`.
 
 ## Orientation Files
 
+**Root-level** (always available for orientation):
+
 - [Project Context](project-context.md)
-- [Architecture Summary](architecture-summary.md)
-- [Ownership Rules](ownership-rules.md)
-- [Coding Rules](coding-rules.md)
-- [UI Rules](ui-rules.md)
-- [Supabase Rules](supabase-rules.md)
 - [Workflow](workflow.md)
 - [Documentation Map](doc-map.md)
+
+**`core/`** (stable summaries — load only when named by the active task):
+
+- [Architecture Summary](core/architecture-summary.md)
+- [Ownership Rules](core/ownership-rules.md)
+- [Coding Rules](core/coding-rules.md)
+- [UI Rules](core/ui-rules.md)
+- [Supabase Rules](core/supabase-rules.md)
+
+**`task-playbooks/`** (execution guides by platform):
+
+- [Android](task-playbooks/android.md)
+- [Supabase](task-playbooks/supabase.md)
+- [Wear OS](task-playbooks/wear.md)
 
 ## Continuity Files
 

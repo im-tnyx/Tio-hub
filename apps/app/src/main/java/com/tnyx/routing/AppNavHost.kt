@@ -10,9 +10,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
 import androidx.navigation.toRoute
 import com.tnyx.core.legal.presentation.route.LegalRoute
+import com.tnyx.features.onboarding.domain.model.OnboardingAuthState
+import com.tnyx.features.onboarding.domain.model.OnboardingEntryPath
 import com.tnyx.features.splash.presentation.route.SplashRoute
 import com.tnyx.features.auth.navigation.authGraph
 import com.tnyx.features.nutrition.presentation.targets.NutritionTargetsRoute
+import com.tnyx.features.onboarding.navigation.onboardingScreen
 import com.tnyx.features.profile.navigation.profileGraph
 import com.tnyx.features.settings.navigation.settingsGraph
 import com.tnyx.features.welcome.navigation.welcomeScreen
@@ -51,6 +54,17 @@ fun AppNavHost(
                         popUpTo(RootRoute.Splash) { inclusive = true }
                     }
                 },
+                onNavigateToOnboarding = {
+                    navController.navigate(
+                        RootRoute.Onboarding(
+                            entryPath = OnboardingEntryPath.SignIn.name,
+                            authState = OnboardingAuthState.SignedIn.name,
+                            signupCompleted = true,
+                        ),
+                    ) {
+                        popUpTo(RootRoute.Splash) { inclusive = true }
+                    }
+                },
                 onNavigateToMain = {
                     navController.navigate(RootRoute.MainGraph) {
                         popUpTo(RootRoute.Splash) { inclusive = true }
@@ -60,6 +74,15 @@ fun AppNavHost(
         }
 
         welcomeScreen(
+            onNavigateToOnboarding = {
+                navController.navigate(
+                    RootRoute.Onboarding(
+                        entryPath = OnboardingEntryPath.GetStarted.name,
+                    ),
+                ) {
+                    launchSingleTop = true
+                }
+            },
             onNavigateToHome = {
                 navController.navigate(RootRoute.MainGraph) {
                     popUpTo(RootRoute.Welcome) { inclusive = true }
@@ -73,6 +96,18 @@ fun AppNavHost(
             }
         )
 
+        onboardingScreen(
+            onCompleted = {
+                navController.navigate(RootRoute.MainGraph) {
+                    popUpTo(RootRoute.Welcome) { inclusive = true }
+                    launchSingleTop = true
+                }
+            },
+            onExit = {
+                navController.popBackStack()
+            },
+        )
+
         composable<RootRoute.MainGraph> {
             MainScreen(rootNavController = navController)
         }
@@ -80,7 +115,13 @@ fun AppNavHost(
         authGraph(
             navController = navController,
             onAuthSuccess = {
-                navController.navigate(RootRoute.MainGraph) {
+                navController.navigate(
+                    RootRoute.Onboarding(
+                        entryPath = OnboardingEntryPath.SignIn.name,
+                        authState = OnboardingAuthState.SignedIn.name,
+                        signupCompleted = true,
+                    ),
+                ) {
                     popUpTo(RootRoute.AuthGraph) { inclusive = true }
                 }
             }

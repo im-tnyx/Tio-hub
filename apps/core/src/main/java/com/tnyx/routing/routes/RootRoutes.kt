@@ -15,6 +15,18 @@ sealed interface RootRoute {
     data object Welcome : RootRoute
 
     @Serializable
+    data class Onboarding(
+        val entryPath: String = "GetStarted",
+        val authState: String = "SignedOut",
+        val signupCompleted: Boolean = false,
+        val workoutPlanEnabled: Boolean? = null,
+        val mobilePresent: Boolean = false,
+        val mobileVerified: Boolean = false,
+        val namePrefilled: Boolean = false,
+        val authRequired: Boolean = false,
+    ) : RootRoute
+
+    @Serializable
     data object AuthGraph : RootRoute
 
     @Serializable

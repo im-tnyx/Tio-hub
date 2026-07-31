@@ -17,12 +17,23 @@ Task files cannot override runtime source, canonical docs, GitHub history, or da
 ## Repository Orientation
 
 - Concise project context: `.ai/project-context.md`
-- Architecture summary: `.ai/architecture-summary.md`
-- Ownership summary: `.ai/ownership-rules.md`
-- Coding rules: `.ai/coding-rules.md`
-- UI rules: `.ai/ui-rules.md`
-- Data/security rules: `.ai/supabase-rules.md`
-- Working workflow: `.ai/workflow.md`
+- Working workflow + Git boundary: `.ai/workflow.md`
+- Documentation routing: `.ai/doc-map.md`
+
+**Stable core summaries** (load only when named by the active task):
+
+- Architecture: `.ai/core/architecture-summary.md`
+- Ownership: `.ai/core/ownership-rules.md`
+- Coding: `.ai/core/coding-rules.md`
+- UI: `.ai/core/ui-rules.md`
+- Data/security: `.ai/core/supabase-rules.md`
+
+**Task playbooks** (execution guides by platform):
+
+- Android: `.ai/task-playbooks/android.md`
+- Supabase: `.ai/task-playbooks/supabase.md`
+- Wear OS: `.ai/task-playbooks/wear.md`
+
 
 ## Android And Wear Truth
 

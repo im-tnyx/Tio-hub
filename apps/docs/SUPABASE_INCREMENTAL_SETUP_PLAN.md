@@ -1,6 +1,6 @@
 # Supabase Incremental Setup Plan
 
-Last updated: 2026-07-29
+Last updated: 2026-07-30
 
 This document is the memory anchor for moving TNYX away from hardcoded demo data
 toward verified Supabase schema foundations that a future backend can consume,
@@ -57,8 +57,12 @@ full Profile flow complete. The verified object inventory, applied migration
 versions, current security state, and future table backlog are maintained in
 [SUPABASE_SCHEMA_STATUS.md](SUPABASE_SCHEMA_STATUS.md).
 
-The current Android Profile binding is non-persistent and in-memory. Live
-Supabase objects are not an active Android synchronization path.
+Android now has an active Supabase-backed Auth/Profile path for the currently
+authenticated user, and the current nutrition bootstrap path reads live
+`user_nutrition_profiles` targets instead of permanent fake goal values. This
+still does not mean every feature is fully synced yet: nutrition meal logs,
+workout history, progress logs, and future backend-owned contracts still need
+their own runtime slices.
 
 ## Future Turborepo / TypeScript Boundary
 
@@ -378,22 +382,24 @@ Open decisions before backend implementation:
 - Which backend runtime, hosting, token, and identity mapping strategy will be
   authoritative?
 
-## First Practical Task
+## Current Practical Focus
 
-Recommended first task:
+Recommended current task:
 
-Profile backend contract packet, while retaining the local in-memory runtime.
+Add the first truthful post-bootstrap persistence slice instead of restoring
+fake local/demo data.
 
 Why:
 
-- Profile already has a stable Android repository contract and verified schema.
-- Defining auth headers, identity mapping, DTOs, and error behavior first avoids
-  coupling future clients to Supabase.
-- Backend runtime can remain deferred until hosting and auth decisions are
-  approved.
+- Auth and Profile already have an active Supabase-backed client path.
+- Nutrition targets already read from live `user_nutrition_profiles`.
+- The next highest-value hardcoded gap is date-specific meal persistence.
+- Backend runtime can still remain deferred if Android repositories keep a
+  stable contract boundary.
 
 Minimum outcome:
 
-- Android Profile remains usable through `InMemoryProfileRepository`.
-- Future backend Profile endpoints and identity boundary are documented.
-- Live Supabase Profile objects remain backend foundations, not client sync.
+- `MealDiaryViewModel` stays repository-driven.
+- `meal_logs` and related rows become the first real nutrition diary truth.
+- Future backend Profile/Nutrition endpoints can replace client-direct
+  Supabase access without rewriting Screens.

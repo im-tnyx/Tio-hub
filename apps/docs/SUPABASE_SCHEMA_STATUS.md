@@ -1,6 +1,6 @@
 # Supabase Schema Status
 
-Last verified: 2026-07-29
+Last verified: 2026-07-30
 
 This document records which Supabase objects currently exist for Tio-hub and
 which data areas may need tables later. Update it after every approved schema,
@@ -34,11 +34,13 @@ must not be added to this document.
 |---|---|---|---|
 | `20260729150842` | `bootstrap_user_profiles` | `LIVE` | Creates the initial user profile, nutrition profile, workout profile, auth identity, profile view, RLS, grants, indexes, and profile image storage policy baseline. |
 | `20260729151026` | `deny_direct_auth_identity_access` | `LIVE` | Explicitly denies direct authenticated access to provider identity mapping rows. |
+| `20260730193000` | `add_profiles_mobile_column` | `LIVE` | Adds `profiles.mobile` so active Android profile sync can persist phone-number profile data remotely. |
 
 Migration source:
 
 - `supabase/migrations/20260729150842_bootstrap_user_profiles.sql`
 - `supabase/migrations/20260729151026_deny_direct_auth_identity_access.sql`
+- `supabase/migrations/20260730193000_add_profiles_mobile_column.sql`
 
 ## Current Live Objects
 
@@ -70,12 +72,12 @@ Migration source:
 
 | Area | Status | Boundary |
 |---|---|---|
-| Profile read/write repository | `NOT ACTIVE` | Android currently binds `ProfileRepository` to a non-persistent in-memory implementation. The direct Supabase implementation is not the active runtime source. |
-| Profile image upload | `NOT ACTIVE` | The live `tio-profile` bucket remains available to a future backend media flow; current Android avatar updates are in-memory only. |
+| Profile read/write repository | `ACTIVE` | Android now binds `ProfileRepository` to `SupabaseProfileRepository`, reads remote profile/nutrition rows, and refreshes while the profile is being observed. |
+| Profile image upload | `ACTIVE` | Android avatar updates now write to the live `tio-profile` bucket and update `profiles.avatar_url`. |
 | Username editing | `NOT IMPLEMENTED` | The schema and model support `username`, but Personal Information does not yet edit and save it. |
-| Real auth source | `NOT FINALIZED` | Android still has `FakeAuthRepository`; backend auth/token/identity ownership must be finalized before production auth claims. |
+| Real auth source | `ACTIVE CLIENT SOURCE` | Android now binds `AuthRepository` to a Supabase-backed implementation for email/password, Google OAuth start, email OTP verification, and sign-out. Backend authority is still a future contract question, but fake local auth is no longer the active source. |
 | Firebase identity linking | `NOT IMPLEMENTED` | `auth_identities` reserves a safe server-owned mapping boundary only. |
-| Nutrition diary persistence | `NOT IMPLEMENTED` | Current profile targets are not meal logging tables. |
+| Nutrition diary persistence | `REMOTE TARGETS ONLY` | Android Meal Diary reads live `user_nutrition_profiles` target values through Supabase for the authenticated user and no longer shows seeded fake meals or fake progress. `meal_logs` persistence still does not exist yet. |
 | Workout cloud sync | `NOT IMPLEMENTED` | Current workout preferences are not workout plans, sessions, or set history. |
 
 ## Future Table Backlog

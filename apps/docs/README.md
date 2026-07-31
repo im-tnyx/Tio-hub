@@ -45,9 +45,10 @@ Use this path for a new contributor, AI assistant, or future maintainer:
 | [WORKOUT_PRODUCT_BLUEPRINT.md](WORKOUT_PRODUCT_BLUEPRINT.md) | Planned Workout product and UX target, Lyfta reference boundary, gender-aware exercise media contract, architecture gates, and 90-day delivery order |
 | [SUPABASE_INCREMENTAL_SETUP_PLAN.md](SUPABASE_INCREMENTAL_SETUP_PLAN.md) | Plan for replacing hardcoded data with repository-backed Supabase slices, RLS, seed data, and future TypeScript/Turborepo boundaries |
 | [SUPABASE_SCHEMA_STATUS.md](SUPABASE_SCHEMA_STATUS.md) | Verified live Supabase object and migration inventory, runtime integration status, future table backlog, and table-addition gate |
-| [BACKEND_TRANSITION_PLAN.md](BACKEND_TRANSITION_PLAN.md) | Binding backend-mediated client data boundary, current fake/in-memory runtime limitation, and future minimum backend slice |
+| [BACKEND_TRANSITION_PLAN.md](BACKEND_TRANSITION_PLAN.md) | Binding backend-mediated client data boundary, current Fake Auth/local Room limitation, and future minimum backend slice |
 | [ANDROID_APP_PROGRESS.md](ANDROID_APP_PROGRESS.md) | Current Android implementation status: completed foundation, skeletons, placeholders, known validation, and next recommended slices |
 | [NUTRITION.md](NUTRITION.md) | Nutrition runtime behavior, Meal Diary/Editor flow, UI/data boundary, hardcoded-data status, and persistence roadmap |
+| [ONBOARDING_ARCHITECTURE.md](ONBOARDING_ARCHITECTURE.md) | Canonical Tio onboarding runtime boundary, stable section/step identity rules, version 1 flow, persistence direction, and staged delivery |
 | [ONBOARDING_FLOW_DETAILED.md](ONBOARDING_FLOW_DETAILED.md) | Full onboarding reference, section order, data collection, resume expectations, and future integration direction |
 | [TNYX_MODULAR_ONBOARDING.md](TNYX_MODULAR_ONBOARDING.md) | Modular onboarding implementation guide and migration direction |
 | [WEAR_OS_PLAN.md](WEAR_OS_PLAN.md) | Wear OS product and architecture plan for workout/nutrition companion workflows |
@@ -268,6 +269,7 @@ Confirm:
 
 Read:
 
+- [ONBOARDING_ARCHITECTURE.md](ONBOARDING_ARCHITECTURE.md)
 - [ONBOARDING_FLOW_DETAILED.md](ONBOARDING_FLOW_DETAILED.md)
 - [TNYX_MODULAR_ONBOARDING.md](TNYX_MODULAR_ONBOARDING.md)
 - [PROFILE_SETTINGS_GUIDE.md](PROFILE_SETTINGS_GUIDE.md)

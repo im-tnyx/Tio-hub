@@ -4,18 +4,30 @@ This changelog records architecture decisions that affect project structure, dat
 
 Do not use this file for ordinary feature changes, bug fixes, or copy edits.
 
+## 2026-07-29 - Stable Android Onboarding Flow Identity
+
+- Added versioned Onboarding section and step contracts under
+  `:features:onboarding`.
+- Chose explicit namespaced string IDs instead of persisted enum ordinals or
+  numeric step indexes.
+- Defined the minimal Profile, Body Goal, Workout, and Review flow while
+  keeping draft persistence, UI, backend sync, and dynamic configuration
+  deferred.
+- Added `ONBOARDING_ARCHITECTURE.md` as the canonical Tio onboarding runtime
+  boundary; Tnyx onboarding remains reference material only.
+
 ## 2026-07-29 - Backend-mediated client data boundary
 
 - Superseded the earlier Supabase-first client transition decision with
   ADR-0006.
 - Kept live Supabase migrations, RLS, grants, views, and storage as server-side
   schema foundations rather than active Android synchronization proof.
-- Bound the active Android `ProfileRepository` to a non-persistent
-  `InMemoryProfileRepository` with empty defaults for the Fake Auth development
+- Bound the active Android `ProfileRepository` to a local
+  `RoomProfileRepository` with empty defaults for the Fake Auth development
   phase.
 - Kept Screens and ViewModels unchanged behind the existing repository
   contract.
-- Deferred real account creation, identity mapping, profile persistence, and
+- Deferred real account creation, identity mapping, and remote Profile
   synchronization until a backend runtime/auth ADR and minimum Auth/Profile API
   slice are approved.
 - Kept the existing direct Supabase implementation inactive rather than

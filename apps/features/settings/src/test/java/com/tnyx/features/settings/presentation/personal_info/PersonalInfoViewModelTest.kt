@@ -13,8 +13,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import java.time.LocalDate
+import java.time.ZoneId
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class PersonalInfoViewModelTest {
@@ -31,21 +34,42 @@ class PersonalInfoViewModelTest {
         assertEquals("Santosh", viewModel.uiState.value.fullName)
         assertEquals("santosh", viewModel.uiState.value.username)
         assertEquals("santosh@example.com", viewModel.uiState.value.email)
+        assertEquals("+91", viewModel.uiState.value.selectedCountry?.code)
+        assertEquals("9876543210", viewModel.uiState.value.phoneNumber)
+        assertEquals("Male", viewModel.uiState.value.gender)
+        assertEquals("171", viewModel.uiState.value.heightCm)
+        assertTrue(viewModel.uiState.value.dobMillis > 0L)
     }
 
     @Test
-    fun saveNormalizesAndUpdatesNameAndUsername() = runTest {
+    fun saveNormalizesAndUpdatesProfileFields() = runTest {
         val repository = TestProfileRepository(profile())
         val viewModel = PersonalInfoViewModel(repository, TestSessionProvider())
         advanceUntilIdle()
 
         viewModel.onAction(PersonalInfoAction.OnFullNameChange("  Santosh Kumar  "))
         viewModel.onAction(PersonalInfoAction.OnUsernameChange("@Santosh_Kumar"))
+        viewModel.onAction(PersonalInfoAction.OnCountrySelected(com.tnyx.core.ui.components.inputs.Country("United States", "+1", "🇺🇸")))
+        viewModel.onAction(PersonalInfoAction.OnMobileChange("5551234567"))
+        viewModel.onAction(PersonalInfoAction.OnGenderChange("Other"))
+        viewModel.onAction(
+            PersonalInfoAction.OnDobChange(
+                LocalDate.of(1998, 8, 19)
+                    .atStartOfDay(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli(),
+            ),
+        )
+        viewModel.onAction(PersonalInfoAction.OnHeightCmChange("180"))
         viewModel.onAction(PersonalInfoAction.OnSaveClicked)
         advanceUntilIdle()
 
         assertEquals("Santosh Kumar", repository.updatedProfile?.displayName)
         assertEquals("santosh_kumar", repository.updatedProfile?.username)
+        assertEquals("+15551234567", repository.updatedProfile?.mobile)
+        assertEquals("Other", repository.updatedProfile?.gender)
+        assertEquals("1998-08-19", repository.updatedProfile?.dob)
+        assertEquals(180, repository.updatedProfile?.height)
         assertFalse(viewModel.uiState.value.hasChanges)
     }
 
@@ -63,18 +87,33 @@ class PersonalInfoViewModelTest {
         assertEquals(null, repository.updatedProfile)
     }
 
+    @Test
+    fun invalidHeightDoesNotUpdateProfile() = runTest {
+        val repository = TestProfileRepository(profile())
+        val viewModel = PersonalInfoViewModel(repository, TestSessionProvider())
+        advanceUntilIdle()
+
+        viewModel.onAction(PersonalInfoAction.OnHeightCmChange("abc"))
+        viewModel.onAction(PersonalInfoAction.OnSaveClicked)
+        advanceUntilIdle()
+
+        assertEquals("Height is invalid. Check the value and try again.", viewModel.uiState.value.saveError)
+        assertEquals(null, repository.updatedProfile)
+    }
+
     private fun profile(): UserProfile {
         return UserProfile(
             id = "user-a",
             displayName = "Santosh",
             username = "santosh",
-            dob = "",
-            gender = "",
+            dob = "1995-06-05",
+            gender = "Male",
             planLabel = "",
             weight = 0.0,
-            height = 0,
+            height = 171,
             bmi = 0.0,
             bmr = 0,
+            mobile = "+919876543210",
         )
     }
 }

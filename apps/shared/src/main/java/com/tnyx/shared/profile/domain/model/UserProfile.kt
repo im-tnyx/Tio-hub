@@ -41,6 +41,8 @@ data class UserProfile(
     val avatarUrl: String? = null,
     val membershipTier: MembershipTier = MembershipTier.fromPlanLabel(planLabel),
     val username: String = "",
+    val mobile: String = "",
+    val hasCompletedOnboarding: Boolean = false,
 )
 
 @Serializable

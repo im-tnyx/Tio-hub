@@ -79,28 +79,89 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
 - [x] Login destination has minimum real UI.
 - [x] Signup destination has minimum real UI.
 - [x] OTP destination has minimum real UI.
-- [x] Auth success flow is reachable from Login demo/sign-in and OTP verify actions.
+- [x] Auth success flow is reachable from real Supabase sign-in and OTP verify actions.
 - [x] AuthRepository contract exists.
-- [x] FakeAuthRepository backs the minimum auth flow for app testing.
-- [x] Unit tests cover FakeAuthRepository and Auth ViewModels (Login, Signup, OTP).
-- [x] Fake Auth publishes a shared in-memory `AuthSession` with normalized,
-  stable per-email user IDs.
-- [x] Signup display name survives OTP verification and seeds the local Profile.
+- [x] `SupabaseAuthRepository` is the active Android auth source.
+- [x] Signup display name survives OTP verification through Supabase user metadata and seeds the shared session/profile path.
 - [x] Settings Logout clears the active session and returns to `AuthGraph`
   after removing the authenticated main back stack.
-- [x] Android owns `DataStoreAuthSessionStore`; Fake Auth session identity
+- [x] Android owns `DataStoreAuthSessionStore`; the shared authenticated session
   survives process restart and no password is persisted.
 - [x] Splash resolves the persisted session before routing: signed-in sessions
   open `MainGraph`, signed-out state opens Welcome.
+- [x] Login now exposes `Continue with Google` and starts Supabase OAuth
+  through an app-owned external auth gateway instead of hardwiring Supabase
+  client behavior into the feature module.
+- [x] Android now owns a Supabase deeplink/session bridge: `MainActivity`
+  handles OAuth return intents and the bridge imports authenticated Supabase
+  sessions into the shared local `AuthSession` store.
+- [x] Login demo-account action is disabled in sync mode so fake local auth is
+  no longer the active runtime path.
 - [ ] Backend auth/token/identity source of truth is finalized.
 
 ### Onboarding
 
 - [x] Onboarding docs and flow reference exist.
 - [x] Splash and welcome foundation exist.
-- [ ] Full modular onboarding runtime is not yet wired into the new app architecture.
-- [ ] Onboarding persistence is not yet repository-backed.
-- [ ] Resume manager is not yet backend repository-backed.
+- [x] Versioned section/step domain contracts now define the local
+  Intro -> Profile -> Body Goal -> Mobile -> Workout Intro -> Workout ->
+  Targets -> Source -> Review flow with stable string IDs.
+- [x] Flow tests cover ordering, cross-section navigation, serialization,
+  insertion-safe positions, and invalid definitions.
+- [x] Typed draft and versioned progress are persisted atomically through the
+  feature-owned `OnboardingRepository` contract and app-owned Preferences
+  DataStore implementation.
+- [x] Resume validation preserves compatible checkpoints and resets stale flow
+  versions, unknown positions, and unknown IDs.
+- [x] Typed `RootRoute.Onboarding`, feature-owned navigation, generic container,
+  ViewModel, state, actions, and effects are wired.
+- [x] ViewModel serializes checkpoint operations and handles required answers,
+  next/back/skip, local completion, and persistence retry.
+- [x] Profile name, gender, and date-of-birth forms render in the container and
+  persist stable typed answers.
+- [x] Body Goal primary goal, height, current weight, target weight, and
+  activity level forms render in the container and persist stable typed
+  answers.
+- [x] Workout intro gating, experience, gym access, location bias, focus
+  areas, conditional equipment, training days, duration, split, optional
+  workout concerns, and optional special-event forms render in the container
+  and persist stable typed answers.
+- [x] Targets steps-target, sleep-target, water-target, goal-pace, and
+  nutrition-summary forms render after Workout and persist stable typed target
+  answers.
+- [x] Targets now include a required recommendation-summary bridge step so the
+  user sees seeded step, sleep, and water guidance before goal-pace
+  selection.
+- [x] Source channel and reason forms render after Workout, persist stable
+  typed source answers, and are included in review summary rendering.
+- [x] Review summary renders collected answers, requires explicit confirmation,
+  and allows local onboarding completion.
+- [x] Successful local onboarding now shows a short setup state and a ready
+  state before entering the app, instead of exiting directly from the review
+  confirmation step.
+- [x] Visible onboarding progress now follows the effective runtime path, so
+  declining Workout Intro removes the workout section and gym-only access
+  removes the optional equipment step from the denominator.
+- [x] Current-step answers no longer bump visible progress immediately; the
+  bar now stays stable while answering and updates with the committed next-step
+  transition.
+- [x] Single onboarding CTA/progress shell now uses step-aware visibility:
+  intro hides progress, and profile/body/mobile/workout steps reveal the same
+  footer CTA from step-ready timing instead of pinning it immediately on every
+  screen or coupling visible progress to answer selection.
+- [x] Onboarding checkpoint preparation now seeds live Profile values into the
+  local draft and can skip intro/mobile when signed-in bootstrap context
+  already exists, without adding extra intro screens or typing-only steps.
+- [x] Welcome `Get Started` opens onboarding; Welcome `Skip` still opens Main.
+- [x] The local onboarding shell now reaches completion without a placeholder
+  step.
+- [x] Completed onboarding now finalizes Profile-owned answers into the active
+  local Profile and marks that profile as onboarded.
+- [x] Splash now sends signed-out users with a completed local onboarding
+  profile directly to `MainGraph`.
+- [ ] Full modular onboarding runtime is not yet product-complete.
+- [ ] Guest-to-auth account handoff, backend sync, and non-Profile repository
+  finalization are not yet repository-backed.
 
 ### Nutrition
 
@@ -108,9 +169,18 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
 - [x] Nutrition graph exists.
 - [x] Meal Diary, Meal Editor, and Meal Item Editor screens exist.
 - [x] Bottom nav visibility is hidden for meal edit/item edit flows.
+- [x] Meal Diary now reads through `NutritionRepository` instead of owning
+  hardcoded meals directly in `MealDiaryViewModel`.
+- [x] App-owned nutrition bootstrap wiring can read live
+  `user_nutrition_profiles` targets when a real Supabase session exists.
+- [x] Fake seeded diary meals, fake water progress, and fake vitamin/mineral
+  progress are removed from the active runtime path.
+- [x] Meal Diary refreshes the selected date periodically so remote nutrition
+  target changes can appear without reopening the screen.
 - [ ] Nutrition data is still not fully local/backend repository-backed.
-- [ ] Hardcoded sample meal data is still not fully removed.
-- [ ] Nutrition targets table/repository slice is not implemented yet.
+- [ ] Real `meal_logs` persistence is not implemented yet.
+- [ ] Nutrition targets still come from `user_nutrition_profiles`; a separate
+  meal-log repository slice is not implemented yet.
 
 ### Workout
 
@@ -147,20 +217,21 @@ Boundary note: shared contracts, Phone persistence/recovery, and the first repos
 - [x] Edit and avatar actions open the real Settings Personal Information route.
 - [x] Avatar entry selects You when enabled and launches standalone `ProfileGraph` as fallback.
 - [x] Shared Profile model and Supabase repository DTO expose additive username data.
-- [x] Active Profile Hilt binding uses a local persistent
-  `RoomProfileRepository`; authenticated profiles are keyed by active fake
-  user ID and signed-out state resolves to a clean guest profile.
-- [x] Local Profile changes remain isolated across account switches and persist
-  through app process/database recreation.
+- [x] Active Profile Hilt binding now uses `SupabaseProfileRepository`.
+- [x] Authenticated Profile reads come from live `profiles` and
+  `user_nutrition_profiles`; signed-out state resolves to a clean guest
+  profile.
 - [x] Personal Information reads active name, username, email, and avatar;
   Save updates normalized name/username and avatar actions update the active
-  local Room profile.
-- [x] Direct `SupabaseProfileRepository` is not the active Android Profile
-  runtime source.
+  remote profile path.
+- [x] Avatar upload/remove persists through the live `tio-profile` storage
+  bucket and `profiles.avatar_url`.
 - [x] `bootstrap_user_profiles` और `deny_direct_auth_identity_access` migrations
   connected Tio-hub Supabase project पर applied और verified हैं।
-- [ ] Personal Information email and mobile writes remain deferred; remote
-  Profile/avatar synchronization is not implemented.
+- [x] `add_profiles_mobile_column` migration is applied and verified on the
+  connected Tio-hub Supabase project.
+- [ ] Personal Information email writes remain deferred; current remote sync
+  does not make the full Profile surface backend-final.
 - [ ] Remaining Profile launchers are intentionally absent until their owning feature slices exist.
 
 ### Settings
@@ -195,14 +266,15 @@ Recommended next order:
    - Keep Home as composition and launcher UI, not a cross-domain business owner.
 
 2. **Nutrition repository vertical slice**
-   - Add `NutritionRepository` contract.
-   - Move Meal Diary read path from hardcoded ViewModel data to repository.
-   - Add local/dev fake repository first if Supabase is not ready.
-   - Then add Supabase tables/seed/RLS when implementation begins.
+   - Keep `NutritionRepository` as the stable screen contract.
+   - Add real `meal_logs` / `meal_log_items` persistence behind the repository.
+   - Remove the remaining bootstrap-only empty diary boundary once real tables exist.
+   - Validate owner-scoped reads/writes before calling the slice synced.
 
 3. **Auth real session source slice**
-   - Replace `FakeAuthRepository` with the approved backend auth implementation.
-   - Keep ViewModels behind the stable `AuthRepository` contract.
+   - Keep the active `SupabaseAuthRepository` behind the stable `AuthRepository` contract.
+   - Decide the future backend-mediated auth/session authority without
+     reintroducing fake runtime auth.
 
 4. **Progress real screens**
    - Implement Journey screen first.
@@ -258,6 +330,187 @@ Rule: Future module folders may exist as checked-in ownership placeholders, but 
 ---
 
 ## ✅ Latest Validation
+
+### 2026-07-30: Nutrition repository bootstrap
+
+- [x] `./gradlew.bat :features:nutrition:testDebugUnitTest
+  :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL.
+- [x] Scope: Meal Diary now loads through `NutritionRepository`; app wiring
+  provides a bootstrap repository that can read live Supabase nutrition
+  profile targets when available and returns empty diary content otherwise.
+- [x] Real meal-log persistence, add/edit/delete writes, backend mediation, and
+  RLS-validated diary tables remain incomplete or unchanged.
+
+### 2026-07-30: Post-review onboarding completion states
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL.
+- [x] Scope: review completion now transitions through local setup and ready
+  states before app entry, while keeping stable flow IDs, checkpoint
+  persistence, and existing review confirmation behavior intact.
+- [x] Backend handoff, guest-to-auth migration, analytics, and non-Profile
+  repository finalization remain incomplete or unchanged.
+
+### 2026-07-30: Profile-seeded onboarding bootstrap and hidden-path alignment
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :app:compileDebugKotlin --no-configuration-cache --no-daemon
+  -Dkotlin.compiler.execution.strategy=in-process`
+- [x] Result: BUILD SUCCESSFUL.
+- [x] Scope: onboarding now seeds available live Profile fields into the local
+  checkpoint draft, aligns hidden intro/mobile positions for signed-in or
+  prefilled users, and reuses the same effective-flow logic across progress UI
+  and state-machine navigation.
+- [x] Guest-to-auth handoff, backend sync, analytics, remote onboarding draft
+  storage, and extra intro/typing-heavy steps remain incomplete or unchanged.
+
+### 2026-07-30: Targets/source bridge steps and Google auth foundation
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :features:auth:testDebugUnitTest :app:testDebugUnitTest
+  :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL.
+- [x] Scope: onboarding now includes `targets.recommendation_summary` and
+  source attribution; Login now starts Google OAuth through Supabase deeplink
+  handling and a local session bridge without changing the existing
+  fake-email/demo auth path.
+- [x] Backend auth ownership, guest-to-auth handoff, backend sync, analytics,
+  and non-Profile repository finalization remain incomplete or unchanged.
+
+### 2026-07-30: Local onboarding profile finalization and guest splash gate
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :app:testDebugUnitTest :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL.
+- [x] Scope: completed onboarding now writes Profile-owned answers into the
+  active local Profile, marks that profile as onboarded, retries failed
+  finalization, and uses the local Profile completion flag to bypass Welcome
+  on future signed-out cold starts.
+- [x] Guest-to-auth handoff, backend sync, analytics, and non-Profile
+  repository finalization remain incomplete or unchanged.
+
+### 2026-07-30: Targets onboarding expansion
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL.
+- [x] Scope: Targets section now includes stable `targets.sleep_target` and
+  `targets.nutrition_summary` steps, updated review coverage, validation, and
+  progression before Source in the local flow.
+- [x] Guest-to-auth handoff, backend sync, analytics, and repository
+  finalization remain incomplete or unchanged.
+
+### 2026-07-30: Source onboarding expansion
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL.
+- [x] Scope: Source section now includes stable `source.reason` intent
+  capture, updated review coverage, validation, and progression before Review
+  in the local flow.
+- [x] Guest-to-auth handoff, backend sync, analytics, and repository
+  finalization remain incomplete or unchanged.
+
+### 2026-07-30: Source onboarding section
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL.
+- [x] Scope: Source section insertion between Workout and Review, stable
+  `source.channel` validation, review summary coverage, and skip/progression
+  updates across the local flow.
+- [x] Targets, guest-to-auth handoff, backend sync, analytics, and repository
+  finalization remained incomplete in that earlier slice.
+
+### 2026-07-30: Targets onboarding section
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL.
+- [x] Scope: Targets section insertion between Workout and Source, bounded
+  steps/water targets, stable goal-pace selection, review summary coverage,
+  and updated skip/progression behavior in the local flow.
+- [x] Sleep targets, nutrition summary, guest-to-auth handoff, backend sync,
+  analytics, and repository finalization remained incomplete in that earlier
+  slice.
+
+### 2026-07-30: Review onboarding completion step
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :app:testDebugUnitTest :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL; onboarding 45 tests, app 25 tests, 0 failures,
+  0 errors.
+- [x] Scope: Review summary rendering, explicit finish confirmation, draft
+  answer exposure through UI state, and local completion validation.
+- [x] Backend/account handoff, remote sync, analytics, and business
+  finalization remain incomplete or unchanged.
+
+### 2026-07-30: Workout onboarding section
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :app:testDebugUnitTest :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL; onboarding 44 tests, app 25 tests, 0 failures,
+  0 errors.
+- [x] Scope: Workout experience/location/equipment/training-days/duration
+  forms, shared onboarding choice cards, ViewModel validation, and Workout
+  boundary progression into Review.
+- [x] Review, account handoff, backend/Supabase sync, analytics, and business
+  finalization remain incomplete or unchanged.
+
+### 2026-07-30: Body Goal onboarding section
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :app:testDebugUnitTest :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL; onboarding 38 tests, app 25 tests, 0 failures,
+  0 errors.
+- [x] Scope: Body Goal goal/activity selections, numeric body-stat steps,
+  scroll-safe onboarding shell, ViewModel validation, and Body Goal boundary
+  progression into Workout.
+- [x] Workout, Review, account handoff, backend/Supabase sync, analytics, and
+  business finalization remain incomplete or unchanged.
+
+### 2026-07-30: Profile Onboarding section and Welcome entry
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :app:testDebugUnitTest :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL; 57 tests, 0 failures, 0 errors.
+- [x] Scope: Profile name/gender/date-of-birth forms, step-specific validation,
+  bounded reusable date picker, and Welcome Get Started/Skip routing.
+- [x] Body Goal, Workout, Review, account handoff, backend/Supabase sync,
+  analytics, and business finalization remain incomplete or unchanged.
+
+### 2026-07-29: Onboarding presentation container
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :app:testDebugUnitTest :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL; 51 tests, 0 failures, 0 errors.
+- [x] Scope: typed root destination, generic Tnyx-token container,
+  ViewModel/state/actions/effects, serialized persistence operations,
+  validation, next/back/skip, local completion, and retry behavior.
+- [x] Welcome entry, section-specific forms, authenticated account handoff,
+  backend/Supabase sync, analytics, and business finalization remain unchanged.
+
+### 2026-07-29: Local Onboarding checkpoint persistence
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :app:testDebugUnitTest :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL; 39 tests, 0 failures, 0 errors.
+- [x] Scope: typed draft answers, versioned progress, atomic checkpoint
+  persistence, Hilt binding, compatible resume, and stale-checkpoint reset.
+- [x] No onboarding UI/navigation, authenticated account handoff, backend or
+  Supabase sync, analytics, or completion finalization was added.
+
+### 2026-07-29: Stable Onboarding flow contracts
+
+- [x] `./gradlew.bat :features:onboarding:testDebugUnitTest
+  :features:onboarding:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL.
+- [x] Scope: stable section/step IDs, versioned default flow, deterministic
+  next/previous positions, serialization, and insertion-safe progress identity.
+- [x] No onboarding UI, draft persistence, backend synchronization, remote
+  config, analytics, or finalization was added.
 
 ### 2026-07-29: Persistent Fake Auth session and Splash gate
 
@@ -334,6 +587,15 @@ Rule: Future module folders may exist as checked-in ownership placeholders, but 
 - [x] Backend-mediated client data access is accepted in ADR-0006; live schema
   existence is no longer described as active Android synchronization.
 
+### 2026-07-30: Supabase-backed auth/profile sync baseline
+
+- [x] `./gradlew.bat :features:auth:compileDebugKotlin :features:nutrition:compileDebugKotlin :app:compileDebugKotlin --no-configuration-cache`
+- [x] Result: BUILD SUCCESSFUL
+- [x] Live Supabase migration applied: `20260730193000_add_profiles_mobile_column`
+- [x] Live schema verification: `profiles.mobile` exists in project `ublwxylwdqjdykqcncuv`
+- [x] Scope: active `SupabaseAuthRepository` binding, demo-account disablement in Login UI, active `SupabaseProfileRepository` binding, remote avatar/profile persistence, refresh-driven remote profile sync, and nutrition fake fallback removal.
+- [x] Truth boundary: profile/nutrition target data is no longer local-only runtime truth; `meal_logs` still does not exist, so meal diary remains target-sync only.
+
 ### 2026-07-16: Workout shared contract v2
 
 - [x] `./gradlew.bat :shared:test :app:compileDebugKotlin :wear:compileDebugKotlin`
@@ -367,5 +629,5 @@ Known warning:
 
 ---
 
-**Last Updated:** 2026-07-29
-**Current Focus:** Re-prove the dense Stage 3 editor compile/tests, then complete device smoke for RPE, add-set, Previous copy, history, and force-stop recovery before Stage 4 exercise catalog and approved media work begins.
+**Last Updated:** 2026-07-30
+**Current Focus:** Extend Supabase-backed runtime truth beyond profile/targets into real meal-log and broader onboarding-owned remote persistence.

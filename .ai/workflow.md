@@ -69,3 +69,13 @@ Do not create large future areas before a slice needs them:
 - Full Supabase schema
 
 Plan them in docs first, then implement vertical slices.
+
+## Git Boundary
+
+- Use focused, scoped branches per objective.
+- Preserve unrelated uncommitted user changes before switching objectives.
+- Before commit or push: inspect `git diff --stat` and confirm only intended files are staged.
+- Do not commit generated/cache/build artifacts: `.gradle`, `build/`, APK/AAB files.
+- Do not commit secrets, service-role keys, `.env` values, or private credentials.
+- Do not open a Pull Request, push to a shared branch, or merge without explicit user request.
+- After merge: update `.ai/CURRENT.md` and archive the completed task before starting a new branch.

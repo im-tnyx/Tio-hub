@@ -4,72 +4,72 @@ import com.tnyx.shared.profile.domain.model.MembershipTier
 import com.tnyx.shared.profile.domain.model.ProfileJourney
 import com.tnyx.shared.profile.domain.model.ProfileWorkoutChart
 import com.tnyx.shared.profile.domain.model.UserProfile
+import com.tnyx.shared.auth.domain.repository.AuthSessionProvider
 import com.tnyx.shared.profile.domain.repository.ProfileRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.storage.storage
 import io.ktor.http.ContentType
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
+import kotlin.coroutines.coroutineContext
 
 private const val AVATAR_BUCKET = "tio-profile"
 private const val AVATAR_FILE_NAME = "avatar.jpg"
+private const val PROFILE_REFRESH_INTERVAL_MS = 10_000L
 
 @Serializable
-data class ProfileDto(
+data class ProfileRowDto(
     val id: String,
     val username: String? = null,
     val display_name: String? = null,
+    val mobile: String? = null,
     val dob: String? = null,
     val gender: String? = null,
+    val is_onboarded: Boolean = false,
     val plan_label: String? = null,
     val avatar_url: String? = null,
+    val status_label: String? = null,
+    val current_streak: Int? = null,
+)
+
+@Serializable
+data class NutritionProfileRowDto(
     val weight: Double? = null,
     val height: Int? = null,
-    val bmi: Double? = null,
-    val bmr: Int? = null,
-    val status_label: String? = null,
-    val streak: Int? = null,
+    val current_weight_kg: Double? = null,
+    val height_cm: Double? = null,
+    val target_weight_kg: Double? = null,
     val body_fat: Double? = null,
-    val journey_name: String? = null,
-    val journey_initial_weight: Double? = null,
-    val journey_target_weight: Double? = null,
-    val journey_progress: Float? = null,
-    val progress_photos: List<String>? = null,
-    val last_photo_update_weight: String? = null,
-    val last_photo_update_date: String? = null,
-    val chart_duration_minutes: List<Float>? = null,
-    val chart_volume_kg: List<Float>? = null,
-    val chart_reps: List<Float>? = null,
+    val body_fat_percentage: Double? = null,
 )
 
 class SupabaseProfileRepository(
     private val supabaseClient: SupabaseClient,
+    private val sessionProvider: AuthSessionProvider,
 ) : ProfileRepository {
-
-    private val currentProfile = MutableStateFlow<UserProfile?>(null)
-
-    override fun getCurrentProfile(): Flow<UserProfile> = flow {
-        val currentUserId = currentUserId()
-        if (currentProfile.value?.id != currentUserId) {
-            currentProfile.value = getCurrentProfileDto(currentUserId).toDomain()
-        }
-        emitAll(currentProfile.filterNotNull())
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    override fun getCurrentProfile(): Flow<UserProfile> {
+        return sessionProvider.observeSession()
+            .flatMapLatest { session ->
+                if (session == null) {
+                    flowOf(emptyProfile())
+                } else {
+                    observeRemoteProfile(session.userId)
+                }
+            }
+            .distinctUntilChanged()
     }
 
-    override fun getProfile(userId: String): Flow<UserProfile> = flow {
-        val dto = supabaseClient.from("profile_overview").select {
-            filter {
-                eq("id", userId)
-            }
-        }.decodeSingle<ProfileDto>()
-
-        emit(dto.toDomain())
+    override fun getProfile(userId: String): Flow<UserProfile> {
+        return observeRemoteProfile(userId).distinctUntilChanged()
     }
 
     override suspend fun updateProfile(profile: UserProfile) {
@@ -83,10 +83,12 @@ class SupabaseProfileRepository(
                     .removePrefix("@")
                     .lowercase()
                     .takeIf(String::isNotBlank),
-                "display_name" to profile.displayName,
-                "dob" to profile.dob,
-                "gender" to profile.gender,
-                "plan_label" to profile.planLabel,
+                "display_name" to profile.displayName.trim(),
+                "mobile" to profile.mobile.takeIf(String::isNotBlank),
+                "dob" to profile.dob.trim().takeIf(String::isNotBlank),
+                "gender" to profile.gender.trim().takeIf(String::isNotBlank),
+                "plan_label" to profile.planLabel.trim().takeIf(String::isNotBlank),
+                "is_onboarded" to profile.hasCompletedOnboarding,
             ),
         ) {
             filter {
@@ -105,17 +107,12 @@ class SupabaseProfileRepository(
         ) {
             onConflict = "user_id"
         }
-        currentProfile.value = profile
     }
 
     override suspend fun updateAvatar(jpegBytes: ByteArray): String {
         require(jpegBytes.isNotEmpty()) { "Avatar image is empty" }
 
         val currentUserId = currentUserId()
-        val profile = currentProfile.value
-            ?.takeIf { it.id == currentUserId }
-            ?: getCurrentProfileDto(currentUserId).toDomain()
-
         val objectPath = avatarObjectPath(currentUserId)
         val bucket = supabaseClient.storage.from(AVATAR_BUCKET)
 
@@ -134,17 +131,11 @@ class SupabaseProfileRepository(
                 eq("id", currentUserId)
             }
         }
-
-        currentProfile.value = profile.copy(avatarUrl = cacheBustedUrl)
         return cacheBustedUrl
     }
 
     override suspend fun removeAvatar() {
         val currentUserId = currentUserId()
-        val profile = currentProfile.value
-            ?.takeIf { it.id == currentUserId }
-            ?: getCurrentProfileDto(currentUserId).toDomain()
-
         val objectPath = avatarObjectPath(currentUserId)
         val bucket = supabaseClient.storage.from(AVATAR_BUCKET)
 
@@ -157,19 +148,13 @@ class SupabaseProfileRepository(
                 eq("id", currentUserId)
             }
         }
-        currentProfile.value = profile.copy(avatarUrl = null)
-    }
-
-    private suspend fun getCurrentProfileDto(userId: String): ProfileDto {
-        return supabaseClient.from("profile_overview").select {
-            filter {
-                eq("id", userId)
-            }
-        }.decodeSingle()
     }
 
     private fun currentUserId(): String {
-        return requireNotNull(supabaseClient.auth.currentUserOrNull()?.id) {
+        return requireNotNull(
+            supabaseClient.auth.currentUserOrNull()?.id
+                ?: sessionProvider.currentSession()?.userId,
+        ) {
             "A signed-in user is required for profile access"
         }
     }
@@ -178,37 +163,81 @@ class SupabaseProfileRepository(
         return "$profileId/$AVATAR_FILE_NAME"
     }
 
-    private fun ProfileDto.toDomain(): UserProfile {
+    private fun observeRemoteProfile(userId: String): Flow<UserProfile> = flow {
+        while (coroutineContext.isActive) {
+            emit(fetchProfile(userId))
+            delay(PROFILE_REFRESH_INTERVAL_MS)
+        }
+    }
+
+    private suspend fun fetchProfile(userId: String): UserProfile {
+        val profile = supabaseClient.from("profiles").select {
+            filter {
+                eq("id", userId)
+            }
+        }.decodeSingle<ProfileRowDto>()
+
+        val nutrition = supabaseClient.from("user_nutrition_profiles").select {
+            filter {
+                eq("user_id", userId)
+            }
+        }.decodeList<NutritionProfileRowDto>().firstOrNull()
+
+        return profile.toDomain(nutrition)
+    }
+
+    private fun ProfileRowDto.toDomain(nutrition: NutritionProfileRowDto?): UserProfile {
+        val currentWeight = nutrition?.current_weight_kg ?: nutrition?.weight ?: 0.0
+        val heightCm = nutrition?.height_cm ?: nutrition?.height?.toDouble() ?: 0.0
+        val targetWeight = nutrition?.target_weight_kg ?: 0.0
+        val bmi = if (currentWeight > 0.0 && heightCm > 0.0) {
+            ((currentWeight / Math.pow(heightCm / 100.0, 2.0)) * 100.0).toInt() / 100.0
+        } else {
+            0.0
+        }
+
         return UserProfile(
             id = id,
             displayName = display_name.orEmpty(),
             dob = dob.orEmpty(),
             gender = gender.orEmpty(),
             planLabel = plan_label.orEmpty(),
-            weight = weight ?: 0.0,
-            height = height ?: 0,
-            bmi = bmi ?: 0.0,
-            bmr = bmr ?: 0,
+            weight = currentWeight,
+            height = heightCm.toInt(),
+            bmi = bmi,
+            bmr = 0,
             statusLabel = status_label.orEmpty(),
-            streak = streak ?: 0,
-            bodyFat = body_fat ?: 0.0,
+            streak = current_streak ?: 0,
+            bodyFat = nutrition?.body_fat_percentage ?: nutrition?.body_fat ?: 0.0,
             currentJourney = ProfileJourney(
-                name = journey_name.orEmpty(),
-                initialWeight = journey_initial_weight ?: 0.0,
-                targetWeight = journey_target_weight ?: 0.0,
-                progress = (journey_progress ?: 0f).coerceIn(0f, 1f),
+                name = "",
+                initialWeight = currentWeight.takeIf { it > 0.0 } ?: 0.0,
+                targetWeight = targetWeight,
+                progress = 0f,
             ),
-            progressPhotos = progress_photos.orEmpty(),
-            lastPhotoUpdateWeight = last_photo_update_weight.orEmpty(),
-            lastPhotoUpdateDate = last_photo_update_date.orEmpty(),
-            workoutChart = ProfileWorkoutChart(
-                durationMinutes = chart_duration_minutes.orEmpty(),
-                volumeKg = chart_volume_kg.orEmpty(),
-                reps = chart_reps.orEmpty(),
-            ),
+            progressPhotos = emptyList(),
+            lastPhotoUpdateWeight = "",
+            lastPhotoUpdateDate = "",
+            workoutChart = ProfileWorkoutChart(),
             avatarUrl = avatar_url?.takeIf(String::isNotBlank),
             membershipTier = MembershipTier.fromPlanLabel(plan_label),
             username = username.orEmpty(),
+            mobile = mobile.orEmpty(),
+            hasCompletedOnboarding = is_onboarded,
+        )
+    }
+
+    private fun emptyProfile(): UserProfile {
+        return UserProfile(
+            id = "anonymous",
+            displayName = "",
+            dob = "",
+            gender = "",
+            planLabel = "",
+            weight = 0.0,
+            height = 0,
+            bmi = 0.0,
+            bmr = 0,
         )
     }
 }

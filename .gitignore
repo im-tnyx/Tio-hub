@@ -13,6 +13,7 @@
 
 # Android / Gradle
 .gradle/
+.gradle-codex/
 build/
 **/build/
 local.properties
@@ -71,3 +72,10 @@ pnpm-debug.log*
 
 
 references/
+
+# Local asset staging area; runtime-owned copies normally live in feature res folders.
+apps/assets/*
+!apps/assets/final/
+apps/assets/final/*
+!apps/assets/final/musclemap/
+!apps/assets/final/musclemap/**

@@ -14,19 +14,14 @@ import javax.inject.Inject
 class MealEditorViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-
-    // In a real app, we would fetch the meal using an ID from savedStateHandle
     private val _uiState = MutableStateFlow(MealEditorUiState(
         meal = NutritionMeal(
-            id = "1",
-            name = "Avocado Toast",
+            id = savedStateHandle.get<String>("mealId").orEmpty(),
+            name = "",
             type = "BREAKFAST",
-            items = listOf(
-                MealItem(id = "i1", name = "Whole Grain Bread", calories = 120, protein = 4.0, quantity = 2.0, unit = "slice"),
-                MealItem(id = "i2", name = "Avocado", calories = 160, protein = 2.0, quantity = 0.5, unit = "fruit")
-            ),
-            description = "This meal is light and balanced with healthy fats from avocado."
-        )
+            items = emptyList(),
+            description = "",
+        ),
     ))
     val uiState = _uiState.asStateFlow()
 

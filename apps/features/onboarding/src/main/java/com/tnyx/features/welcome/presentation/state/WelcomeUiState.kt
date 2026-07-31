@@ -27,7 +27,8 @@ data class WelcomeUiState(
 )
 
 sealed class WelcomeEffect {
-    data object NavigateToHome : WelcomeEffect()
+    data object NavigateToOnboarding : WelcomeEffect()
+    data object NavigateToMain : WelcomeEffect()
     data object NavigateToLogin : WelcomeEffect()
     data object ShowLanguageSelector : WelcomeEffect()
     data class NavigateToLegal(val title: String, val url: String) : WelcomeEffect()

@@ -309,7 +309,7 @@ fun PersonalInfoScreen(
             }
         }
 
-        TnyxDatePickerDialog(
+        TnyxDobPickerDialog(
             initialDate = initialDate,
             onDismiss = { onAction(PersonalInfoAction.OnDismissOverlays) },
             onConfirm = { selectedDate ->

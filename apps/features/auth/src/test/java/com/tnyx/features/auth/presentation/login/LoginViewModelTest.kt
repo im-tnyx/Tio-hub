@@ -1,6 +1,7 @@
 package com.tnyx.features.auth.presentation.login
 
 import com.tnyx.features.auth.domain.model.AuthResult
+import com.tnyx.features.auth.data.session.InMemoryAuthSessionStore
 import com.tnyx.shared.auth.domain.model.AuthSession
 import com.tnyx.features.auth.domain.repository.TestAuthRepository
 import com.tnyx.features.auth.presentation.MainDispatcherRule
@@ -23,8 +24,9 @@ class LoginViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val authRepository = TestAuthRepository()
-    private val viewModel = LoginViewModel(authRepository)
+    private val sessionStore = InMemoryAuthSessionStore()
+    private val authRepository = TestAuthRepository(sessionStore)
+    private val viewModel by lazy { LoginViewModel(authRepository, sessionStore) }
 
     @Test
     fun handleAction_EmailChanged_updatesState() {
@@ -176,5 +178,17 @@ class LoginViewModelTest {
         assertEquals(LoginEffect.NavigateToSignup, copyEffects[0])
 
         collectJob.cancel()
+    }
+
+    @Test
+    fun googleSignInStartClearsLoadingWithoutImmediateFailure() = runTest {
+        authRepository.signInWithGoogleResult = AuthResult.ExternalAuthStarted
+
+        viewModel.handleAction(LoginAction.GoogleClicked)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isLoading)
+        assertNull(viewModel.uiState.value.emailError)
+        assertNull(viewModel.uiState.value.passwordError)
     }
 }

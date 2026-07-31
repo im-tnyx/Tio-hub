@@ -12,12 +12,14 @@ fun NavController.navigateToWelcome(navOptions: NavOptions? = null) {
 }
 
 fun NavGraphBuilder.welcomeScreen(
+    onNavigateToOnboarding: () -> Unit,
     onNavigateToHome: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToLegal: (title: String, url: String) -> Unit
 ) {
     composable<RootRoute.Welcome> {
         WelcomeRoute(
+            onNavigateToOnboarding = onNavigateToOnboarding,
             onNavigateToHome = onNavigateToHome,
             onNavigateToLogin = onNavigateToLogin,
             onNavigateToLegal = onNavigateToLegal

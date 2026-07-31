@@ -5,8 +5,10 @@ import androidx.room.Room
 import com.tnyx.data.profile.InternalProfileAvatarStore
 import com.tnyx.data.profile.ProfilePersistenceCodec
 import com.tnyx.data.profile.RoomProfileRepository
+import com.tnyx.data.profile.SupabaseProfileRepository
 import com.tnyx.data.profile.local.ProfileDao
 import com.tnyx.data.profile.local.ProfileDatabase
+import io.github.jan.supabase.SupabaseClient
 import com.tnyx.shared.auth.domain.repository.AuthSessionProvider
 import com.tnyx.shared.profile.domain.repository.ProfileRepository
 import dagger.Module
@@ -48,16 +50,12 @@ object ProfileDataModule {
     @Provides
     @Singleton
     fun provideProfileRepository(
+        supabaseClient: SupabaseClient,
         sessionProvider: AuthSessionProvider,
-        dao: ProfileDao,
-        codec: ProfilePersistenceCodec,
-        avatarStore: InternalProfileAvatarStore,
     ): ProfileRepository {
-        return RoomProfileRepository(
+        return SupabaseProfileRepository(
+            supabaseClient = supabaseClient,
             sessionProvider = sessionProvider,
-            dao = dao,
-            codec = codec,
-            avatarStore = avatarStore,
         )
     }
 }

@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -21,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tnyx.core.theme.TnyxTheme
+import com.tnyx.core.ui.components.buttons.TnyxPrimaryButton
 
 private val AccentBlue = Color(0xFF3B82F6)
 
@@ -35,19 +35,14 @@ fun CreateExerciseScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Create Exercise",
-                            style = TnyxTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 18.sp
-                            ),
-                            color = TnyxTheme.colors.textPrimary,
-                        )
-                    }
+                    Text(
+                        text = "Create Exercise",
+                        style = TnyxTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 18.sp
+                        ),
+                        color = TnyxTheme.colors.textPrimary,
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = { onAction(CreateExerciseAction.BackClicked) }) {
@@ -59,22 +54,12 @@ fun CreateExerciseScreen(
                     }
                 },
                 actions = {
-                    Button(
-                        onClick = { onAction(CreateExerciseAction.SaveClicked) },
+                    TnyxPrimaryButton(
+                        text = "Save",
+                        onPressed = { onAction(CreateExerciseAction.SaveClicked) },
                         enabled = !state.isSaving,
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = AccentBlue,
-                            contentColor = Color.White
-                        ),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                        modifier = Modifier.height(34.dp)
-                    ) {
-                        Text(
-                            text = "Save",
-                            style = TnyxTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
-                        )
-                    }
+                        height = 36.dp
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = TnyxTheme.colors.background,
@@ -153,10 +138,40 @@ fun CreateExerciseScreen(
                 thickness = 1.dp
             )
 
-            // Equipment Selector Row
+            // Add Instruction (Optional) Field
+            OutlinedTextField(
+                value = state.instructions,
+                onValueChange = { onAction(CreateExerciseAction.InstructionsChanged(it)) },
+                placeholder = {
+                    Text(
+                        text = "Add instruction (optional)",
+                        style = TnyxTheme.typography.bodyLarge,
+                        color = TnyxTheme.colors.textSecondary.copy(alpha = 0.6f)
+                    )
+                },
+                singleLine = false,
+                maxLines = 3,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedTextColor = TnyxTheme.colors.textPrimary,
+                    unfocusedTextColor = TnyxTheme.colors.textPrimary,
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            HorizontalDivider(
+                color = TnyxTheme.colors.textPrimary.copy(alpha = 0.12f),
+                thickness = 1.dp
+            )
+
+            // Equipment Selector Row (Optional)
             CreateExerciseOptionRow(
                 title = "Equipment",
                 selectedText = state.equipment,
+                hasOptionalText = state.equipment.contains("optional"),
                 onClick = { onAction(CreateExerciseAction.EquipmentClicked) }
             )
 
@@ -177,7 +192,7 @@ fun CreateExerciseScreen(
                 thickness = 1.dp
             )
 
-            // Other Muscles Row
+            // Other Muscles Row (Optional)
             CreateExerciseOptionRow(
                 title = "Other Muscles",
                 selectedText = state.otherMuscles,

@@ -21,11 +21,13 @@ fun CreateExerciseRoute(
             when (action) {
                 CreateExerciseAction.BackClicked -> onNavigateBack()
                 CreateExerciseAction.SaveClicked -> {
-                    // Trigger save
                     onSaveSuccess()
                 }
                 is CreateExerciseAction.NameChanged -> {
                     uiState = uiState.copy(exerciseName = action.name)
+                }
+                is CreateExerciseAction.InstructionsChanged -> {
+                    uiState = uiState.copy(instructions = action.instructions)
                 }
                 CreateExerciseAction.AddAssetClicked -> {
                     // Open asset picker

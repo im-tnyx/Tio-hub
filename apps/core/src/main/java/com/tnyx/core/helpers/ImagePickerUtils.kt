@@ -1,4 +1,4 @@
-package com.tnyx.core.ui.utils
+package com.tnyx.core.helpers
 
 import android.content.Context
 import android.graphics.Bitmap

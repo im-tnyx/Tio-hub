@@ -10,8 +10,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.tnyx.core.ui.utils.readAvatarJpeg
-import com.tnyx.core.ui.utils.toSquareJpegBytes
+import com.tnyx.core.helpers.readAvatarJpeg
+import com.tnyx.core.helpers.toSquareJpegBytes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

@@ -93,11 +93,5 @@ fun NavGraphBuilder.settingsGraph(
                 onLogout = onLogout,
             )
         }
-
-        composable<SettingsRoute.PersonalInfo> {
-            com.tnyx.features.settings.presentation.personal_info.PersonalInfoRoute(
-                onNavigateBack = onNavigateBack
-            )
-        }
     }
 }

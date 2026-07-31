@@ -344,7 +344,7 @@ private fun MealEditorBottomBar(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Action Buttons Row (Delete/Cancel + Save)
             Row(
@@ -356,7 +356,7 @@ private fun MealEditorBottomBar(
                     onClick = onDelete,
                     modifier = Modifier
                         .weight(1f)
-                        .height(52.dp),
+                        .height(44.dp),
                     shape = CircleShape,
                     border = BorderStroke(1.dp, if (isExistingMeal) TnyxTheme.colors.error.copy(alpha = 0.4f) else TnyxTheme.colors.textPrimary.copy(alpha = 0.15f)),
                     colors = ButtonDefaults.outlinedButtonColors(
@@ -371,12 +371,12 @@ private fun MealEditorBottomBar(
                             Icon(
                                 imageVector = Icons.Outlined.Delete,
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(16.dp)
                             )
                         }
                         Text(
                             text = if (isExistingMeal) "Delete" else "Cancel",
-                            style = TnyxTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                            style = TnyxTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
                         )
                     }
                 }
@@ -387,9 +387,10 @@ private fun MealEditorBottomBar(
                     enabled = !isSaving,
                     modifier = Modifier
                         .weight(1f)
-                        .height(52.dp)
+                        .height(44.dp)
                 )
             }
         }
     }
 }
+

@@ -64,6 +64,12 @@ enum class TnyxAvatarSize(
         badgeSize = 22.dp,
         fallbackIconSize = 32.dp,
     ),
+    XLarge(
+        containerSize = 280.dp,
+        imageSize = 260.dp,
+        badgeSize = 48.dp,
+        fallbackIconSize = 100.dp,
+    ),
 }
 
 @Composable

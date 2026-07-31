@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,13 +13,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PhotoCamera
 import androidx.compose.material.icons.rounded.PhotoLibrary
 import androidx.compose.material3.HorizontalDivider
@@ -30,15 +27,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import coil.compose.SubcomposeAsyncImage
-import coil.compose.SubcomposeAsyncImageContent
 import com.tnyx.core.theme.TnyxTheme
+import com.tnyx.core.ui.components.avatar.TnyxAvatarSize
+import com.tnyx.core.ui.components.avatar.TnyxUserAvatar
 import com.tnyx.core.ui.components.layouts.TnyxScreenHeader
 import com.tnyx.core.ui.components.sheets.TnyxModalBottomSheet
+import com.tnyx.shared.profile.domain.model.MembershipTier
 
 @Composable
 fun AvatarViewerScreen(
@@ -92,29 +87,12 @@ fun AvatarViewerScreen(
                     .weight(1f),
                 contentAlignment = Alignment.Center,
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.85f)
-                        .aspectRatio(1f)
-                        .clip(CircleShape)
-                        .background(TnyxTheme.colors.surfaceVariant),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    val avatarUrl = uiState.avatarUrl?.takeIf(String::isNotBlank)
-                    if (avatarUrl != null) {
-                        SubcomposeAsyncImage(
-                            model = avatarUrl,
-                            contentDescription = "Profile photo",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
-                            loading = { AvatarLargeFallback() },
-                            error = { AvatarLargeFallback() },
-                            success = { SubcomposeAsyncImageContent() },
-                        )
-                    } else {
-                        AvatarLargeFallback()
-                    }
-                }
+                TnyxUserAvatar(
+                    imageUrl = uiState.avatarUrl,
+                    displayName = uiState.displayName,
+                    membershipTier = MembershipTier.Free,
+                    size = TnyxAvatarSize.XLarge,
+                )
             }
         }
 
@@ -174,20 +152,5 @@ fun AvatarViewerScreen(
 
             Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
         }
-    }
-}
-
-@Composable
-private fun AvatarLargeFallback() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            imageVector = Icons.Rounded.Person,
-            contentDescription = null,
-            tint = TnyxTheme.colors.textMuted,
-            modifier = Modifier.size(100.dp),
-        )
     }
 }

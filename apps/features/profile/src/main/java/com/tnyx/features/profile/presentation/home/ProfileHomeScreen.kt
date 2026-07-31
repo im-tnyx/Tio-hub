@@ -56,6 +56,7 @@ fun ProfileHomeScreen(
                     state = uiState,
                     usernameLabel = usernameLabel,
                     onEditProfile = { onAction(ProfileHomeAction.EditProfileClicked) },
+                    onAvatarClick = { onAction(ProfileHomeAction.AvatarClicked) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = TnyxTheme.dimens.SpaceL),
@@ -105,6 +106,7 @@ private fun ProfileIdentity(
     state: ProfileHomeUiState,
     usernameLabel: String,
     onEditProfile: () -> Unit,
+    onAvatarClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -119,7 +121,7 @@ private fun ProfileIdentity(
             membershipTier = state.membershipTier,
             size = TnyxAvatarSize.Large,
             showEditBadge = true,
-            onClick = { onAction(ProfileHomeAction.AvatarClicked) },
+            onClick = onAvatarClick,
         )
 
         Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceSM))

@@ -26,6 +26,8 @@ import com.tnyx.core.ui.components.avatar.TnyxAvatarSize
 import com.tnyx.core.ui.components.avatar.TnyxUserAvatar
 import com.tnyx.core.ui.components.layouts.TnyxScreenHeader
 
+import com.tnyx.core.ui.components.sheets.ImageSourceBottomSheet
+
 @Composable
 fun ProfileHomeScreen(
     uiState: ProfileHomeUiState,
@@ -56,6 +58,8 @@ fun ProfileHomeScreen(
                     state = uiState,
                     usernameLabel = usernameLabel,
                     onEditProfile = { onAction(ProfileHomeAction.EditProfileClicked) },
+                    onAvatarClick = { onAction(ProfileHomeAction.AvatarClicked) },
+                    onEditPhotoClick = { onAction(ProfileHomeAction.ChangePhotoClicked) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = TnyxTheme.dimens.SpaceL),
@@ -97,6 +101,14 @@ fun ProfileHomeScreen(
                 }
             },
         )
+
+        ImageSourceBottomSheet(
+            visible = uiState.isBottomSheetVisible,
+            onDismissRequest = { onAction(ProfileHomeAction.DismissBottomSheet) },
+            onCameraClick = { onAction(ProfileHomeAction.CameraClicked) },
+            onGalleryClick = { onAction(ProfileHomeAction.GalleryClicked) },
+            title = "Change Profile Photo",
+        )
     }
 }
 
@@ -105,6 +117,8 @@ private fun ProfileIdentity(
     state: ProfileHomeUiState,
     usernameLabel: String,
     onEditProfile: () -> Unit,
+    onAvatarClick: () -> Unit,
+    onEditPhotoClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -118,7 +132,9 @@ private fun ProfileIdentity(
             displayName = state.displayName,
             membershipTier = state.membershipTier,
             size = TnyxAvatarSize.Large,
-            onClick = onEditProfile,
+            showEditBadge = true,
+            onClick = onAvatarClick,
+            onEditClick = onEditPhotoClick,
         )
 
         Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceSM))

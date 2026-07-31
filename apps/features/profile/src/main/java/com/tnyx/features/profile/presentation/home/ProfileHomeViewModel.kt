@@ -70,6 +70,26 @@ class ProfileHomeViewModel @Inject constructor(
         }
     }
 
+    fun openBottomSheet() {
+        _uiState.update { it.copy(isBottomSheetVisible = true) }
+    }
+
+    fun dismissBottomSheet() {
+        _uiState.update { it.copy(isBottomSheetVisible = false) }
+    }
+
+    fun uploadAvatar(jpegBytes: ByteArray) {
+        if (jpegBytes.isEmpty()) return
+        viewModelScope.launch {
+            try {
+                profileRepository.updateAvatar(jpegBytes)
+                dismissBottomSheet()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     private fun formatStatus(dobString: String, gender: String): String {
         val age = calculateAge(dobString) ?: return gender.lowercase().ifBlank { "" }
         val normalizedGender = gender.lowercase()

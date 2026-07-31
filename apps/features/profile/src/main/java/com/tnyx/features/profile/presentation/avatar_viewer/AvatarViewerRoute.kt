@@ -1,4 +1,4 @@
-package com.tnyx.features.profile.presentation.home
+package com.tnyx.features.profile.presentation.avatar_viewer
 
 import android.graphics.Bitmap
 import android.net.Uri
@@ -17,13 +17,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun ProfileHomeRoute(
-    onOpenSettings: () -> Unit,
-    onOpenEditProfile: () -> Unit,
+fun AvatarViewerRoute(
     onNavigateBack: () -> Unit,
-    showBackButton: Boolean,
-    onOpenAvatarViewer: () -> Unit = {},
-    viewModel: ProfileHomeViewModel = hiltViewModel()
+    viewModel: AvatarViewerViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -57,37 +53,24 @@ fun ProfileHomeRoute(
         }
     }
 
-    ProfileHomeScreen(
+    AvatarViewerScreen(
         uiState = uiState,
-        showBackButton = showBackButton,
         onAction = { action ->
             when (action) {
-                ProfileHomeAction.EditProfileClicked -> onOpenEditProfile()
-                ProfileHomeAction.AvatarClicked -> {
-                    if (uiState.avatarUrl.isNullOrBlank()) {
-                        viewModel.openBottomSheet()
-                    } else {
-                        onOpenAvatarViewer()
-                    }
-                }
-                ProfileHomeAction.ChangePhotoClicked -> viewModel.openBottomSheet()
-                ProfileHomeAction.DismissBottomSheet -> viewModel.dismissBottomSheet()
-                ProfileHomeAction.CameraClicked -> {
+                AvatarViewerAction.BackClicked -> onNavigateBack()
+                AvatarViewerAction.EditClicked -> viewModel.openEditSheet()
+                AvatarViewerAction.DismissEditSheet -> viewModel.dismissEditSheet()
+                AvatarViewerAction.DeleteClicked -> viewModel.openDeleteSheet()
+                AvatarViewerAction.DismissDeleteSheet -> viewModel.dismissDeleteSheet()
+                AvatarViewerAction.ConfirmDeleteClicked -> viewModel.confirmDeletePhoto(onSuccess = onNavigateBack)
+                AvatarViewerAction.DownloadClicked -> { /* TODO: handle download photo */ }
+                AvatarViewerAction.CameraClicked -> {
                     cameraLauncher.launch(null)
                 }
-                ProfileHomeAction.GalleryClicked -> {
+                AvatarViewerAction.GalleryClicked -> {
                     galleryLauncher.launch("image/*")
                 }
-                ProfileHomeAction.AddProgressPhotosClicked -> { /* TODO: Navigate to add photos */ }
-                ProfileHomeAction.SettingsClicked -> onOpenSettings()
-                ProfileHomeAction.BackClicked -> onNavigateBack()
-                ProfileHomeAction.JourneyHistoryClicked -> { /* TODO: Navigate to history */ }
-                ProfileHomeAction.ProgressPhotosClicked -> { /* TODO: Navigate to progress */ }
-                ProfileHomeAction.SupportClicked -> { /* TODO: Navigate to support */ }
-                ProfileHomeAction.ViewAllProgressClicked -> { /* TODO: Navigate to progress */ }
-                ProfileHomeAction.HealthConnectionsClicked -> { /* TODO: Navigate to health connections */ }
-                ProfileHomeAction.RefreshProfile -> viewModel.loadUserProfile()
             }
-        }
+        },
     )
 }

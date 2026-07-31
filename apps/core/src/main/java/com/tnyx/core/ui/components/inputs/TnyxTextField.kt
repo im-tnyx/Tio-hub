@@ -3,6 +3,7 @@
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -20,17 +21,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.Dp
 import com.tnyx.core.theme.TnyxTheme
 
 /**
  * Tnyx Standard Monochrome TextField
  */
+enum class TnyxTextFieldVariant {
+    Default,
+    Compact,
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TnyxTextField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    variant: TnyxTextFieldVariant = TnyxTextFieldVariant.Default,
     label: @Composable (() -> Unit)? = null,
     leadingIcon: @Composable (() -> Unit)? = null,
     placeholder: @Composable (() -> Unit)? = null,
@@ -39,6 +47,7 @@ fun TnyxTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    height: Dp? = null,
     enabled: Boolean = true,
     readOnly: Boolean = false,
     singleLine: Boolean = true,
@@ -50,15 +59,34 @@ fun TnyxTextField(
 ) {
     val tokens = TnyxTheme.components.input
     val isFocused by interactionSource.collectIsFocusedAsState()
+    val resolvedHeight = height ?: when (variant) {
+        TnyxTextFieldVariant.Default -> tokens.height
+        TnyxTextFieldVariant.Compact -> TnyxTheme.dimens.InputHeightCompact
+    }
+    val resolvedContentPadding = when (variant) {
+        TnyxTextFieldVariant.Default -> PaddingValues(
+            horizontal = TnyxTheme.dimens.SpaceM,
+            vertical = TnyxTheme.dimens.SpaceS,
+        )
+        TnyxTextFieldVariant.Compact -> PaddingValues(
+            horizontal = TnyxTheme.dimens.SpaceSM,
+            vertical = TnyxTheme.dimens.SpaceXS,
+        )
+    }
 
     val textColor = when {
         !enabled -> tokens.disabledTextColor
         isError -> TnyxTheme.colors.error
+        variant == TnyxTextFieldVariant.Compact -> TnyxTheme.colors.textPrimary
         isFocused -> TnyxTheme.colors.textPrimary
         else -> TnyxTheme.colors.textSecondary
     }
     
-    val indicatorColor = if (isError) tokens.errorIndicatorColor else tokens.focusedIndicatorColor
+    val indicatorColor = when {
+        isError -> tokens.errorIndicatorColor
+        variant == TnyxTextFieldVariant.Compact -> tokens.unfocusedIndicatorColor
+        else -> tokens.focusedIndicatorColor
+    }
 
     val colors = OutlinedTextFieldDefaults.colors(
         focusedContainerColor = tokens.containerColor,
@@ -96,7 +124,7 @@ fun TnyxTextField(
             modifier = Modifier
                 .fillMaxWidth()
                 .then(if (label != null) Modifier.padding(top = TnyxTheme.dimens.SpaceXXS) else Modifier)
-                .heightIn(min = tokens.height),
+                .heightIn(min = resolvedHeight),
             interactionSource = interactionSource,
             singleLine = singleLine,
             enabled = enabled,
@@ -122,6 +150,7 @@ fun TnyxTextField(
                     leadingIcon = leadingIcon,
                     trailingIcon = trailingIcon,
                     colors = colors,
+                    contentPadding = resolvedContentPadding,
                     container = {
                         OutlinedTextFieldDefaults.Container(
                             enabled = enabled,

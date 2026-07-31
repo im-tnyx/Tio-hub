@@ -8,16 +8,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun WorkoutRoute(
     onOpenHistory: () -> Unit,
+    onOpenLibrary: () -> Unit,
     viewModel: WorkoutViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     WorkoutScreen(
         state = uiState,
         onAction = { action ->
-            if (action == WorkoutAction.HistoryClicked) {
-                onOpenHistory()
-            } else {
-                viewModel.handleAction(action)
+            when (action) {
+                WorkoutAction.HistoryClicked -> onOpenHistory()
+                WorkoutAction.LibraryClicked -> onOpenLibrary()
+                else -> viewModel.handleAction(action)
             }
         },
     )

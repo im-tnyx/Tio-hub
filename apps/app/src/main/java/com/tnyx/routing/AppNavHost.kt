@@ -128,6 +128,7 @@ fun AppNavHost(
         )
 
         profileGraph(
+            navController = navController,
             onOpenSettings = {
                 navController.navigate(SettingsRoute.Graph)
             },
@@ -152,6 +153,12 @@ fun AppNavHost(
             },
             onLogout = sessionViewModel::signOut,
         )
+
+        composable<SettingsRoute.PersonalInfo> {
+            com.tnyx.features.settings.presentation.personal_info.PersonalInfoRoute(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
 
         composable<NutritionRoute.Targets> {
             NutritionTargetsRoute(

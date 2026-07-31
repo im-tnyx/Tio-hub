@@ -20,6 +20,7 @@ data class ProfileHomeUiState(
     val lastPhotoUpdateWeight: String = "",
     val lastPhotoUpdateDate: String = "",
     val workoutChart: WorkoutChartState = WorkoutChartState(),
+    val isBottomSheetVisible: Boolean = false,
 )
 
 data class CurrentJourneyState(
@@ -46,4 +47,9 @@ sealed interface ProfileHomeAction {
     data object AddProgressPhotosClicked : ProfileHomeAction
     data object HealthConnectionsClicked : ProfileHomeAction
     data object RefreshProfile : ProfileHomeAction
+    data object AvatarClicked : ProfileHomeAction
+    data object ChangePhotoClicked : ProfileHomeAction
+    data object DismissBottomSheet : ProfileHomeAction
+    data object CameraClicked : ProfileHomeAction
+    data object GalleryClicked : ProfileHomeAction
 }

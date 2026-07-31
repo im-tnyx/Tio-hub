@@ -54,11 +54,7 @@ private val TRAVEL_DISTANCE: Dp = 63.dp
 
 /**
  * Expandable Meal FAB — exact 1:1 match with Flutter ExpandableMealFab shape & icon tokens.
- *
- * Button Shape Size: 60.dp
- * Main Icon Size: 33.dp
- * Sub Icon Size: 27.dp
- * Travel Distance: 63.dp
+ * Instant round background cleanup: Sub-actions remain 0 alpha at center (0.dp, 0.dp) to eliminate round shape flickering.
  */
 @Composable
 fun ExpandableMealFab(
@@ -204,15 +200,18 @@ private fun AnimatedSubFab(
     val offsetYPx = (targetOffsetY.value * progress).dp
     val rotation = (PI / 2 * (1f - progress)).toFloat() * (180f / PI.toFloat())
 
+    // Sub-button alpha remains 0 while at (0.dp, 0.dp) center so the round shape never flickers over main button
+    val effectiveAlpha = if (progress < 0.12f) 0f else ((progress - 0.12f) / 0.88f)
+
     Surface(
         onClick = onClick,
         shape = CircleShape,
         color = containerColor,
-        shadowElevation = if (isExpanded) 4.dp else 0.dp,
+        shadowElevation = if (isExpanded && progress > 0.5f) 4.dp else 0.dp,
         modifier = modifier
             .offset(x = offsetXPx, y = offsetYPx)
             .size(size)
-            .alpha(progress)
+            .alpha(effectiveAlpha)
             .scale(0.75f + 0.25f * progress)
             .rotate(rotation)
             .border(width = 1.dp, color = borderColor, shape = CircleShape)

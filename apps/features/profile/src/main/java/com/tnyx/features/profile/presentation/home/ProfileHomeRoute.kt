@@ -22,7 +22,13 @@ fun ProfileHomeRoute(
         onAction = { action ->
             when (action) {
                 ProfileHomeAction.EditProfileClicked -> onOpenEditProfile()
-                ProfileHomeAction.AvatarClicked -> onOpenAvatarViewer()
+                ProfileHomeAction.AvatarClicked -> {
+                    if (uiState.avatarUrl.isNullOrBlank()) {
+                        viewModel.openBottomSheet()
+                    } else {
+                        onOpenAvatarViewer()
+                    }
+                }
                 ProfileHomeAction.ChangePhotoClicked -> viewModel.openBottomSheet()
                 ProfileHomeAction.DismissBottomSheet -> viewModel.dismissBottomSheet()
                 ProfileHomeAction.CameraClicked -> {

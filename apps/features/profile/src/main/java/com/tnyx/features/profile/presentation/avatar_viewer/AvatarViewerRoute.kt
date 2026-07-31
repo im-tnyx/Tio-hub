@@ -17,16 +17,18 @@ fun AvatarViewerRoute(
         onAction = { action ->
             when (action) {
                 AvatarViewerAction.BackClicked -> onNavigateBack()
-                AvatarViewerAction.EditClicked -> viewModel.openBottomSheet()
-                AvatarViewerAction.DismissBottomSheet -> viewModel.dismissBottomSheet()
-                AvatarViewerAction.DeleteClicked -> { /* TODO: handle delete photo */ }
+                AvatarViewerAction.EditClicked -> viewModel.openEditSheet()
+                AvatarViewerAction.DismissEditSheet -> viewModel.dismissEditSheet()
+                AvatarViewerAction.DeleteClicked -> viewModel.openDeleteSheet()
+                AvatarViewerAction.DismissDeleteSheet -> viewModel.dismissDeleteSheet()
+                AvatarViewerAction.ConfirmDeleteClicked -> viewModel.confirmDeletePhoto(onSuccess = onNavigateBack)
                 AvatarViewerAction.DownloadClicked -> { /* TODO: handle download photo */ }
                 AvatarViewerAction.CameraClicked -> {
-                    viewModel.dismissBottomSheet()
+                    viewModel.dismissEditSheet()
                     /* TODO: handle camera picker */
                 }
                 AvatarViewerAction.GalleryClicked -> {
-                    viewModel.dismissBottomSheet()
+                    viewModel.dismissEditSheet()
                     /* TODO: handle gallery picker */
                 }
             }

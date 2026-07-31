@@ -39,11 +39,33 @@ class AvatarViewerViewModel @Inject constructor(
         }
     }
 
-    fun openBottomSheet() {
-        _uiState.update { it.copy(isBottomSheetVisible = true) }
+    fun openEditSheet() {
+        _uiState.update { it.copy(isEditSheetVisible = true) }
     }
 
-    fun dismissBottomSheet() {
-        _uiState.update { it.copy(isBottomSheetVisible = false) }
+    fun dismissEditSheet() {
+        _uiState.update { it.copy(isEditSheetVisible = false) }
+    }
+
+    fun openDeleteSheet() {
+        _uiState.update { it.copy(isDeleteSheetVisible = true) }
+    }
+
+    fun dismissDeleteSheet() {
+        _uiState.update { it.copy(isDeleteSheetVisible = false) }
+    }
+
+    fun confirmDeletePhoto(onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isDeleting = true) }
+            try {
+                profileRepository.removeAvatar()
+                _uiState.update { it.copy(isDeleting = false, isDeleteSheetVisible = false) }
+                onSuccess()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiState.update { it.copy(isDeleting = false) }
+            }
+        }
     }
 }

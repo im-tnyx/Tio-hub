@@ -19,10 +19,10 @@ fun NavGraphBuilder.nutritionGraph(
         composable<NutritionScreen.MealDiary> {
             MealDiaryRoute(
                 onNavigateToMealDetail = { mealId ->
-                    navController.navigate(NutritionScreen.MealEditor(mealId))
+                    navController.navigate(NutritionScreen.MealEditor(mealId = mealId))
                 },
-                onNavigateToAddMeal = {
-                    navController.navigate(NutritionScreen.MealEditor())
+                onNavigateToAddMeal = { date ->
+                    navController.navigate(NutritionScreen.MealEditor(date = date.toString()))
                 },
                 onShowOverview = onShowOverview
             )
@@ -57,7 +57,7 @@ sealed interface NutritionScreen {
     data object MealDiary : NutritionScreen
 
     @kotlinx.serialization.Serializable
-    data class MealEditor(val mealId: String? = null) : NutritionScreen
+    data class MealEditor(val mealId: String? = null, val date: String? = null) : NutritionScreen
 
     @kotlinx.serialization.Serializable
     data class MealItemEditor(val itemId: String) : NutritionScreen

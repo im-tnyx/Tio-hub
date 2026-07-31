@@ -49,7 +49,7 @@ class MealDiaryViewModel @Inject constructor(
                 loadDiary(action.date)
             }
             is MealDiaryAction.MealClicked -> {
-                viewModelScope.launch { 
+                viewModelScope.launch {
                     _effect.emit(MealDiaryEffect.NavigateToMealDetail(action.meal.id))
                 }
             }
@@ -58,10 +58,25 @@ class MealDiaryViewModel @Inject constructor(
                     _effect.emit(MealDiaryEffect.ShowOverview(action.target))
                 }
             }
+            MealDiaryAction.FabToggled -> {
+                _uiState.update { it.copy(isFabExpanded = !it.isFabExpanded) }
+            }
+            MealDiaryAction.FabCollapsed -> {
+                _uiState.update { it.copy(isFabExpanded = false) }
+            }
             MealDiaryAction.AddMealClicked -> {
+                _uiState.update { it.copy(isFabExpanded = false) }
                 viewModelScope.launch {
-                    _effect.emit(MealDiaryEffect.NavigateToAddMeal)
+                    _effect.emit(MealDiaryEffect.NavigateToAddMeal(_uiState.value.selectedDate))
                 }
+            }
+            MealDiaryAction.AddMealVoiceClicked -> {
+                // Voice meal entry — future implementation
+                _uiState.update { it.copy(isFabExpanded = false) }
+            }
+            MealDiaryAction.AddMealCameraClicked -> {
+                // Camera meal scan — future implementation
+                _uiState.update { it.copy(isFabExpanded = false) }
             }
         }
     }
@@ -126,6 +141,7 @@ class MealDiaryViewModel @Inject constructor(
             mineralsProgress = mineralsProgress,
             meals = meals,
             isLoading = false,
+            isFabExpanded = false, // Always collapse FAB after a diary reload
         )
     }
 

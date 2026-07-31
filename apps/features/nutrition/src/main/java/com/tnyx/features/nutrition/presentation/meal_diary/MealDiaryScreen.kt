@@ -148,6 +148,20 @@ fun MealDiaryScreen(
                 onDateSelected = { onAction(MealDiaryAction.DateSelected(it)) }
             )
         }
+
+        // --- 3. EXPANDABLE MEAL FAB ---
+        ExpandableMealFab(
+            isExpanded = state.isFabExpanded,
+            onToggle = { onAction(MealDiaryAction.FabToggled) },
+            onCollapse = { onAction(MealDiaryAction.FabCollapsed) },
+            onSearchClicked = { onAction(MealDiaryAction.AddMealClicked) },
+            onMicClicked = { onAction(MealDiaryAction.AddMealVoiceClicked) },
+            onCameraClicked = { onAction(MealDiaryAction.AddMealCameraClicked) },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 20.dp, bottom = 24.dp)
+                .navigationBarsPadding(),
+        )
     }
 }
 

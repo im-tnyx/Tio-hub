@@ -169,18 +169,15 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
 - [x] Nutrition graph exists.
 - [x] Meal Diary, Meal Editor, and Meal Item Editor screens exist.
 - [x] Bottom nav visibility is hidden for meal edit/item edit flows.
-- [x] Meal Diary now reads through `NutritionRepository` instead of owning
-  hardcoded meals directly in `MealDiaryViewModel`.
-- [x] App-owned nutrition bootstrap wiring can read live
-  `user_nutrition_profiles` targets when a real Supabase session exists.
-- [x] Fake seeded diary meals, fake water progress, and fake vitamin/mineral
-  progress are removed from the active runtime path.
-- [x] Meal Diary refreshes the selected date periodically so remote nutrition
-  target changes can appear without reopening the screen.
-- [ ] Nutrition data is still not fully local/backend repository-backed.
-- [ ] Real `meal_logs` persistence is not implemented yet.
-- [ ] Nutrition targets still come from `user_nutrition_profiles`; a separate
-  meal-log repository slice is not implemented yet.
+- [x] Meal Diary reads through `NutritionRepository`.
+- [x] App-owned `NutritionBootstrapRepository` reads live `user_nutrition_profiles` targets.
+- [x] Fake seeded diary meals, fake water progress, and fake vitamin/mineral progress are removed.
+- [x] Meal Diary refreshes the selected date periodically.
+- [x] **Real `meal_logs` & `meal_log_items` Supabase Persistence:** `NutritionRepository` extends CRUD methods (`saveMealLog`, `deleteMealLog`, `saveMealLogItem`, `updateMealLogItem`, `deleteMealLogItem`).
+- [x] **Meal Log DTOs & Table Mapping:** `NutritionBootstrapRepository` decodes and persists `meal_logs` and `meal_log_items` table records for active Supabase user.
+- [x] **Flutter-Matched `ExpandableMealFab`:** 420ms FastOutSlowIn animated floating action button with main icon scale+fade switch and 3 animated sub-actions (Mic, Camera, Search) with backdrop overlay.
+- [x] **MealEditor & MealItemEditor Wiring:** Both ViewModels inject `NutritionRepository` and perform live database CRUD operations.
+
 
 ### Workout
 

@@ -1,6 +1,8 @@
 package com.tnyx.features.nutrition.presentation.targets
 
 import com.tnyx.features.nutrition.domain.models.MealDiarySnapshot
+import com.tnyx.features.nutrition.domain.models.MealItem
+import com.tnyx.features.nutrition.domain.models.NutritionMeal
 import com.tnyx.features.nutrition.domain.models.NutritionTargetsSnapshot
 import com.tnyx.features.nutrition.domain.repository.NutritionRepository
 import com.tnyx.features.nutrition.presentation.meal_diary.MainDispatcherRule
@@ -120,4 +122,11 @@ private class FakeNutritionTargetsRepository(
         currentTargets = targets
         lastUpdatedTargets = targets
     }
+
+    override suspend fun saveMealLog(date: LocalDate, meal: NutritionMeal): NutritionMeal = meal
+    override suspend fun deleteMealLog(mealId: String) {}
+    override suspend fun saveMealLogItem(mealLogId: String, item: MealItem): MealItem = item
+    override suspend fun updateMealLogItem(item: MealItem) {}
+    override suspend fun deleteMealLogItem(itemId: String) {}
 }
+

@@ -17,6 +17,7 @@ sealed class MealEditorAction {
     data class ItemQuantityChanged(val itemId: String, val quantity: Double) : MealEditorAction()
     data object AddItemClicked : MealEditorAction()
     data object SaveClicked : MealEditorAction()
+    data object DeleteMealClicked : MealEditorAction()
     data object BackClicked : MealEditorAction()
     data object ShareClicked : MealEditorAction()
     data object EditNameRequested : MealEditorAction()

@@ -127,4 +127,11 @@ private class FakeNutritionRepository(
     override suspend fun updateNutritionTargets(targets: NutritionTargetsSnapshot) {
         error("Not needed for MealDiaryViewModelTest")
     }
+
+    override suspend fun saveMealLog(date: LocalDate, meal: NutritionMeal): NutritionMeal = meal
+    override suspend fun deleteMealLog(mealId: String) {}
+    override suspend fun saveMealLogItem(mealLogId: String, item: MealItem): MealItem = item
+    override suspend fun updateMealLogItem(item: MealItem) {}
+    override suspend fun deleteMealLogItem(itemId: String) {}
 }
+

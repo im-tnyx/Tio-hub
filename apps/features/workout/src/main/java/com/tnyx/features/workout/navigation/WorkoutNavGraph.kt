@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.tnyx.features.workout.presentation.WorkoutHistoryRoute
 import com.tnyx.features.workout.presentation.WorkoutRoute
+import com.tnyx.features.workout.presentation.library.ExerciseLibraryRoute
 import com.tnyx.routing.routes.MainRoute
 import kotlinx.serialization.Serializable
 
@@ -25,6 +26,13 @@ fun NavGraphBuilder.workoutGraph(
                 onNavigateBack = { navController.popBackStack() },
             )
         }
+        composable<WorkoutDestination.Library> {
+            ExerciseLibraryRoute(
+                onNavigateBack = { navController.popBackStack() },
+                onExerciseSelected = { _ -> },
+                onCreateExercise = {}
+            )
+        }
     }
 }
 
@@ -35,4 +43,7 @@ sealed interface WorkoutDestination {
 
     @Serializable
     data object History : WorkoutDestination
+
+    @Serializable
+    data object Library : WorkoutDestination
 }

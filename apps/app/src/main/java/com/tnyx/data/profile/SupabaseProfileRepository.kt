@@ -166,14 +166,19 @@ class SupabaseProfileRepository(
         }
     }
 
-    private fun resolveValidUserId(profileId: String?): String? {
+    private suspend fun resolveValidUserId(profileId: String?): String? {
         val remoteUserId = supabaseClient.auth.currentUserOrNull()?.id
             ?: sessionProvider.currentSession()?.userId
-        return when {
-            remoteUserId != null && isUuid(remoteUserId) -> remoteUserId
-            !profileId.isNullOrBlank() && profileId != "anonymous" && isUuid(profileId) -> profileId
-            else -> null
+        if (remoteUserId != null && isUuid(remoteUserId)) {
+            return remoteUserId
         }
+        if (!profileId.isNullOrBlank() && profileId != "anonymous" && isUuid(profileId)) {
+            return profileId
+        }
+        return runCatching {
+            supabaseClient.auth.signInAnonymously()
+            supabaseClient.auth.currentUserOrNull()?.id
+        }.getOrNull()?.takeIf(::isUuid)
     }
 
     private fun isUuid(value: String): Boolean {

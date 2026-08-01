@@ -17,7 +17,6 @@ sealed class MealSearchAction {
     data class QueryChanged(val query: String) : MealSearchAction()
     data class CategorySelected(val category: String) : MealSearchAction()
     data class FoodItemSelected(val item: MealItem) : MealSearchAction()
-    data object CreateCustomMealClicked : MealSearchAction()
     data object BackClicked : MealSearchAction()
 }
 

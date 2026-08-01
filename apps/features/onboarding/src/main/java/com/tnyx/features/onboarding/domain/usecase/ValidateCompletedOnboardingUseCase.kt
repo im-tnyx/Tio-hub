@@ -1,10 +1,11 @@
 package com.tnyx.features.onboarding.domain.usecase
 
-import com.tnyx.features.onboarding.domain.flow.OnboardingSectionIds
-import com.tnyx.features.onboarding.domain.flow.OnboardingStepIds
-import com.tnyx.features.onboarding.domain.model.OnboardingAnswer
+import com.tnyx.features.onboarding.domain.flow.effectiveSections
+import com.tnyx.features.onboarding.domain.model.OnboardingCheckpoint
 import com.tnyx.features.onboarding.domain.model.OnboardingDraft
 import com.tnyx.features.onboarding.domain.model.OnboardingFlowDefinition
+import com.tnyx.features.onboarding.domain.model.OnboardingPosition
+import com.tnyx.features.onboarding.domain.model.OnboardingProgress
 import com.tnyx.features.onboarding.domain.model.OnboardingStepId
 import javax.inject.Inject
 
@@ -19,8 +20,15 @@ class ValidateCompletedOnboardingUseCase @Inject constructor(
         draft: OnboardingDraft,
         flow: OnboardingFlowDefinition,
     ): Boolean {
-        return requiredStepIds(flow, draft.answers).all { stepId ->
-            validateOnboardingAnswer(stepId, draft.answerFor(stepId))
+        return invoke(defaultCheckpointFor(draft, flow), flow)
+    }
+
+    operator fun invoke(
+        checkpoint: OnboardingCheckpoint,
+        flow: OnboardingFlowDefinition,
+    ): Boolean {
+        return requiredStepIds(flow, checkpoint).all { stepId ->
+            validateOnboardingAnswer(stepId, checkpoint.draft.answerFor(stepId))
         }
     }
 
@@ -28,32 +36,43 @@ class ValidateCompletedOnboardingUseCase @Inject constructor(
         draft: OnboardingDraft,
         flow: OnboardingFlowDefinition,
     ): List<OnboardingStepId> {
-        return requiredStepIds(flow, draft.answers).filterNot { stepId ->
-            validateOnboardingAnswer(stepId, draft.answerFor(stepId))
+        return missingRequiredStepIds(defaultCheckpointFor(draft, flow), flow)
+    }
+
+    fun missingRequiredStepIds(
+        checkpoint: OnboardingCheckpoint,
+        flow: OnboardingFlowDefinition,
+    ): List<OnboardingStepId> {
+        return requiredStepIds(flow, checkpoint).filterNot { stepId ->
+            validateOnboardingAnswer(stepId, checkpoint.draft.answerFor(stepId))
         }
     }
 
     private fun requiredStepIds(
         flow: OnboardingFlowDefinition,
-        draftAnswers: Map<OnboardingStepId, OnboardingAnswer>,
+        checkpoint: OnboardingCheckpoint,
     ): List<OnboardingStepId> {
-        val wantsToSkipWorkout = (draftAnswers[OnboardingStepIds.WorkoutIntroChoice] as? OnboardingAnswer.Toggle)
-            ?.value == false
-        val gymOnlyAccess = (draftAnswers[OnboardingStepIds.WorkoutGymAccess] as? OnboardingAnswer.Text)
-            ?.value == "gym"
-
-        return flow.sections
-            .filterNot { section ->
-                wantsToSkipWorkout && section.id == OnboardingSectionIds.Workout
-            }
-            .flatMap { section ->
-                if (!gymOnlyAccess || section.id != OnboardingSectionIds.Workout) {
-                    section.steps
-                } else {
-                    section.steps.filterNot { step -> step.id == OnboardingStepIds.WorkoutEquipment }
-                }
-            }
+        return flow.effectiveSections(checkpoint)
+            .flatMap { section -> section.steps }
             .filter { step -> step.isRequired }
             .map { step -> step.id }
+    }
+
+    private fun defaultCheckpointFor(
+        draft: OnboardingDraft,
+        flow: OnboardingFlowDefinition,
+    ): OnboardingCheckpoint {
+        val firstSection = flow.sections.first()
+        val firstStep = firstSection.steps.first()
+        return OnboardingCheckpoint(
+            draft = draft,
+            progress = OnboardingProgress(
+                flowVersion = flow.version,
+                position = OnboardingPosition(
+                    sectionId = firstSection.id,
+                    stepId = firstStep.id,
+                ),
+            ),
+        )
     }
 }

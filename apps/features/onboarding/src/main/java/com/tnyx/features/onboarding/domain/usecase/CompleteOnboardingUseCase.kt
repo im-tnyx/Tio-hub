@@ -36,7 +36,7 @@ class CompleteOnboardingUseCase @Inject constructor(
         finalizeOnboardingProfile: FinalizeOnboardingProfileUseCase,
     ): CompleteOnboardingResult {
         return try {
-            if (!validateCompletedOnboarding(checkpoint.draft, DefaultOnboardingFlow.definition)) {
+            if (!validateCompletedOnboarding(checkpoint, DefaultOnboardingFlow.definition)) {
                 return CompleteOnboardingResult.Failure(checkpoint)
             }
             if (persistCheckpoint) {

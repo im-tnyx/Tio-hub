@@ -72,13 +72,14 @@ Migration source:
 
 | Area | Status | Boundary |
 |---|---|---|
-| Profile read/write repository | `ACTIVE` | Android now binds `ProfileRepository` to `SupabaseProfileRepository`, reads remote profile/nutrition rows, and refreshes while the profile is being observed. |
+| Profile read/write repository | `ACTIVE` | Android binds `ProfileRepository` to `SupabaseProfileRepository`; Personal Information writes profile and supported nutrition fields, and remote write failures reach the UI. |
 | Profile image upload | `ACTIVE` | Android avatar updates now write to the live `tio-profile` bucket and update `profiles.avatar_url`. |
-| Username editing | `NOT IMPLEMENTED` | The schema and model support `username`, but Personal Information does not yet edit and save it. |
+| Username editing | `ACTIVE` | Personal Information saves an optional, validated username with the other profile identity fields. |
 | Real auth source | `ACTIVE CLIENT SOURCE` | Android now binds `AuthRepository` to a Supabase-backed implementation for email/password, Google OAuth start, email OTP verification, and sign-out. Backend authority is still a future contract question, but fake local auth is no longer the active source. |
 | Firebase identity linking | `NOT IMPLEMENTED` | `auth_identities` reserves a safe server-owned mapping boundary only. |
 | Nutrition diary persistence | `REMOTE TARGETS ONLY` | Android Meal Diary reads live `user_nutrition_profiles` target values through Supabase for the authenticated user and no longer shows seeded fake meals or fake progress. `meal_logs` persistence still does not exist yet. |
-| Workout cloud sync | `NOT IMPLEMENTED` | Current workout preferences are not workout plans, sessions, or set history. |
+| Onboarding owner-row sync | `ACTIVE` | Onboarding completion writes schema-supported profile, nutrition, and workout preference answers to the authenticated user's owner-scoped rows. Source attribution and answers without owner columns remain local only. |
+| Workout cloud sync | `PARTIAL` | Onboarding preferences sync to `user_workout_profiles`; workout plans, sessions, and set history remain local-only/not implemented. |
 
 ## Future Table Backlog
 

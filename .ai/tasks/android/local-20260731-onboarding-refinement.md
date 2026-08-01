@@ -22,3 +22,39 @@ Audit and refine the Android Onboarding flow (`apps/features/onboarding/`) accor
 - [ ] Verify screen transitions and back-stack handling.
 - [ ] Fix any visual alignment or input handling bugs.
 - [ ] Empirical build verification (`:app:assembleDebug`).
+
+## 2026-08-01 Checkpoint
+
+- Anonymous Supabase Auth and profile-image Storage were verified live.
+- Fixed Personal Information saves for anonymous profiles whose optional
+  `username` is blank; remote profile write failures now surface to the UI.
+- Completed onboarding now syncs current schema-supported Nutrition and Workout
+  owner fields in addition to Profile-owned fields.
+- Validation passed: `:features:onboarding:test`, `:features:settings:test`,
+  and `:app:compileDebugKotlin`.
+- Remaining boundary: source attribution and answers without existing owner
+  columns are intentionally not persisted remotely; no schema migration was
+  created or applied.
+- Bumped the local onboarding flow to version `16` so older checkpoints reset
+  and the explicit Review confirmation cannot be accidentally cleared before
+  Finish.
+- Fixed the runtime `Finish` failure after using `Skip` in the Workout section:
+  skipping that section now records `workout_intro.choice = false`, so final
+  validation no longer requires omitted Workout answers before the Supabase
+  profile/nutrition sync starts.
+- Validation passed: `:features:onboarding:test` and `:app:assembleDebug`.
+- Completion now trusts the completed state emitted by the step-level flow
+  validator and always starts the Supabase write path from the final Review
+  step; it no longer blocks `Finish` on a second full-draft validation pass.
+- Local recovery-checkpoint writes are now best-effort at completion, so a
+  DataStore persistence fault cannot prevent the Profile/Nutrition/Workout
+  Supabase write from starting.
+- Anonymous Supabase sessions now remain on the `GetStarted` onboarding route
+  rather than being treated as permanent signed-in sessions. This preserves
+  the Intro step and the full Back path for guest onboarding.
+- Nutrition Sleep Schedule now uses the core reusable
+  `SleepScheduleBottomSheet`, which edits bedtime and wake-up time together
+  and delegates persistence to the caller.
+- Validation passed: `:features:onboarding:test` and `:app:assembleDebug`.
+  The verified APK was reinstalled over the connected test device without
+  clearing app data and launched to Home without a crash.

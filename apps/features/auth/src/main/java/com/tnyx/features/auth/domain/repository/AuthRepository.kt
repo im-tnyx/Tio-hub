@@ -19,5 +19,7 @@ interface AuthRepository {
 
     suspend fun resendOtp(email: String): AuthResult
 
+    suspend fun signInAnonymously(): AuthResult
+
     suspend fun signOut()
 }

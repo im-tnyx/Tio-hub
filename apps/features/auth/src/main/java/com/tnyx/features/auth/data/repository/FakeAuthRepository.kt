@@ -105,6 +105,17 @@ class FakeAuthRepository @Inject constructor(
         return AuthResult.VerificationRequired(email = normalizeEmail(email))
     }
 
+    override suspend fun signInAnonymously(): AuthResult {
+        return authenticated(
+            AuthSession(
+                userId = "guest-user",
+                email = "guest@tnyx.app",
+                displayName = "Guest User",
+                isDemo = true,
+            ),
+        )
+    }
+
     override suspend fun signOut() {
         runCatching { externalAuthGateway.signOut() }
         sessionStore.clearSession()

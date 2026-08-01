@@ -102,6 +102,25 @@ class SupabaseAuthRepository @Inject constructor(
         }
     }
 
+    override suspend fun signInAnonymously(): AuthResult {
+        return runCatching {
+            supabaseClient.auth.signInAnonymously()
+            val user = supabaseClient.auth.currentUserOrNull()
+                ?: return AuthResult.Failure("No authenticated Supabase user is available")
+            val email = user.email?.takeIf(String::isNotBlank) ?: "guest_${user.id.take(8)}@tnyx.app"
+            val session = AuthSession(
+                userId = user.id,
+                email = email,
+                displayName = "Guest User",
+                isDemo = true,
+            )
+            sessionStore.setSession(session)
+            AuthResult.Authenticated(session)
+        }.getOrElse { error ->
+            AuthResult.Failure(error.message ?: "Could not start guest session right now")
+        }
+    }
+
     override suspend fun signOut() {
         runCatching { externalAuthGateway.signOut() }
         runCatching { supabaseClient.auth.clearSession() }

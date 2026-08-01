@@ -19,6 +19,9 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlin.coroutines.coroutineContext
 
 private const val AVATAR_BUCKET = "tio-profile"
@@ -55,24 +58,39 @@ class SupabaseProfileRepository(
     private val supabaseClient: SupabaseClient,
     private val sessionProvider: AuthSessionProvider,
 ) : ProfileRepository {
+    private val localProfileState = MutableStateFlow<UserProfile?>(null)
+
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     override fun getCurrentProfile(): Flow<UserProfile> {
         return sessionProvider.observeSession()
             .flatMapLatest { session ->
-                if (session == null) {
-                    flowOf(emptyProfile())
+                val userId = session?.userId
+                if (userId.isNullOrBlank()) {
+                    localProfileState.map { it ?: emptyProfile() }
                 } else {
-                    observeRemoteProfile(session.userId)
+                    combine(
+                        localProfileState,
+                        observeRemoteProfile(userId),
+                    ) { local, remote ->
+                        mergeProfiles(local, remote)
+                    }
                 }
             }
             .distinctUntilChanged()
     }
 
     override fun getProfile(userId: String): Flow<UserProfile> {
-        return observeRemoteProfile(userId).distinctUntilChanged()
+        return combine(
+            localProfileState,
+            observeRemoteProfile(userId),
+        ) { local, remote ->
+            mergeProfiles(local, remote)
+        }.distinctUntilChanged()
     }
 
     override suspend fun updateProfile(profile: UserProfile) {
+        localProfileState.value = profile
+
         val targetUserId = resolveValidUserId(profile.id) ?: return
 
         runCatching {
@@ -240,6 +258,24 @@ class SupabaseProfileRepository(
             username = username.orEmpty(),
             mobile = mobile.orEmpty(),
             hasCompletedOnboarding = is_onboarded,
+        )
+    }
+
+    private fun mergeProfiles(local: UserProfile?, remote: UserProfile): UserProfile {
+        if (local == null) return remote
+        return remote.copy(
+            displayName = remote.displayName.ifBlank { local.displayName },
+            dob = remote.dob.ifBlank { local.dob },
+            gender = remote.gender.ifBlank { local.gender },
+            mobile = remote.mobile.ifBlank { local.mobile },
+            planLabel = remote.planLabel.ifBlank { local.planLabel },
+            height = if (remote.height > 0) remote.height else local.height,
+            weight = if (remote.weight > 0.0) remote.weight else local.weight,
+            hasCompletedOnboarding = remote.hasCompletedOnboarding || local.hasCompletedOnboarding,
+            currentJourney = remote.currentJourney.copy(
+                initialWeight = if (remote.currentJourney.initialWeight > 0.0) remote.currentJourney.initialWeight else local.currentJourney.initialWeight,
+                targetWeight = if (remote.currentJourney.targetWeight > 0.0) remote.currentJourney.targetWeight else local.currentJourney.targetWeight,
+            ),
         )
     }
 

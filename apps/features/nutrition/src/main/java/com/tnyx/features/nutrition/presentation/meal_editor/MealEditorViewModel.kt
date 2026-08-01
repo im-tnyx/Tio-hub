@@ -11,6 +11,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalDateTime
 import javax.inject.Inject
 
 @HiltViewModel
@@ -34,6 +35,7 @@ class MealEditorViewModel @Inject constructor(
                 items = emptyList(),
                 description = "",
             ),
+            logDateTime = logDate.atTime(LocalDateTime.now().toLocalTime()),
         )
     )
     val uiState = _uiState.asStateFlow()
@@ -48,6 +50,15 @@ class MealEditorViewModel @Inject constructor(
             }
             is MealEditorAction.CategoryChanged -> {
                 _uiState.update { it.copy(meal = it.meal.copy(type = action.category)) }
+            }
+            MealEditorAction.LogDatePickerRequested -> {
+                _uiState.update { it.copy(isLogDatePickerVisible = true) }
+            }
+            is MealEditorAction.LogDateTimeChanged -> {
+                _uiState.update { it.copy(logDateTime = action.dateTime) }
+            }
+            MealEditorAction.LogDatePickerDismissed -> {
+                _uiState.update { it.copy(isLogDatePickerVisible = false) }
             }
             is MealEditorAction.ItemDeleted -> {
                 val itemId = action.itemId
@@ -74,7 +85,7 @@ class MealEditorViewModel @Inject constructor(
                 viewModelScope.launch {
                     _uiState.update { it.copy(isSaving = true) }
                     runCatching {
-                        nutritionRepository.saveMealLog(logDate, _uiState.value.meal)
+                        nutritionRepository.saveMealLog(_uiState.value.logDateTime.toLocalDate(), _uiState.value.meal)
                     }
                     _uiState.update { it.copy(isSaving = false) }
                     _effect.emit(MealEditorEffect.NavigateBack)

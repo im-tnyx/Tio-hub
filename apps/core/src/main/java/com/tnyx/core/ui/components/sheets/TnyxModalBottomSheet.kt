@@ -14,6 +14,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import com.tnyx.core.theme.TnyxTheme
 
 /**
@@ -29,6 +30,7 @@ fun TnyxModalBottomSheet(
     title: String? = null,
     showDivider: Boolean = true,
     skipPartiallyExpanded: Boolean = true,
+    contentBottomPadding: Dp? = null,
     dragHandle: @Composable (() -> Unit)? = { BottomSheetDefaults.DragHandle() },
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -55,7 +57,7 @@ fun TnyxModalBottomSheet(
                 .fillMaxWidth()
                 .navigationBarsPadding()
                 .padding(horizontal = tokens.horizontalPadding)
-                .padding(bottom = tokens.bottomPadding)
+                .padding(bottom = contentBottomPadding ?: tokens.bottomPadding)
         ) {
             if (!title.isNullOrBlank()) {
                 Text(

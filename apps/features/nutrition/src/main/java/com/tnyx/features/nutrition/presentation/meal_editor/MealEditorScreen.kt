@@ -27,7 +27,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tnyx.core.theme.TnyxTheme
 import com.tnyx.core.ui.components.buttons.TnyxPrimaryButton
+import com.tnyx.core.ui.components.inputs.CupertinoDateTimePicker
 import com.tnyx.features.nutrition.presentation.meal_editor.widgets.MealItemTile
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,7 +80,9 @@ fun MealEditorScreen(
                 category = state.meal.type,
                 isExistingMeal = isExistingMeal,
                 isSaving = state.isSaving,
+                logDateTime = state.logDateTime,
                 onCategoryChanged = { onAction(MealEditorAction.CategoryChanged(it)) },
+                onLogDateClicked = { onAction(MealEditorAction.LogDatePickerRequested) },
                 onDelete = { onAction(MealEditorAction.DeleteMealClicked) },
                 onSave = { onAction(MealEditorAction.SaveClicked) }
             )
@@ -202,6 +208,14 @@ fun MealEditorScreen(
             }
         }
     }
+    CupertinoDateTimePicker(
+        visible = state.isLogDatePickerVisible,
+        initialDateTime = state.logDateTime,
+        minimumDateTime = LocalDateTime.of(2000, 1, 1, 0, 0),
+        maximumDateTime = LocalDateTime.now(),
+        onDismissRequest = { onAction(MealEditorAction.LogDatePickerDismissed) },
+        onDateTimeChanged = { onAction(MealEditorAction.LogDateTimeChanged(it)) },
+    )
 }
 
 @Composable
@@ -260,7 +274,9 @@ private fun MealEditorBottomBar(
     category: String,
     isExistingMeal: Boolean,
     isSaving: Boolean,
+    logDateTime: LocalDateTime,
     onCategoryChanged: (String) -> Unit,
+    onLogDateClicked: () -> Unit,
     onDelete: () -> Unit,
     onSave: () -> Unit
 ) {
@@ -329,6 +345,7 @@ private fun MealEditorBottomBar(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.clickable(onClick = onLogDateClicked),
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.CalendarMonth,
@@ -337,7 +354,7 @@ private fun MealEditorBottomBar(
                         tint = TnyxTheme.colors.textSecondary,
                     )
                     Text(
-                        text = "Today",
+                        text = logDateTime.toLogDateLabel(),
                         style = TnyxTheme.typography.bodySmall,
                         color = TnyxTheme.colors.textSecondary,
                     )
@@ -391,6 +408,14 @@ private fun MealEditorBottomBar(
                 )
             }
         }
+    }
+}
+
+private fun LocalDateTime.toLogDateLabel(): String {
+    return if (toLocalDate() == java.time.LocalDate.now()) {
+        "Today"
+    } else {
+        format(DateTimeFormatter.ofPattern("d MMM", Locale.US))
     }
 }
 

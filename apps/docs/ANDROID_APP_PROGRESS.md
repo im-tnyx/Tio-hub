@@ -175,6 +175,7 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
 - [x] Meal Diary refreshes the selected date periodically.
 - [x] **Real `meal_logs` & `meal_log_items` Supabase Persistence:** `NutritionRepository` extends CRUD methods (`saveMealLog`, `deleteMealLog`, `saveMealLogItem`, `updateMealLogItem`, `deleteMealLogItem`).
 - [x] **Meal Log DTOs & Table Mapping:** `NutritionBootstrapRepository` decodes and persists `meal_logs` and `meal_log_items` table records for active Supabase user.
+- [x] **Live Nutrition Diary Tables Applied:** Supabase project `ublwxylwdqjdykqcncuv` now has `meal_logs` and `meal_log_items` with owner-scoped RLS, and one manual verification log+item row exists.
 - [x] **Flutter-Matched `ExpandableMealFab`:** 420ms FastOutSlowIn animated floating action button with main icon scale+fade switch and 3 animated sub-actions (Mic, Camera, Search) with backdrop overlay.
 - [x] **MealEditor & MealItemEditor Wiring:** Both ViewModels inject `NutritionRepository` and perform live database CRUD operations.
 
@@ -591,7 +592,7 @@ Rule: Future module folders may exist as checked-in ownership placeholders, but 
 - [x] Live Supabase migration applied: `20260730193000_add_profiles_mobile_column`
 - [x] Live schema verification: `profiles.mobile` exists in project `ublwxylwdqjdykqcncuv`
 - [x] Scope: active `SupabaseAuthRepository` binding, demo-account disablement in Login UI, active `SupabaseProfileRepository` binding, remote avatar/profile persistence, refresh-driven remote profile sync, and nutrition fake fallback removal.
-- [x] Truth boundary: profile/nutrition target data is no longer local-only runtime truth; `meal_logs` still does not exist, so meal diary remains target-sync only.
+- [x] Truth boundary: profile/nutrition target data and nutrition diary tables now exist on the connected Supabase project; device-side meal diary/editor route validation still remains separate from schema truth.
 
 ### 2026-07-16: Workout shared contract v2
 
@@ -626,5 +627,5 @@ Known warning:
 
 ---
 
-**Last Updated:** 2026-07-30
+**Last Updated:** 2026-08-01
 **Current Focus:** Extend Supabase-backed runtime truth beyond profile/targets into real meal-log and broader onboarding-owned remote persistence.

@@ -1,6 +1,6 @@
 # Supabase Schema Status
 
-Last verified: 2026-07-30
+Last verified: 2026-08-01
 
 This document records which Supabase objects currently exist for Tio-hub and
 which data areas may need tables later. Update it after every approved schema,
@@ -35,12 +35,14 @@ must not be added to this document.
 | `20260729150842` | `bootstrap_user_profiles` | `LIVE` | Creates the initial user profile, nutrition profile, workout profile, auth identity, profile view, RLS, grants, indexes, and profile image storage policy baseline. |
 | `20260729151026` | `deny_direct_auth_identity_access` | `LIVE` | Explicitly denies direct authenticated access to provider identity mapping rows. |
 | `20260730193000` | `add_profiles_mobile_column` | `LIVE` | Adds `profiles.mobile` so active Android profile sync can persist phone-number profile data remotely. |
+| `20260731000000` | `nutrition_meal_logs` | `LIVE` | Creates `meal_logs` and `meal_log_items` with owner-scoped RLS for the Android nutrition diary slice. |
 
 Migration source:
 
 - `supabase/migrations/20260729150842_bootstrap_user_profiles.sql`
 - `supabase/migrations/20260729151026_deny_direct_auth_identity_access.sql`
 - `supabase/migrations/20260730193000_add_profiles_mobile_column.sql`
+- `supabase/migrations/20260731000000_nutrition_meal_logs.sql`
 
 ## Current Live Objects
 
@@ -50,20 +52,26 @@ Migration source:
 | `public.user_nutrition_profiles` | Table | Nutrition | `LIVE` | User-owned body, goal, diet, target, and onboarding snapshot data. Sleep fields are currently input snapshots only; future Recovery calculations do not belong here. |
 | `public.user_workout_profiles` | Table | Workout | `LIVE` | User-owned workout preferences such as experience, location, equipment, duration, training days, split, focus areas, and health concerns. |
 | `public.auth_identities` | Table | Backend/Auth | `LIVE` | Server-controlled mapping point for current Supabase identity and a possible future Firebase/provider identity. Direct authenticated access is denied. Firebase runtime is not implemented yet. |
+| `public.meal_logs` | Table | Nutrition | `LIVE` | One meal entry per user, date, and meal type for the nutrition diary repository path. |
+| `public.meal_log_items` | Table | Nutrition | `LIVE` | User-owned food items attached to a `meal_logs` row, with macro fields used by Android meal CRUD. |
 | `public.profile_overview` | View | Profile | `LIVE` | Security-invoker read model that combines the current profile, nutrition snapshot, and workout preference data. |
 | `storage.buckets:tio-profile` | Storage bucket | Profile | `LIVE` | Public profile images only; current limit is 5 MB and allowed MIME type is `image/jpeg`. |
 
 ## Current Security And Data State
 
-- RLS is enabled on all four public tables.
-- `profiles`, `user_nutrition_profiles`, and `user_workout_profiles` use
+- RLS is enabled on all six public tables.
+- `profiles`, `user_nutrition_profiles`, `user_workout_profiles`, `meal_logs`,
+  and `meal_log_items` use
   owner-scoped authenticated policies.
 - Direct authenticated access to `auth_identities` is explicitly denied.
 - `profile_overview` uses the caller's permissions through
   `security_invoker`.
 - The Supabase Security Advisor returned zero findings after the current
   migrations were applied.
-- No demo user, profile row, or production seed data was inserted.
+- No demo user or profile row was inserted.
+- One manual verification meal log and one meal-log item were inserted on
+  2026-08-01 for an existing authenticated profile to prove the live nutrition
+  diary schema and write path.
 - The fresh database currently reports two expected unused-index information
   notices for `profiles_referred_by_id_idx` and
   `auth_identities_user_id_idx`. Re-evaluate them after real workload exists.
@@ -77,7 +85,7 @@ Migration source:
 | Username editing | `ACTIVE` | Personal Information saves an optional, validated username with the other profile identity fields. |
 | Real auth source | `ACTIVE CLIENT SOURCE` | Android now binds `AuthRepository` to a Supabase-backed implementation for email/password, Google OAuth start, email OTP verification, and sign-out. Backend authority is still a future contract question, but fake local auth is no longer the active source. |
 | Firebase identity linking | `NOT IMPLEMENTED` | `auth_identities` reserves a safe server-owned mapping boundary only. |
-| Nutrition diary persistence | `REMOTE TARGETS ONLY` | Android Meal Diary reads live `user_nutrition_profiles` target values through Supabase for the authenticated user and no longer shows seeded fake meals or fake progress. `meal_logs` persistence still does not exist yet. |
+| Nutrition diary persistence | `SCHEMA LIVE / CLIENT PATH PARTIAL` | Android source targets live `meal_logs` and `meal_log_items`, and the connected project now contains both tables plus one verified write. Device-side Meal Diary and Meal Editor route validation still remains a separate runtime check. |
 | Onboarding owner-row sync | `ACTIVE` | Onboarding completion writes schema-supported profile, nutrition, and workout preference answers to the authenticated user's owner-scoped rows. Source attribution and answers without owner columns remain local only. |
 | Workout cloud sync | `PARTIAL` | Onboarding preferences sync to `user_workout_profiles`; workout plans, sessions, and set history remain local-only/not implemented. |
 
@@ -91,7 +99,7 @@ Confirm the real feature contract before choosing final names or columns.
 | Auth/session | Provider-link RPCs or server API around `auth_identities` | `PLANNED` | Real Supabase/Firebase/backend auth source is approved. |
 | Onboarding | `onboarding_progress`, `onboarding_answers` | `PLANNED` | Resume-after-restart and multi-step persistence are implemented. Reuse existing profile tables instead of duplicating owned fields. |
 | Nutrition targets | A dedicated `nutrition_targets` table only if the current profile snapshot no longer fits | `PLANNED` | Nutrition needs versioned or independently managed targets. |
-| Nutrition diary | `meal_logs`, `meal_log_items`, `food_items` | `PLANNED` | Meal Diary read/write moves behind a real repository contract. |
+| Nutrition diary catalog/search | `food_items` | `PLANNED` | Food catalog/search still needs its approved runtime contract after the live `meal_logs` base. |
 | Workout library | `exercise_catalog` plus licensed/provenance-safe media metadata | `PLANNED` | Exercise Library runtime and catalog source are approved. |
 | Workout planning | `workout_plans`, `workout_plan_days`, related exercise ordering | `PLANNED` | Routine creation requires cloud persistence. |
 | Workout execution | `workout_sessions`, `workout_sets` | `PLANNED` | Phone workout runtime requires sync or server history. Existing local Room behavior remains the current runtime boundary until then. |

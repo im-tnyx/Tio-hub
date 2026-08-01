@@ -297,7 +297,7 @@ class PersonalInfoViewModel @Inject constructor(
             .removePrefix("@")
             .lowercase()
         val fullNameError = if (state.fullName.isBlank()) "Full name is required" else null
-        val usernameError = if (!USERNAME_PATTERN.matches(normalizedUsername)) {
+        val usernameError = if (normalizedUsername.isNotBlank() && !USERNAME_PATTERN.matches(normalizedUsername)) {
             "Use 3-30 lowercase letters, numbers, or underscores"
         } else {
             null

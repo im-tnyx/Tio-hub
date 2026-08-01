@@ -88,6 +88,22 @@ class PersonalInfoViewModelTest {
     }
 
     @Test
+    fun blankUsernameDoesNotBlockPersonalInformationSave() = runTest {
+        val repository = TestProfileRepository(profile().copy(username = ""))
+        val viewModel = PersonalInfoViewModel(repository, TestSessionProvider())
+        advanceUntilIdle()
+
+        viewModel.onAction(PersonalInfoAction.OnFullNameChange("Santosh Kumar"))
+        viewModel.onAction(PersonalInfoAction.OnGenderChange("male"))
+        viewModel.onAction(PersonalInfoAction.OnSaveClicked)
+        advanceUntilIdle()
+
+        assertEquals("Santosh Kumar", repository.updatedProfile?.displayName)
+        assertEquals("", repository.updatedProfile?.username)
+        assertEquals("male", repository.updatedProfile?.gender)
+    }
+
+    @Test
     fun invalidHeightDoesNotUpdateProfile() = runTest {
         val repository = TestProfileRepository(profile())
         val viewModel = PersonalInfoViewModel(repository, TestSessionProvider())

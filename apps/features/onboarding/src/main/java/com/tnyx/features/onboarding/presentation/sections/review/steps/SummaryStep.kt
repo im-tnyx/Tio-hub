@@ -48,9 +48,9 @@ internal fun SummaryStep(
             selected = isConfirmed,
             selectionMode = OnboardingSelectionMode.Multiple,
             onClick = {
-                onAnswerChanged(
-                    if (isConfirmed) null else OnboardingAnswer.Toggle(true),
-                )
+                if (!isConfirmed) {
+                    onAnswerChanged(OnboardingAnswer.Toggle(true))
+                }
             },
         )
         if (showValidationError) {

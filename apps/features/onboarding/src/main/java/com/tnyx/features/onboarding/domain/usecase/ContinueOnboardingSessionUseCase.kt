@@ -20,6 +20,7 @@ sealed interface ContinueOnboardingSessionResult {
     data class CompleteFailed(
         val checkpoint: com.tnyx.features.onboarding.domain.model.OnboardingCheckpoint,
     ) : ContinueOnboardingSessionResult
+
 }
 
 class ContinueOnboardingSessionUseCase @Inject constructor(
@@ -51,15 +52,14 @@ class ContinueOnboardingSessionUseCase @Inject constructor(
             }
 
             is AdvanceOnboardingStepResult.Completed -> {
-                when (
-                    completeOnboardingUseCase(
-                        checkpoint = advanceResult.checkpoint,
-                        persistCheckpoint = true,
-                        onboardingRepository = onboardingRepository,
-                        profileRepository = profileRepository,
-                        finalizeOnboardingProfile = finalizeOnboardingProfile,
-                    )
-                ) {
+                val completionResult = completeOnboardingUseCase(
+                    checkpoint = advanceResult.checkpoint,
+                    persistCheckpoint = true,
+                    onboardingRepository = onboardingRepository,
+                    profileRepository = profileRepository,
+                    finalizeOnboardingProfile = finalizeOnboardingProfile,
+                )
+                when (completionResult) {
                     is CompleteOnboardingResult.Success -> {
                         ContinueOnboardingSessionResult.Completed(advanceResult.checkpoint)
                     }

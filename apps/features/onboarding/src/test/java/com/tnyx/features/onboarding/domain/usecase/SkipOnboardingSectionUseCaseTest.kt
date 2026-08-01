@@ -3,6 +3,7 @@ package com.tnyx.features.onboarding.domain.usecase
 import com.tnyx.features.onboarding.domain.flow.DefaultOnboardingFlow
 import com.tnyx.features.onboarding.domain.flow.OnboardingSectionIds
 import com.tnyx.features.onboarding.domain.flow.OnboardingStepIds
+import com.tnyx.features.onboarding.domain.model.OnboardingAnswer
 import com.tnyx.features.onboarding.domain.model.OnboardingCheckpoint
 import com.tnyx.features.onboarding.domain.model.OnboardingDraft
 import com.tnyx.features.onboarding.domain.model.OnboardingPosition
@@ -38,6 +39,10 @@ class SkipOnboardingSectionUseCaseTest {
         )
 
         assertEquals(OnboardingStepIds.TargetsStepsTarget, result?.progress?.position?.stepId)
+        assertEquals(
+            OnboardingAnswer.Toggle(false),
+            result?.draft?.answerFor(OnboardingStepIds.WorkoutIntroChoice),
+        )
     }
 
     private fun checkpoint(

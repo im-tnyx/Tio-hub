@@ -122,17 +122,19 @@ class NutritionBootstrapRepository @Inject constructor(
             sleepHours?.let { put("sleep_target_hours", JsonPrimitive(it)) }
         }
 
-        supabaseClient.from("user_nutrition_profiles").upsert(
-            mapOf(
-                "user_id" to supabaseUserId,
-                "steps_target" to targets.stepsTarget.takeIf { it > 0 },
-                "water_target_ml" to targets.waterTargetLitres.takeIf { it > 0.0 }?.times(1000.0),
-                "target_weight_kg" to targets.targetWeight.takeIf { it > 0.0 },
-                "bed_time" to bedTime.format(dbTimeFormatter),
-                "wake_up_time" to wakeTime.format(dbTimeFormatter),
-                "macro_targets" to macroTargets,
-            ),
-        ) {
+        val nutritionPayload = buildJsonObject {
+            put("user_id", supabaseUserId)
+            targets.stepsTarget.takeIf { it > 0 }?.let { put("steps_target", it) }
+            targets.waterTargetLitres.takeIf { it > 0.0 }
+                ?.times(1000.0)
+                ?.toInt()
+                ?.let { put("water_target_ml", it) }
+            targets.targetWeight.takeIf { it > 0.0 }?.let { put("target_weight_kg", it) }
+            put("bed_time", bedTime.format(dbTimeFormatter))
+            put("wake_up_time", wakeTime.format(dbTimeFormatter))
+            put("macro_targets", macroTargets)
+        }
+        supabaseClient.from("user_nutrition_profiles").upsert(nutritionPayload) {
             onConflict = "user_id"
         }
     }

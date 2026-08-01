@@ -19,6 +19,9 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -89,44 +92,40 @@ class SupabaseProfileRepository(
     }
 
     override suspend fun updateProfile(profile: UserProfile) {
+        val targetUserId = requireNotNull(resolveValidUserId(profile.id)) {
+            "A signed-in Supabase user is required to update a profile"
+        }
+
+        val profilePayload = buildJsonObject {
+            put("id", targetUserId)
+            profile.username.trim().removePrefix("@").lowercase()
+                .takeIf(String::isNotBlank)
+                ?.let { put("username", it) }
+            profile.displayName.trim().takeIf(String::isNotBlank)
+                ?.let { put("display_name", it) }
+            profile.mobile.takeIf(String::isNotBlank)?.let { put("mobile", it) }
+            profile.dob.trim().takeIf(String::isNotBlank)?.let { put("dob", it) }
+            profile.gender.trim().takeIf(String::isNotBlank)?.let { put("gender", it) }
+            profile.planLabel.trim().takeIf(String::isNotBlank)?.let { put("plan_label", it) }
+            put("is_onboarded", profile.hasCompletedOnboarding)
+        }
+        supabaseClient.from("profiles").upsert(profilePayload) {
+            onConflict = "id"
+        }
+
+        val nutritionPayload = buildJsonObject {
+            put("user_id", targetUserId)
+            profile.weight.takeIf { it > 0.0 }?.let { put("current_weight_kg", it) }
+            profile.height.takeIf { it > 0 }?.let { put("height_cm", it) }
+            profile.bodyFat.takeIf { it > 0.0 }?.let { put("body_fat_percentage", it) }
+            profile.currentJourney.targetWeight.takeIf { it > 0.0 }
+                ?.let { put("target_weight_kg", it) }
+        }
+        supabaseClient.from("user_nutrition_profiles").upsert(nutritionPayload) {
+            onConflict = "user_id"
+        }
+
         localProfileState.value = profile
-
-        val targetUserId = resolveValidUserId(profile.id) ?: return
-
-        runCatching {
-            supabaseClient.from("profiles").upsert(
-                mapOf(
-                    "id" to targetUserId,
-                    "username" to profile.username
-                        .trim()
-                        .removePrefix("@")
-                        .lowercase()
-                        .takeIf(String::isNotBlank),
-                    "display_name" to profile.displayName.trim(),
-                    "mobile" to profile.mobile.takeIf(String::isNotBlank),
-                    "dob" to profile.dob.trim().takeIf(String::isNotBlank),
-                    "gender" to profile.gender.trim().takeIf(String::isNotBlank),
-                    "plan_label" to profile.planLabel.trim().takeIf(String::isNotBlank),
-                    "is_onboarded" to profile.hasCompletedOnboarding,
-                ),
-            ) {
-                onConflict = "id"
-            }
-        }.onFailure { it.printStackTrace() }
-
-        runCatching {
-            supabaseClient.from("user_nutrition_profiles").upsert(
-                mapOf(
-                    "user_id" to targetUserId,
-                    "current_weight_kg" to profile.weight.takeIf { it > 0.0 },
-                    "height_cm" to profile.height.takeIf { it > 0 },
-                    "body_fat_percentage" to profile.bodyFat.takeIf { it > 0.0 },
-                    "target_weight_kg" to profile.currentJourney.targetWeight.takeIf { it > 0.0 },
-                ),
-            ) {
-                onConflict = "user_id"
-            }
-        }.onFailure { it.printStackTrace() }
     }
 
     override suspend fun updateAvatar(jpegBytes: ByteArray): String {
@@ -145,7 +144,10 @@ class SupabaseProfileRepository(
         val cacheBustedUrl = "$publicUrl?v=${System.currentTimeMillis()}"
 
         supabaseClient.from("profiles").upsert(
-            mapOf("id" to currentUserId, "avatar_url" to cacheBustedUrl),
+            buildJsonObject {
+                put("id", currentUserId)
+                put("avatar_url", cacheBustedUrl)
+            },
         ) {
             onConflict = "id"
         }
@@ -160,7 +162,10 @@ class SupabaseProfileRepository(
         runCatching { bucket.delete(objectPath) }
 
         supabaseClient.from("profiles").upsert(
-            mapOf<String, Any?>("id" to currentUserId, "avatar_url" to null),
+            buildJsonObject {
+                put("id", currentUserId)
+                put("avatar_url", JsonNull)
+            },
         ) {
             onConflict = "id"
         }

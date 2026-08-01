@@ -78,6 +78,27 @@ class NutritionTargetsViewModelTest {
         assertTrue(repository.lastUpdatedTargets?.dynamicCaloriesEnabled == true)
     }
 
+    @Test
+    fun sleepScheduleSavePersistsBothTimesAndRecalculatesDuration() = runTest {
+        val repository = FakeNutritionTargetsRepository(initialTargets = sampleTargets())
+        val viewModel = NutritionTargetsViewModel(repository)
+        advanceUntilIdle()
+
+        viewModel.handleAction(
+            NutritionTargetsAction.SleepScheduleSaved(
+                sleepTime = "10:30 PM",
+                wakeTime = "07:15 AM",
+            ),
+        )
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals("10:30 PM", state.formattedSleepTime)
+        assertEquals("07:15 AM", state.formattedWakeTime)
+        assertEquals("8.8", state.sleepTargetHours)
+        assertEquals("10:30 PM", repository.lastUpdatedTargets?.formattedSleepTime)
+    }
+
     private fun sampleTargets(): NutritionTargetsSnapshot {
         return NutritionTargetsSnapshot(
             dynamicCaloriesEnabled = true,

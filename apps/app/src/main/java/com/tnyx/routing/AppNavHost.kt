@@ -99,7 +99,7 @@ fun AppNavHost(
         onboardingScreen(
             onCompleted = {
                 navController.navigate(RootRoute.MainGraph) {
-                    popUpTo(RootRoute.Welcome) { inclusive = true }
+                    popUpTo(navController.graph.id) { inclusive = true }
                     launchSingleTop = true
                 }
             },

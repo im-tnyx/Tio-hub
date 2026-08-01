@@ -73,39 +73,42 @@ class SupabaseProfileRepository(
     }
 
     override suspend fun updateProfile(profile: UserProfile) {
-        val currentUserId = currentUserId()
-        val targetUserId = if (profile.id.isNotBlank() && profile.id != "anonymous") profile.id else currentUserId
+        val targetUserId = resolveValidUserId(profile.id) ?: return
 
-        supabaseClient.from("profiles").upsert(
-            mapOf(
-                "id" to targetUserId,
-                "username" to profile.username
-                    .trim()
-                    .removePrefix("@")
-                    .lowercase()
-                    .takeIf(String::isNotBlank),
-                "display_name" to profile.displayName.trim(),
-                "mobile" to profile.mobile.takeIf(String::isNotBlank),
-                "dob" to profile.dob.trim().takeIf(String::isNotBlank),
-                "gender" to profile.gender.trim().takeIf(String::isNotBlank),
-                "plan_label" to profile.planLabel.trim().takeIf(String::isNotBlank),
-                "is_onboarded" to profile.hasCompletedOnboarding,
-            ),
-        ) {
-            onConflict = "id"
-        }
+        runCatching {
+            supabaseClient.from("profiles").upsert(
+                mapOf(
+                    "id" to targetUserId,
+                    "username" to profile.username
+                        .trim()
+                        .removePrefix("@")
+                        .lowercase()
+                        .takeIf(String::isNotBlank),
+                    "display_name" to profile.displayName.trim(),
+                    "mobile" to profile.mobile.takeIf(String::isNotBlank),
+                    "dob" to profile.dob.trim().takeIf(String::isNotBlank),
+                    "gender" to profile.gender.trim().takeIf(String::isNotBlank),
+                    "plan_label" to profile.planLabel.trim().takeIf(String::isNotBlank),
+                    "is_onboarded" to profile.hasCompletedOnboarding,
+                ),
+            ) {
+                onConflict = "id"
+            }
+        }.onFailure { it.printStackTrace() }
 
-        supabaseClient.from("user_nutrition_profiles").upsert(
-            mapOf(
-                "user_id" to targetUserId,
-                "current_weight_kg" to profile.weight.takeIf { it > 0.0 },
-                "height_cm" to profile.height.takeIf { it > 0 },
-                "body_fat_percentage" to profile.bodyFat.takeIf { it > 0.0 },
-                "target_weight_kg" to profile.currentJourney.targetWeight.takeIf { it > 0.0 },
-            ),
-        ) {
-            onConflict = "user_id"
-        }
+        runCatching {
+            supabaseClient.from("user_nutrition_profiles").upsert(
+                mapOf(
+                    "user_id" to targetUserId,
+                    "current_weight_kg" to profile.weight.takeIf { it > 0.0 },
+                    "height_cm" to profile.height.takeIf { it > 0 },
+                    "body_fat_percentage" to profile.bodyFat.takeIf { it > 0.0 },
+                    "target_weight_kg" to profile.currentJourney.targetWeight.takeIf { it > 0.0 },
+                ),
+            ) {
+                onConflict = "user_id"
+            }
+        }.onFailure { it.printStackTrace() }
     }
 
     override suspend fun updateAvatar(jpegBytes: ByteArray): String {
@@ -143,6 +146,20 @@ class SupabaseProfileRepository(
         ) {
             onConflict = "id"
         }
+    }
+
+    private fun resolveValidUserId(profileId: String?): String? {
+        val remoteUserId = supabaseClient.auth.currentUserOrNull()?.id
+            ?: sessionProvider.currentSession()?.userId
+        return when {
+            remoteUserId != null && isUuid(remoteUserId) -> remoteUserId
+            !profileId.isNullOrBlank() && profileId != "anonymous" && isUuid(profileId) -> profileId
+            else -> null
+        }
+    }
+
+    private fun isUuid(value: String): Boolean {
+        return runCatching { java.util.UUID.fromString(value) }.isSuccess
     }
 
     private fun currentUserId(): String {

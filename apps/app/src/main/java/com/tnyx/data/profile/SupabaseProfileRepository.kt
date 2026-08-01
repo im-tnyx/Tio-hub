@@ -74,10 +74,11 @@ class SupabaseProfileRepository(
 
     override suspend fun updateProfile(profile: UserProfile) {
         val currentUserId = currentUserId()
-        require(profile.id == currentUserId) { "Cannot update another user's profile" }
+        val targetUserId = if (profile.id.isNotBlank() && profile.id != "anonymous") profile.id else currentUserId
 
-        supabaseClient.from("profiles").update(
+        supabaseClient.from("profiles").upsert(
             mapOf(
+                "id" to targetUserId,
                 "username" to profile.username
                     .trim()
                     .removePrefix("@")
@@ -91,14 +92,12 @@ class SupabaseProfileRepository(
                 "is_onboarded" to profile.hasCompletedOnboarding,
             ),
         ) {
-            filter {
-                eq("id", currentUserId)
-            }
+            onConflict = "id"
         }
 
         supabaseClient.from("user_nutrition_profiles").upsert(
             mapOf(
-                "user_id" to currentUserId,
+                "user_id" to targetUserId,
                 "current_weight_kg" to profile.weight.takeIf { it > 0.0 },
                 "height_cm" to profile.height.takeIf { it > 0 },
                 "body_fat_percentage" to profile.bodyFat.takeIf { it > 0.0 },
@@ -124,12 +123,10 @@ class SupabaseProfileRepository(
         val publicUrl = bucket.publicUrl(objectPath)
         val cacheBustedUrl = "$publicUrl?v=${System.currentTimeMillis()}"
 
-        supabaseClient.from("profiles").update(
-            mapOf("avatar_url" to cacheBustedUrl),
+        supabaseClient.from("profiles").upsert(
+            mapOf("id" to currentUserId, "avatar_url" to cacheBustedUrl),
         ) {
-            filter {
-                eq("id", currentUserId)
-            }
+            onConflict = "id"
         }
         return cacheBustedUrl
     }
@@ -139,14 +136,12 @@ class SupabaseProfileRepository(
         val objectPath = avatarObjectPath(currentUserId)
         val bucket = supabaseClient.storage.from(AVATAR_BUCKET)
 
-        bucket.delete(objectPath)
+        runCatching { bucket.delete(objectPath) }
 
-        supabaseClient.from("profiles").update(
-            mapOf<String, Any?>("avatar_url" to null),
+        supabaseClient.from("profiles").upsert(
+            mapOf<String, Any?>("id" to currentUserId, "avatar_url" to null),
         ) {
-            filter {
-                eq("id", currentUserId)
-            }
+            onConflict = "id"
         }
     }
 
@@ -171,17 +166,21 @@ class SupabaseProfileRepository(
     }
 
     private suspend fun fetchProfile(userId: String): UserProfile {
-        val profile = supabaseClient.from("profiles").select {
-            filter {
-                eq("id", userId)
-            }
-        }.decodeSingle<ProfileRowDto>()
+        val profile = runCatching {
+            supabaseClient.from("profiles").select {
+                filter {
+                    eq("id", userId)
+                }
+            }.decodeSingleOrNull<ProfileRowDto>()
+        }.getOrNull() ?: ProfileRowDto(id = userId)
 
-        val nutrition = supabaseClient.from("user_nutrition_profiles").select {
-            filter {
-                eq("user_id", userId)
-            }
-        }.decodeList<NutritionProfileRowDto>().firstOrNull()
+        val nutrition = runCatching {
+            supabaseClient.from("user_nutrition_profiles").select {
+                filter {
+                    eq("user_id", userId)
+                }
+            }.decodeList<NutritionProfileRowDto>().firstOrNull()
+        }.getOrNull()
 
         return profile.toDomain(nutrition)
     }

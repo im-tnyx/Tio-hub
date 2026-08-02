@@ -13,26 +13,36 @@ data class BottomNavigationUiState(
     val draftTabs: List<ShellTab> = DEFAULT_BOTTOM_NAV_TABS,
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
+    val showDiscardDialog: Boolean = false,
     val errorMessage: String? = null,
 ) {
+    val hasUnsavedChanges: Boolean
+        get() = draftTabs != savedTabs
+
     val canSave: Boolean
         get() = !isLoading &&
             !isSaving &&
-            draftTabs != savedTabs &&
+            hasUnsavedChanges &&
             draftTabs.size in MIN_BOTTOM_NAV_TABS..MAX_BOTTOM_NAV_TABS
 
     val canReset: Boolean
         get() = !isLoading && !isSaving && draftTabs != DEFAULT_BOTTOM_NAV_TABS
 
-    val availableTabs: List<ShellTab>
-        get() = BOTTOM_NAV_TAB_CATALOG.filterNot(draftTabs::contains)
+    val supportedTabs: List<ShellTab>
+        get() = BOTTOM_NAV_TAB_CATALOG
+
+    val selectedMode: BottomNavigationMode
+        get() = resolveBottomNavigationMode(draftTabs)
 }
 
 sealed interface BottomNavigationAction {
     data object BackClicked : BottomNavigationAction
+    data object KeepEditingClicked : BottomNavigationAction
+    data object DiscardChangesClicked : BottomNavigationAction
+    data class ApplyMode(val mode: BottomNavigationMode) : BottomNavigationAction
     data class ToggleTab(val tab: ShellTab) : BottomNavigationAction
-    data class MoveTabUp(val tab: ShellTab) : BottomNavigationAction
-    data class MoveTabDown(val tab: ShellTab) : BottomNavigationAction
+    data class AddTab(val tab: ShellTab, val targetIndex: Int) : BottomNavigationAction
+    data class MoveTab(val tab: ShellTab, val targetIndex: Int) : BottomNavigationAction
     data object ResetClicked : BottomNavigationAction
     data object SaveClicked : BottomNavigationAction
     data object DismissError : BottomNavigationAction
@@ -40,7 +50,44 @@ sealed interface BottomNavigationAction {
 
 sealed interface BottomNavigationEffect {
     data object Saved : BottomNavigationEffect
+    data object NavigateBack : BottomNavigationEffect
 }
+
+enum class BottomNavigationMode(
+    val presetTabs: List<ShellTab>?,
+) {
+    Workout(
+        listOf(
+            ShellTab.Home,
+            ShellTab.Workout,
+            ShellTab.Ai,
+            ShellTab.WorkoutLibrary,
+            ShellTab.Progress,
+        )
+    ),
+    Nutrition(
+        listOf(
+            ShellTab.Home,
+            ShellTab.Nutrition,
+            ShellTab.Ai,
+            ShellTab.MealPlan,
+            ShellTab.Progress,
+        )
+    ),
+    Hybrid(DEFAULT_BOTTOM_NAV_TABS),
+    Custom(null),
+}
+
+internal fun resolveBottomNavigationMode(tabs: List<ShellTab>): BottomNavigationMode {
+    return BottomNavigationMode.entries.firstOrNull { mode ->
+        mode.presetTabs?.toSet() == tabs.toSet()
+    } ?: BottomNavigationMode.Custom
+}
+
+internal fun applyBottomNavigationMode(
+    tabs: List<ShellTab>,
+    mode: BottomNavigationMode,
+): List<ShellTab> = mode.presetTabs ?: tabs
 
 internal fun toggleBottomNavigationTab(
     tabs: List<ShellTab>,
@@ -58,18 +105,33 @@ internal fun toggleBottomNavigationTab(
 internal fun moveBottomNavigationTab(
     tabs: List<ShellTab>,
     tab: ShellTab,
-    offset: Int,
+    targetIndex: Int,
 ): List<ShellTab> {
-    if (tab == ShellTab.Home || offset == 0) return tabs
+    if (tab == ShellTab.Home) return tabs
 
     val currentIndex = tabs.indexOf(tab)
     if (currentIndex <= 0) return tabs
 
-    val targetIndex = currentIndex + offset
-    if (targetIndex !in 1 until tabs.size) return tabs
+    val resolvedTargetIndex = targetIndex.coerceIn(1, tabs.lastIndex)
+    if (resolvedTargetIndex == currentIndex) return tabs
 
     return tabs.toMutableList().apply {
-        this[currentIndex] = this[targetIndex]
-        this[targetIndex] = tab
+        removeAt(currentIndex)
+        add(resolvedTargetIndex, tab)
+    }
+}
+
+internal fun addBottomNavigationTab(
+    tabs: List<ShellTab>,
+    tab: ShellTab,
+    targetIndex: Int,
+): List<ShellTab> {
+    if (tab == ShellTab.Home || tab in tabs || tabs.size >= MAX_BOTTOM_NAV_TABS) {
+        return tabs
+    }
+
+    val resolvedTargetIndex = targetIndex.coerceIn(1, tabs.size)
+    return tabs.toMutableList().apply {
+        add(resolvedTargetIndex, tab)
     }
 }

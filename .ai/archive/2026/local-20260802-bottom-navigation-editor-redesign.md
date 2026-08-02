@@ -1,9 +1,11 @@
 # Task: Android Bottom Navigation Editor Redesign
 
 - Platform Scope: android-settings-navigation
-- Status: In Progress
+- Status: Completed
 - Branch: codex/android-bottom-navigation-editor
 - Created: 2026-08-02
+- Merged PR: `#30`
+- Merge Commit: `977c4784b95f9efb95342dc62c56e4d657c823dd`
 
 ## Primary Objective
 
@@ -122,7 +124,8 @@ screen with the checked-in Tio/TNYX design system.
 - Styled the unsaved-changes `AlertDialog` directly with TNYX shape, surface,
   typography, elevation, and action-color tokens. It intentionally remains a
   semantic dialog rather than nesting a `TnyxCard` inside another surface.
-- Remaining review action: device/emulator gesture and narrow-width visual smoke.
+- Remaining review action before merge was device/emulator gesture and
+  narrow-width visual smoke; that follow-up moved to the stabilization audit.
 
 ## Risks And Validation Notes
 

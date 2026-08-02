@@ -199,7 +199,7 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
 - [x] Workout and its reused core Button, Input, Card, and Header consumers resolve visual state through `TnyxTheme` component/semantic tokens without feature-local hardcoded colors, dimensions, alpha values, or typography overrides.
 - [x] Workout source now has additive exercise tracking types/snapshots and a feature-owned reusable exercise editor with keyed multiple-exercise, set, and metric UI state; Active mode is wired while Routine-edit and Read-only consumers remain future work.
 - [x] Active Workout now uses a dense full-width set table with tracking-type columns, add-set, latest completed-session `Previous` mapping/copy, and an RPE 5-10 selector for strength/reps exercises.
-- [ ] Corrected reusable-editor feature tests/compile and the full Phone/Wear gate remain pending because the local rerun was blocked by the Codex Gradle-cache usage limit.
+- [ ] The 2026-08-02 rerun of `:shared:test :features:workout:test :app:testDebugUnitTest :app:compileDebugKotlin :wear:compileDebugKotlin` did not pass in full: `:shared:test`, `:app:compileDebugKotlin`, and `:wear:compileDebugKotlin` succeeded, while `:features:workout:test` failed because `BodyPartIconRegistryTest` and `MuscleMapAssetRegistryTest` could not resolve `kotlin.test.*`, and `:app:testDebugUnitTest` failed in Robolectric with `IllegalStateException` from `MavenDependencyResolver`.
 - [ ] Exercise catalog/media, routine builder, notes, live rest timer, advanced set types, reordering, and device UX smoke are not implemented yet.
 
 Boundary note: shared contracts, Phone persistence/recovery, and the first repository-backed Phone UI slice are implemented. Approved media catalog integration, routine building, advanced session UX, Settings UI, remote outbox delivery, and real Wear sync remain unimplemented. The blueprint allows a Tio-owned visual UI while preserving the approved Lyfta-derived core UX behavior.
@@ -246,6 +246,11 @@ Boundary note: shared contracts, Phone persistence/recovery, and the first repos
   tabs visible, uses muted states plus `X` for selected non-Home tabs and `+`
   for inactive tabs, and supports cross-zone drag/drop; toolbar/system Back
   still protects all unsaved draft changes.
+- [x] Focused Bottom navigation device smoke was completed on 2026-08-02 on
+  Samsung `SM-S921B`: preset preview switching, Custom derivation without
+  false activation on same-membership reorder, Home pinning, `+`/`X` fallback
+  actions, long-press Preview reorder, Save persistence, Reset, and toolbar /
+  system Back unsaved-changes protection were verified.
 - [ ] App preferences, notifications, units, account, export, and about screens are placeholders/folders only.
 - [ ] Subscription UI entry is not wired to Billing / Entitlement yet.
 
@@ -336,6 +341,25 @@ Rule: Future module folders may exist as checked-in ownership placeholders, but 
 ---
 
 ## ✅ Latest Validation
+
+### 2026-08-02: Post-merge runtime stabilization audit
+
+- [x] `git diff --check`
+- [x] `./gradlew.bat :shared:test`
+- [x] `./gradlew.bat :features:workout:test`
+- [x] `./gradlew.bat :app:testDebugUnitTest`
+- [x] `./gradlew.bat :app:compileDebugKotlin`
+- [x] `./gradlew.bat :wear:compileDebugKotlin`
+- [x] Result: `git diff --check`, `:shared:test`, `:app:compileDebugKotlin`,
+  and `:wear:compileDebugKotlin` passed. `:features:workout:test` failed while
+  compiling registry tests because `kotlin.test.*` symbols were unresolved.
+  `:app:testDebugUnitTest` failed in Robolectric with `IllegalStateException`
+  from `MavenDependencyResolver`.
+- [x] Device smoke: Bottom navigation manual smoke ran on Samsung `SM-S921B`
+  and verified presets, Custom derivation, Home pinning, fallback add/remove,
+  Preview reorder, Save/Reset behavior, and unsaved-changes dialogs.
+- [x] Scope: audit and truth-alignment only; no new Android or Wear feature
+  expansion was added.
 
 ### 2026-07-30: Nutrition repository bootstrap
 
@@ -635,5 +659,6 @@ Known warning:
 
 ---
 
-**Last Updated:** 2026-08-01
-**Current Focus:** Extend Supabase-backed runtime truth beyond profile/targets into real meal-log and broader onboarding-owned remote persistence.
+**Last Updated:** 2026-08-02
+**Current Focus:** Post-merge Android runtime stabilization truth alignment; the
+Workout full validation gate remains not fully green on current main.

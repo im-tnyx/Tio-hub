@@ -2,6 +2,8 @@ package com.tnyx.features.welcome.presentation.view_model
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tnyx.features.auth.domain.model.AuthResult
+import com.tnyx.features.auth.domain.repository.AuthRepository
 import com.tnyx.features.welcome.presentation.action.WelcomeAction
 import com.tnyx.features.welcome.presentation.state.LegalDocumentType
 import com.tnyx.features.welcome.presentation.state.WelcomeEffect
@@ -16,7 +18,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class WelcomeViewModel @Inject constructor() : ViewModel() {
+class WelcomeViewModel @Inject constructor(
+    private val authRepository: AuthRepository,
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WelcomeUiState())
     val uiState = _uiState.asStateFlow()
@@ -33,7 +37,7 @@ class WelcomeViewModel @Inject constructor() : ViewModel() {
                 viewModelScope.launch { _effect.emit(WelcomeEffect.NavigateToLogin) }
             }
             WelcomeAction.SkipForNowClicked -> {
-                viewModelScope.launch { _effect.emit(WelcomeEffect.NavigateToMain) }
+                signInWithDemoAccount()
             }
             WelcomeAction.LanguageSelectorClicked -> {
                 _uiState.update { it.copy(showLanguageSheet = true) }
@@ -45,7 +49,8 @@ class WelcomeViewModel @Inject constructor() : ViewModel() {
                 _uiState.update { 
                     it.copy(
                         localeCode = action.localeCode,
-                        showLanguageSheet = false
+                        showLanguageSheet = false,
+                        skipError = null,
                     ) 
                 }
             }
@@ -66,6 +71,24 @@ class WelcomeViewModel @Inject constructor() : ViewModel() {
                     _effect.emit(WelcomeEffect.NavigateToLegal(title, url))
                 }
             }
+        }
+    }
+
+    private fun signInWithDemoAccount() {
+        if (_uiState.value.isSkipLoading) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSkipLoading = true, skipError = null) }
+            when (val result = authRepository.signInWithDemoAccount()) {
+                is AuthResult.Authenticated -> _effect.emit(WelcomeEffect.NavigateToMain)
+                is AuthResult.Failure -> _uiState.update { it.copy(skipError = result.message) }
+                AuthResult.ExternalAuthStarted -> _uiState.update {
+                    it.copy(skipError = "Demo account sign-in needs a direct session, not browser auth")
+                }
+                is AuthResult.VerificationRequired -> _uiState.update {
+                    it.copy(skipError = "Demo account should not require verification")
+                }
+            }
+            _uiState.update { it.copy(isSkipLoading = false) }
         }
     }
 }

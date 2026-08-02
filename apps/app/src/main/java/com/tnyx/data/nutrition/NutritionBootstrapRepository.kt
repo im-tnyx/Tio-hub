@@ -55,7 +55,7 @@ class NutritionBootstrapRepository @Inject constructor(
     }
 
     private suspend fun fetchMealLogsForDate(date: LocalDate): List<NutritionMeal> {
-        val userId = supabaseClient.auth.currentUserOrNull()?.id
+        val userId = resolvedUserId()
             ?: return emptyList()
 
         return runCatching {
@@ -79,7 +79,7 @@ class NutritionBootstrapRepository @Inject constructor(
 
     override suspend fun getNutritionTargets(): NutritionTargetsSnapshot {
         val localSession = sessionProvider.currentSession()
-        val supabaseUserId = supabaseClient.auth.currentUserOrNull()?.id
+        val supabaseUserId = resolvedUserId()
         if (localSession == null || supabaseUserId.isNullOrBlank()) {
             return nutritionTargetsDefaults()
         }
@@ -99,7 +99,7 @@ class NutritionBootstrapRepository @Inject constructor(
 
     override suspend fun updateNutritionTargets(targets: NutritionTargetsSnapshot) {
         val localSession = sessionProvider.currentSession()
-        val supabaseUserId = supabaseClient.auth.currentUserOrNull()?.id
+        val supabaseUserId = resolvedUserId()
         require(localSession != null && !supabaseUserId.isNullOrBlank()) {
             "A signed-in user is required to update nutrition targets"
         }
@@ -234,6 +234,10 @@ class NutritionBootstrapRepository @Inject constructor(
     private fun requireUserId(): String {
         return supabaseClient.auth.currentUserOrNull()?.id
             ?: error("A signed-in Supabase user is required for meal log operations")
+    }
+
+    private fun resolvedUserId(): String? {
+        return supabaseClient.auth.currentUserOrNull()?.id
     }
 
     private fun UserNutritionProfileDto.toTargetsSnapshot(): NutritionTargetsSnapshot {

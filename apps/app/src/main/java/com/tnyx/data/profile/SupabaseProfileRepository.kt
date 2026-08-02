@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
@@ -61,21 +62,24 @@ class SupabaseProfileRepository(
     private val supabaseClient: SupabaseClient,
     private val sessionProvider: AuthSessionProvider,
 ) : ProfileRepository {
-    private val localProfileState = MutableStateFlow<UserProfile?>(null)
+    private val localProfileState = MutableStateFlow<LocalProfileSnapshot?>(null)
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     override fun getCurrentProfile(): Flow<UserProfile> {
         return sessionProvider.observeSession()
+            .distinctUntilChangedBy { it?.userId }
             .flatMapLatest { session ->
                 val userId = session?.userId
                 if (userId.isNullOrBlank()) {
-                    localProfileState.map { it ?: emptyProfile() }
+                    localProfileState.value = null
+                    flowOf(emptyProfile())
                 } else {
+                    clearLocalProfileIfOwnerChanged(userId)
                     combine(
                         localProfileState,
                         observeRemoteProfile(userId),
                     ) { local, remote ->
-                        mergeProfiles(local, remote)
+                        mergeProfiles(local?.takeIf { it.ownerUserId == userId }?.profile, remote)
                     }
                 }
             }
@@ -83,11 +87,12 @@ class SupabaseProfileRepository(
     }
 
     override fun getProfile(userId: String): Flow<UserProfile> {
+        clearLocalProfileIfOwnerChanged(userId)
         return combine(
             localProfileState,
             observeRemoteProfile(userId),
         ) { local, remote ->
-            mergeProfiles(local, remote)
+            mergeProfiles(local?.takeIf { it.ownerUserId == userId }?.profile, remote)
         }.distinctUntilChanged()
     }
 
@@ -125,7 +130,10 @@ class SupabaseProfileRepository(
             onConflict = "user_id"
         }
 
-        localProfileState.value = profile
+        localProfileState.value = LocalProfileSnapshot(
+            ownerUserId = targetUserId,
+            profile = profile.copy(id = targetUserId),
+        )
     }
 
     override suspend fun updateAvatar(jpegBytes: ByteArray): String {
@@ -289,6 +297,12 @@ class SupabaseProfileRepository(
         )
     }
 
+    private fun clearLocalProfileIfOwnerChanged(userId: String) {
+        if (localProfileState.value?.ownerUserId != userId) {
+            localProfileState.value = null
+        }
+    }
+
     private fun emptyProfile(): UserProfile {
         return UserProfile(
             id = "anonymous",
@@ -303,3 +317,8 @@ class SupabaseProfileRepository(
         )
     }
 }
+
+private data class LocalProfileSnapshot(
+    val ownerUserId: String,
+    val profile: UserProfile,
+)

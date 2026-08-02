@@ -1,6 +1,7 @@
 package com.tnyx.features.auth.data.repository
 
 import com.tnyx.features.auth.domain.model.AuthResult
+import com.tnyx.features.auth.domain.model.DemoAccountConfig
 import com.tnyx.features.auth.domain.repository.AuthRepository
 import com.tnyx.features.auth.domain.repository.ExternalAuthGateway
 import com.tnyx.shared.auth.domain.model.AuthSession
@@ -20,6 +21,7 @@ class SupabaseAuthRepository @Inject constructor(
     private val supabaseClient: SupabaseClient,
     private val sessionStore: MutableAuthSessionStore,
     private val externalAuthGateway: ExternalAuthGateway,
+    private val demoAccountConfig: DemoAccountConfig,
 ) : AuthRepository {
 
     override suspend fun signIn(email: String, password: String): AuthResult {
@@ -44,7 +46,13 @@ class SupabaseAuthRepository @Inject constructor(
     }
 
     override suspend fun signInWithDemoAccount(): AuthResult {
-        return AuthResult.Failure("Demo account is disabled in sync mode")
+        if (!demoAccountConfig.isConfigured) {
+            return AuthResult.Failure("Demo account is not configured on this build")
+        }
+        return signIn(
+            email = demoAccountConfig.normalizedEmail,
+            password = demoAccountConfig.normalizedPassword,
+        )
     }
 
     override suspend fun signUp(
@@ -102,18 +110,20 @@ class SupabaseAuthRepository @Inject constructor(
         }
     }
 
+    override suspend fun restoreSessionIfAvailable(): AuthSession? {
+        sessionStore.currentSession()?.let { return it }
+        val user = supabaseClient.auth.currentUserOrNull() ?: return null
+        val session = sessionFromUser(user.id, user.email, user.userMetadata?.get("display_name")?.toString()?.trim('"'))
+        sessionStore.setSession(session)
+        return session
+    }
+
     override suspend fun signInAnonymously(): AuthResult {
         return runCatching {
             supabaseClient.auth.signInAnonymously()
             val user = supabaseClient.auth.currentUserOrNull()
                 ?: return AuthResult.Failure("No authenticated Supabase user is available")
-            val email = user.email?.takeIf(String::isNotBlank) ?: "guest_${user.id.take(8)}@tnyx.app"
-            val session = AuthSession(
-                userId = user.id,
-                email = email,
-                displayName = "Guest User",
-                isDemo = true,
-            )
+            val session = sessionFromUser(user.id, user.email, null)
             sessionStore.setSession(session)
             AuthResult.Authenticated(session)
         }.getOrElse { error ->
@@ -132,20 +142,38 @@ class SupabaseAuthRepository @Inject constructor(
             ?: return AuthResult.Failure("No authenticated Supabase user is available")
         val email = user.email?.takeIf(String::isNotBlank)
             ?: return AuthResult.Failure("Authenticated account is missing an email address")
-        val displayName = user.userMetadata
-            ?.get("display_name")
-            ?.toString()
-            ?.trim('"')
-            ?.takeIf(String::isNotBlank)
-            ?: email.substringBefore("@").replaceFirstChar(Char::titlecase)
-
-        val session = AuthSession(
+        val session = sessionFromUser(
             userId = user.id,
             email = email,
-            displayName = displayName,
-            isDemo = false,
-        )
+            rawDisplayName = user.userMetadata
+                ?.get("display_name")
+                ?.toString()
+                ?.trim('"'),
+        ).copy(isDemo = false)
         sessionStore.setSession(session)
         return AuthResult.Authenticated(session)
+    }
+
+    private fun sessionFromUser(
+        userId: String,
+        email: String?,
+        rawDisplayName: String?,
+    ): AuthSession {
+        val normalizedEmail = email?.takeIf(String::isNotBlank)
+        val isAnonymous = normalizedEmail == null
+        val fallbackEmail = normalizedEmail ?: "guest_${userId.take(8)}@tnyx.app"
+        val displayName = rawDisplayName
+            ?.takeIf(String::isNotBlank)
+            ?: if (isAnonymous) {
+                "Guest User"
+            } else {
+                fallbackEmail.substringBefore("@").replaceFirstChar(Char::titlecase)
+            }
+        return AuthSession(
+            userId = userId,
+            email = fallbackEmail,
+            displayName = displayName,
+            isDemo = isAnonymous,
+        )
     }
 }

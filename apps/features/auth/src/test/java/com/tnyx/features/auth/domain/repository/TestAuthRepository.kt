@@ -1,6 +1,7 @@
 package com.tnyx.features.auth.domain.repository
 
 import com.tnyx.features.auth.domain.model.AuthResult
+import com.tnyx.shared.auth.domain.model.AuthSession
 import com.tnyx.shared.auth.domain.repository.MutableAuthSessionStore
 
 class TestAuthRepository(
@@ -13,6 +14,8 @@ class TestAuthRepository(
     var signUpResult: AuthResult = AuthResult.Failure("Not initialized")
     var verifyOtpResult: AuthResult = AuthResult.Failure("Not initialized")
     var resendOtpResult: AuthResult = AuthResult.Failure("Not initialized")
+    var signInAnonymouslyResult: AuthResult = AuthResult.Failure("Not initialized")
+    var restoreSessionResult: AuthSession? = null
 
     private suspend fun maybeDelay() {
         if (delayMs > 0) {
@@ -56,6 +59,19 @@ class TestAuthRepository(
     override suspend fun resendOtp(email: String): AuthResult {
         maybeDelay()
         return resendOtpResult
+    }
+
+    override suspend fun restoreSessionIfAvailable(): AuthSession? {
+        maybeDelay()
+        restoreSessionResult?.let { sessionStore?.setSession(it) }
+        return restoreSessionResult
+    }
+
+    override suspend fun signInAnonymously(): AuthResult {
+        maybeDelay()
+        val result = signInAnonymouslyResult
+        syncSession(result)
+        return result
     }
 
     override suspend fun signOut() {

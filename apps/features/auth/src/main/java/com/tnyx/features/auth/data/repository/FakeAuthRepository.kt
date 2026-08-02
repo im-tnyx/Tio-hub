@@ -105,6 +105,10 @@ class FakeAuthRepository @Inject constructor(
         return AuthResult.VerificationRequired(email = normalizeEmail(email))
     }
 
+    override suspend fun restoreSessionIfAvailable(): AuthSession? {
+        return sessionStore.currentSession()
+    }
+
     override suspend fun signInAnonymously(): AuthResult {
         return authenticated(
             AuthSession(

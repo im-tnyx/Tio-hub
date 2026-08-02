@@ -20,7 +20,9 @@ class SupabaseOnboardingCompletionSyncRepository @Inject constructor(
 ) : OnboardingCompletionSyncRepository {
 
     override suspend fun syncCompletedOnboarding(draft: OnboardingDraft) {
-        val userId = requireNotNull(supabaseClient.auth.currentUserOrNull()?.id) {
+        val userId = requireNotNull(
+            supabaseClient.auth.currentUserOrNull()?.id,
+        ) {
             "A signed-in Supabase user is required to sync onboarding"
         }
 

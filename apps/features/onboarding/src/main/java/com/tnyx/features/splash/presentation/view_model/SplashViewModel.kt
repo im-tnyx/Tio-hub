@@ -49,6 +49,7 @@ class SplashViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             delay(1500L)
             var session = sessionProvider.observeSession().first()
+                ?: authRepository.restoreSessionIfAvailable()
             if (session == null) {
                 val result = authRepository.signInAnonymously()
                 if (result is AuthResult.Authenticated) {
@@ -57,11 +58,12 @@ class SplashViewModel @Inject constructor(
             }
             val currentProfile = profileRepository.getCurrentProfile().first()
             val hasCompletedOnboarding = currentProfile.hasCompletedOnboarding
+            val hasPermanentSession = session != null && !session.isDemo
             _uiState.update { it.copy(isLoading = false) }
             _effect.emit(
                 if (hasCompletedOnboarding) {
                     SplashEffect.NavigateToMain
-                } else if (session != null) {
+                } else if (hasPermanentSession) {
                     SplashEffect.NavigateToOnboarding
                 } else {
                     SplashEffect.NavigateToWelcome

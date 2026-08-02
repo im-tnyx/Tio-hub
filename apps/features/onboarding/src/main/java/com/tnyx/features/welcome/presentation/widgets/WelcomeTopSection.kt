@@ -20,6 +20,7 @@ import com.tnyx.features.welcome.presentation.action.WelcomeAction
 fun WelcomeTopSection(
     localeCode: String,
     skipText: String,
+    isSkipLoading: Boolean,
     onAction: (WelcomeAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -52,7 +53,7 @@ fun WelcomeTopSection(
 
         // --- Skip Button ---
         Text(
-            text = skipText,
+            text = if (isSkipLoading) "Loading..." else skipText,
             style = TnyxTheme.typography.labelLarge,
             color = TnyxTheme.colors.textPrimary,
             modifier = Modifier
@@ -66,7 +67,7 @@ fun WelcomeTopSection(
                     shape = CircleShape
                 )
                 .clip(CircleShape)
-                .clickable { onAction(WelcomeAction.SkipForNowClicked) }
+                .clickable(enabled = !isSkipLoading) { onAction(WelcomeAction.SkipForNowClicked) }
                 .padding(horizontal = TnyxTheme.dimens.SpaceM, vertical = TnyxTheme.dimens.SpaceS)
         )
     }

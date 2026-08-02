@@ -1,5 +1,6 @@
 package com.tnyx.features.settings.presentation.bottom_navigation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -18,17 +19,17 @@ fun BottomNavigationRoute(
         viewModel.effect.collectLatest { effect ->
             when (effect) {
                 BottomNavigationEffect.Saved -> onNavigateBack()
+                BottomNavigationEffect.NavigateBack -> onNavigateBack()
             }
         }
     }
 
+    BackHandler {
+        viewModel.handleAction(BottomNavigationAction.BackClicked)
+    }
+
     BottomNavigationScreen(
         state = uiState,
-        onAction = { action ->
-            when (action) {
-                BottomNavigationAction.BackClicked -> onNavigateBack()
-                else -> viewModel.handleAction(action)
-            }
-        },
+        onAction = viewModel::handleAction,
     )
 }

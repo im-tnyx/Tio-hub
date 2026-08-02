@@ -238,6 +238,14 @@ Boundary note: shared contracts, Phone persistence/recovery, and the first repos
 - [x] Settings public routes exist.
 - [x] Settings home skeleton exists.
 - [x] Settings graph is launched from the You/Profile gear entry.
+- [x] Bottom navigation editor supports Workout, Nutrition, and Hybrid draft
+  presets; derives Custom layouts; previews add/remove changes immediately;
+  and preserves Home as the fixed first destination.
+- [x] Non-Home Preview tabs support long-press horizontal reordering with
+  TalkBack move actions. The two-row Available grid keeps all eight supported
+  tabs visible, uses muted states plus `X` for selected non-Home tabs and `+`
+  for inactive tabs, and supports cross-zone drag/drop; toolbar/system Back
+  still protects all unsaved draft changes.
 - [ ] App preferences, notifications, units, account, export, and about screens are placeholders/folders only.
 - [ ] Subscription UI entry is not wired to Billing / Entitlement yet.
 

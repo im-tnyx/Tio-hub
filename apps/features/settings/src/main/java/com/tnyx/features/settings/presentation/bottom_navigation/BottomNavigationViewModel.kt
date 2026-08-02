@@ -50,21 +50,47 @@ class BottomNavigationViewModel @Inject constructor(
 
     fun handleAction(action: BottomNavigationAction) {
         when (action) {
-            BottomNavigationAction.BackClicked -> Unit
+            BottomNavigationAction.BackClicked -> requestBack()
+            BottomNavigationAction.KeepEditingClicked -> {
+                _uiState.update { it.copy(showDiscardDialog = false) }
+            }
+            BottomNavigationAction.DiscardChangesClicked -> {
+                _uiState.update { it.copy(showDiscardDialog = false) }
+                viewModelScope.launch { _effect.emit(BottomNavigationEffect.NavigateBack) }
+            }
+            is BottomNavigationAction.ApplyMode -> updateDraft(
+                applyBottomNavigationMode(_uiState.value.draftTabs, action.mode)
+            )
             is BottomNavigationAction.ToggleTab -> updateDraft(
                 toggleBottomNavigationTab(_uiState.value.draftTabs, action.tab)
             )
-            is BottomNavigationAction.MoveTabUp -> updateDraft(
-                moveBottomNavigationTab(_uiState.value.draftTabs, action.tab, offset = -1)
+            is BottomNavigationAction.AddTab -> updateDraft(
+                addBottomNavigationTab(
+                    tabs = _uiState.value.draftTabs,
+                    tab = action.tab,
+                    targetIndex = action.targetIndex,
+                )
             )
-            is BottomNavigationAction.MoveTabDown -> updateDraft(
-                moveBottomNavigationTab(_uiState.value.draftTabs, action.tab, offset = 1)
+            is BottomNavigationAction.MoveTab -> updateDraft(
+                moveBottomNavigationTab(
+                    tabs = _uiState.value.draftTabs,
+                    tab = action.tab,
+                    targetIndex = action.targetIndex,
+                )
             )
             BottomNavigationAction.ResetClicked -> updateDraft(DEFAULT_BOTTOM_NAV_TABS)
             BottomNavigationAction.SaveClicked -> save()
             BottomNavigationAction.DismissError -> {
                 _uiState.update { it.copy(errorMessage = null) }
             }
+        }
+    }
+
+    private fun requestBack() {
+        if (_uiState.value.hasUnsavedChanges) {
+            _uiState.update { it.copy(showDiscardDialog = true) }
+        } else {
+            viewModelScope.launch { _effect.emit(BottomNavigationEffect.NavigateBack) }
         }
     }
 

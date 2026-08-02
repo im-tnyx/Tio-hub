@@ -10,6 +10,8 @@ import com.tnyx.features.onboarding.presentation.sections.OnboardingSectionConte
 import com.tnyx.features.onboarding.presentation.shell.OnboardingErrorState
 import com.tnyx.features.onboarding.presentation.shell.OnboardingShellScreen
 
+import androidx.activity.compose.BackHandler
+
 @Composable
 internal fun OnboardingContainer(
     state: OnboardingUiState,
@@ -19,6 +21,10 @@ internal fun OnboardingContainer(
 ) {
     val position = state.position
     val containerState = containerStateFactory(state)
+
+    BackHandler(enabled = containerState.showBackButton) {
+        onAction(OnboardingAction.BackClicked)
+    }
 
     state.completionStage?.let { completionStage ->
         OnboardingCompletionScreen(

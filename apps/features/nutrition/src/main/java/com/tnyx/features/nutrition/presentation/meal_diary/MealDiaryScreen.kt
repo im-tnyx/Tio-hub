@@ -159,7 +159,7 @@ fun MealDiaryScreen(
             onCameraClicked = { onAction(MealDiaryAction.AddMealCameraClicked) },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 20.dp, bottom = 96.dp)
+                .padding(end = 20.dp, bottom = 72.dp)
                 .navigationBarsPadding(),
         )
     }

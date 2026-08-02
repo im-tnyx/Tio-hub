@@ -55,7 +55,7 @@ class NutritionBootstrapRepository @Inject constructor(
     }
 
     private suspend fun fetchMealLogsForDate(date: LocalDate): List<NutritionMeal> {
-        val userId = supabaseClient.auth.currentUserOrNull()?.id
+        val userId = resolvedUserId()
             ?: return emptyList()
 
         return runCatching {
@@ -79,7 +79,7 @@ class NutritionBootstrapRepository @Inject constructor(
 
     override suspend fun getNutritionTargets(): NutritionTargetsSnapshot {
         val localSession = sessionProvider.currentSession()
-        val supabaseUserId = supabaseClient.auth.currentUserOrNull()?.id
+        val supabaseUserId = resolvedUserId()
         if (localSession == null || supabaseUserId.isNullOrBlank()) {
             return nutritionTargetsDefaults()
         }
@@ -99,7 +99,7 @@ class NutritionBootstrapRepository @Inject constructor(
 
     override suspend fun updateNutritionTargets(targets: NutritionTargetsSnapshot) {
         val localSession = sessionProvider.currentSession()
-        val supabaseUserId = supabaseClient.auth.currentUserOrNull()?.id
+        val supabaseUserId = resolvedUserId()
         require(localSession != null && !supabaseUserId.isNullOrBlank()) {
             "A signed-in user is required to update nutrition targets"
         }
@@ -122,17 +122,19 @@ class NutritionBootstrapRepository @Inject constructor(
             sleepHours?.let { put("sleep_target_hours", JsonPrimitive(it)) }
         }
 
-        supabaseClient.from("user_nutrition_profiles").upsert(
-            mapOf(
-                "user_id" to supabaseUserId,
-                "steps_target" to targets.stepsTarget.takeIf { it > 0 },
-                "water_target_ml" to targets.waterTargetLitres.takeIf { it > 0.0 }?.times(1000.0),
-                "target_weight_kg" to targets.targetWeight.takeIf { it > 0.0 },
-                "bed_time" to bedTime.format(dbTimeFormatter),
-                "wake_up_time" to wakeTime.format(dbTimeFormatter),
-                "macro_targets" to macroTargets,
-            ),
-        ) {
+        val nutritionPayload = buildJsonObject {
+            put("user_id", supabaseUserId)
+            targets.stepsTarget.takeIf { it > 0 }?.let { put("steps_target", it) }
+            targets.waterTargetLitres.takeIf { it > 0.0 }
+                ?.times(1000.0)
+                ?.toInt()
+                ?.let { put("water_target_ml", it) }
+            targets.targetWeight.takeIf { it > 0.0 }?.let { put("target_weight_kg", it) }
+            put("bed_time", bedTime.format(dbTimeFormatter))
+            put("wake_up_time", wakeTime.format(dbTimeFormatter))
+            put("macro_targets", macroTargets)
+        }
+        supabaseClient.from("user_nutrition_profiles").upsert(nutritionPayload) {
             onConflict = "user_id"
         }
     }
@@ -232,6 +234,10 @@ class NutritionBootstrapRepository @Inject constructor(
     private fun requireUserId(): String {
         return supabaseClient.auth.currentUserOrNull()?.id
             ?: error("A signed-in Supabase user is required for meal log operations")
+    }
+
+    private fun resolvedUserId(): String? {
+        return supabaseClient.auth.currentUserOrNull()?.id
     }
 
     private fun UserNutritionProfileDto.toTargetsSnapshot(): NutritionTargetsSnapshot {

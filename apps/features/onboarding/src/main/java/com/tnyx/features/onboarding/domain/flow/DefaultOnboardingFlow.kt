@@ -60,7 +60,7 @@ object OnboardingStepIds {
 }
 
 object DefaultOnboardingFlow {
-    const val VERSION: Int = 15
+    const val VERSION: Int = 16
 
     val definition = OnboardingFlowDefinition(
         version = VERSION,

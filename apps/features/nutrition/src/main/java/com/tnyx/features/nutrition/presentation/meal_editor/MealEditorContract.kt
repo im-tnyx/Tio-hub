@@ -2,10 +2,13 @@ package com.tnyx.features.nutrition.presentation.meal_editor
 
 import androidx.compose.runtime.Immutable
 import com.tnyx.features.nutrition.domain.models.NutritionMeal
+import java.time.LocalDateTime
 
 @Immutable
 data class MealEditorUiState(
     val meal: NutritionMeal = NutritionMeal(id = "", name = "", type = "BREAKFAST"),
+    val logDateTime: LocalDateTime = LocalDateTime.now(),
+    val isLogDatePickerVisible: Boolean = false,
     val isLoading: Boolean = false,
     val isSaving: Boolean = false
 )
@@ -13,6 +16,9 @@ data class MealEditorUiState(
 sealed class MealEditorAction {
     data class NameChanged(val name: String) : MealEditorAction()
     data class CategoryChanged(val category: String) : MealEditorAction()
+    data object LogDatePickerRequested : MealEditorAction()
+    data class LogDateTimeChanged(val dateTime: LocalDateTime) : MealEditorAction()
+    data object LogDatePickerDismissed : MealEditorAction()
     data class ItemDeleted(val itemId: String) : MealEditorAction()
     data class ItemQuantityChanged(val itemId: String, val quantity: Double) : MealEditorAction()
     data object AddItemClicked : MealEditorAction()

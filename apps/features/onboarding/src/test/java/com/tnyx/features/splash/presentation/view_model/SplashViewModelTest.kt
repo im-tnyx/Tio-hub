@@ -18,16 +18,40 @@ import org.junit.Assert.assertFalse
 import org.junit.Rule
 import org.junit.Test
 
+import com.tnyx.features.auth.domain.model.AuthResult
+import com.tnyx.features.auth.domain.repository.AuthRepository
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class SplashViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
     @Test
-    fun signedOutSessionNavigatesToWelcome() = runTest {
+    fun signedOutSessionAutoSignsInAnonymouslyAndNavigatesToWelcome() = runTest {
         val viewModel = SplashViewModel(
             TestSessionProvider(null),
             TestProfileRepository(),
+            TestAuthRepository(),
+        )
+        val effects = mutableListOf<SplashEffect>()
+        val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effect.collect(effects::add)
+        }
+
+        viewModel.handleAction(SplashAction.Init)
+        advanceUntilIdle()
+
+        assertEquals(listOf(SplashEffect.NavigateToWelcome), effects)
+        assertFalse(viewModel.uiState.value.isLoading)
+        collectJob.cancel()
+    }
+
+    @Test
+    fun failedAnonymousSignInNavigatesToWelcome() = runTest {
+        val viewModel = SplashViewModel(
+            TestSessionProvider(null),
+            TestProfileRepository(),
+            FailingAuthRepository(),
         )
         val effects = mutableListOf<SplashEffect>()
         val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
@@ -47,6 +71,7 @@ class SplashViewModelTest {
         val viewModel = SplashViewModel(
             TestSessionProvider(session()),
             TestProfileRepository(),
+            TestAuthRepository(),
         )
         val effects = mutableListOf<SplashEffect>()
         val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
@@ -62,10 +87,66 @@ class SplashViewModelTest {
     }
 
     @Test
+    fun persistedGuestSessionWithoutCompletedOnboardingNavigatesToWelcome() = runTest {
+        val viewModel = SplashViewModel(
+            TestSessionProvider(
+                AuthSession(
+                    userId = "guest-user",
+                    email = "guest@tnyx.app",
+                    displayName = "Guest User",
+                    isDemo = true,
+                ),
+            ),
+            TestProfileRepository(),
+            TestAuthRepository(),
+        )
+        val effects = mutableListOf<SplashEffect>()
+        val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effect.collect(effects::add)
+        }
+
+        viewModel.handleAction(SplashAction.Init)
+        advanceUntilIdle()
+
+        assertEquals(listOf(SplashEffect.NavigateToWelcome), effects)
+        assertFalse(viewModel.uiState.value.isLoading)
+        collectJob.cancel()
+    }
+
+    @Test
+    fun restoredGuestSessionWithoutStoredSessionNavigatesToWelcome() = runTest {
+        val authRepository = TestAuthRepository().apply {
+            restoreSessionResult = AuthSession(
+                userId = "restored-guest",
+                email = "guest@tnyx.app",
+                displayName = "Guest User",
+                isDemo = true,
+            )
+        }
+        val viewModel = SplashViewModel(
+            TestSessionProvider(null),
+            TestProfileRepository(),
+            authRepository,
+        )
+        val effects = mutableListOf<SplashEffect>()
+        val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effect.collect(effects::add)
+        }
+
+        viewModel.handleAction(SplashAction.Init)
+        advanceUntilIdle()
+
+        assertEquals(listOf(SplashEffect.NavigateToWelcome), effects)
+        assertFalse(viewModel.uiState.value.isLoading)
+        collectJob.cancel()
+    }
+
+    @Test
     fun repeatedInitEmitsOnlyOneNavigationEffect() = runTest {
         val viewModel = SplashViewModel(
             TestSessionProvider(session()),
             TestProfileRepository(),
+            TestAuthRepository(),
         )
         val effects = mutableListOf<SplashEffect>()
         val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
@@ -98,6 +179,7 @@ class SplashViewModelTest {
                     hasCompletedOnboarding = true,
                 ),
             ),
+            TestAuthRepository(),
         )
         val effects = mutableListOf<SplashEffect>()
         val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
@@ -151,4 +233,32 @@ private class TestProfileRepository(
     override suspend fun updateAvatar(jpegBytes: ByteArray): String = ""
 
     override suspend fun removeAvatar() = Unit
+}
+
+private class TestAuthRepository : AuthRepository {
+    var restoreSessionResult: AuthSession? = null
+
+    override suspend fun signIn(email: String, password: String): AuthResult = AuthResult.Failure("")
+    override suspend fun signInWithGoogle(): AuthResult = AuthResult.Failure("")
+    override suspend fun signInWithDemoAccount(): AuthResult = AuthResult.Failure("")
+    override suspend fun signUp(name: String, email: String, password: String): AuthResult = AuthResult.Failure("")
+    override suspend fun verifyOtp(email: String, code: String): AuthResult = AuthResult.Failure("")
+    override suspend fun resendOtp(email: String): AuthResult = AuthResult.Failure("")
+    override suspend fun restoreSessionIfAvailable(): AuthSession? = restoreSessionResult
+    override suspend fun signInAnonymously(): AuthResult = AuthResult.Authenticated(
+        AuthSession(userId = "anon-user", email = "guest@tnyx.app", displayName = "Guest User", isDemo = true)
+    )
+    override suspend fun signOut() = Unit
+}
+
+private class FailingAuthRepository : AuthRepository {
+    override suspend fun signIn(email: String, password: String): AuthResult = AuthResult.Failure("")
+    override suspend fun signInWithGoogle(): AuthResult = AuthResult.Failure("")
+    override suspend fun signInWithDemoAccount(): AuthResult = AuthResult.Failure("")
+    override suspend fun signUp(name: String, email: String, password: String): AuthResult = AuthResult.Failure("")
+    override suspend fun verifyOtp(email: String, code: String): AuthResult = AuthResult.Failure("")
+    override suspend fun resendOtp(email: String): AuthResult = AuthResult.Failure("")
+    override suspend fun restoreSessionIfAvailable(): AuthSession? = null
+    override suspend fun signInAnonymously(): AuthResult = AuthResult.Failure("Network error")
+    override suspend fun signOut() = Unit
 }

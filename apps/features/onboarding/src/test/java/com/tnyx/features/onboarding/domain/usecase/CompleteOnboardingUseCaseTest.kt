@@ -7,6 +7,8 @@ import com.tnyx.features.onboarding.domain.model.OnboardingCheckpoint
 import com.tnyx.features.onboarding.domain.model.OnboardingDraft
 import com.tnyx.features.onboarding.domain.model.OnboardingProgress
 import com.tnyx.features.onboarding.domain.repository.OnboardingRepository
+import com.tnyx.features.onboarding.domain.repository.OnboardingCompletionSyncRepository
+import com.tnyx.features.onboarding.domain.resume.ResumeManager
 import com.tnyx.shared.profile.domain.model.UserProfile
 import com.tnyx.shared.profile.domain.repository.ProfileRepository
 import kotlinx.coroutines.flow.Flow
@@ -63,6 +65,76 @@ class CompleteOnboardingUseCaseTest {
         assertTrue(!profileRepository.currentProfile.value.hasCompletedOnboarding)
     }
 
+    @Test
+    fun refusesToFinalizeACheckpointThatIsNotMarkedCompleted() = runTest {
+        val onboardingRepository = FakeCompleteOnboardingRepository()
+        val profileRepository = FakeCompleteProfileRepository()
+        val checkpoint = completedCheckpoint().copy(
+            progress = OnboardingProgress(
+                flowVersion = DefaultOnboardingFlow.VERSION,
+                position = DefaultOnboardingFlow.definition.firstPosition(),
+                isCompleted = false,
+            ),
+            draft = OnboardingDraft().withAnswer(
+                OnboardingStepIds.ReviewSummary,
+                OnboardingAnswer.Toggle(true),
+            ),
+        )
+
+        val result = useCase(
+            checkpoint = checkpoint,
+            persistCheckpoint = true,
+            onboardingRepository = onboardingRepository,
+            profileRepository = profileRepository,
+            finalizeOnboardingProfile = finalizeProfile,
+        )
+
+        assertEquals(CompleteOnboardingResult.Failure(checkpoint), result)
+        assertTrue(onboardingRepository.savedCheckpoints.isEmpty())
+        assertTrue(!profileRepository.currentProfile.value.hasCompletedOnboarding)
+    }
+
+    @Test
+    fun stillUpdatesProfileWhenRecoveryCheckpointSaveFails() = runTest {
+        val onboardingRepository = FakeCompleteOnboardingRepository().apply {
+            failSaves = true
+        }
+        val profileRepository = FakeCompleteProfileRepository()
+        val checkpoint = completedCheckpoint()
+
+        val result = useCase(
+            checkpoint = checkpoint,
+            persistCheckpoint = true,
+            onboardingRepository = onboardingRepository,
+            profileRepository = profileRepository,
+            finalizeOnboardingProfile = finalizeProfile,
+        )
+
+        assertEquals(CompleteOnboardingResult.Success(checkpoint), result)
+        assertTrue(profileRepository.currentProfile.value.hasCompletedOnboarding)
+    }
+
+    @Test
+    fun syncsCompletedAnswersBeforeClearingTheCheckpoint() = runTest {
+        val completionSyncRepository = FakeOnboardingCompletionSyncRepository()
+        val useCase = CompleteOnboardingUseCase(
+            resumeManager = FakeCompleteResumeManager,
+            onboardingCompletionSyncRepository = completionSyncRepository,
+        )
+        val checkpoint = completedCheckpoint()
+
+        val result = useCase(
+            checkpoint = checkpoint,
+            persistCheckpoint = true,
+            onboardingRepository = FakeCompleteOnboardingRepository(),
+            profileRepository = FakeCompleteProfileRepository(),
+            finalizeOnboardingProfile = finalizeProfile,
+        )
+
+        assertEquals(CompleteOnboardingResult.Success(checkpoint), result)
+        assertEquals(checkpoint.draft, completionSyncRepository.syncedDraft)
+    }
+
     private fun completedCheckpoint(): OnboardingCheckpoint {
         return OnboardingCheckpoint(
             draft = completedDraft(),
@@ -102,10 +174,12 @@ class CompleteOnboardingUseCaseTest {
 private class FakeCompleteOnboardingRepository : OnboardingRepository {
     val savedCheckpoints = mutableListOf<OnboardingCheckpoint>()
     var clearCheckpointCalls: Int = 0
+    var failSaves: Boolean = false
 
     override fun observeCheckpoint(): Flow<OnboardingCheckpoint?> = flowOf(null)
 
     override suspend fun saveCheckpoint(checkpoint: OnboardingCheckpoint) {
+        if (failSaves) error("Expected test save failure")
         savedCheckpoints += checkpoint
     }
 
@@ -142,4 +216,20 @@ private class FakeCompleteProfileRepository(
     override suspend fun updateAvatar(jpegBytes: ByteArray): String = ""
 
     override suspend fun removeAvatar() = Unit
+}
+
+private class FakeOnboardingCompletionSyncRepository : OnboardingCompletionSyncRepository {
+    var syncedDraft: OnboardingDraft? = null
+
+    override suspend fun syncCompletedOnboarding(draft: OnboardingDraft) {
+        syncedDraft = draft
+    }
+}
+
+private object FakeCompleteResumeManager : ResumeManager {
+    override suspend fun restoreCheckpoint(): OnboardingCheckpoint? = null
+
+    override suspend fun saveCheckpoint(checkpoint: OnboardingCheckpoint) = Unit
+
+    override suspend fun clearCheckpoint() = Unit
 }

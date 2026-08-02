@@ -60,6 +60,10 @@ class NutritionTargetsViewModel @Inject constructor(
                 _uiState.update { it.copy(activeEditField = null, editValue = "") }
             }
             NutritionTargetsAction.EditSaved -> saveEditedTarget()
+            is NutritionTargetsAction.SleepScheduleSaved -> saveSleepSchedule(
+                sleepTime = action.sleepTime,
+                wakeTime = action.wakeTime,
+            )
             NutritionTargetsAction.RecalculateClicked -> recalculateTargets()
         }
     }
@@ -91,32 +95,25 @@ class NutritionTargetsViewModel @Inject constructor(
         val state = _uiState.value
         val field = state.activeEditField ?: return
         val numericValue = state.editValue.trim().toDoubleOrNull()
-
         if (numericValue == null || numericValue <= 0.0) {
             emitEffect(NutritionTargetsEffect.ShowMessage("Enter a valid positive value."))
             return
         }
-
-        val updatedState = state.let {
-            when (field) {
-                NutritionTargetField.Calories -> it.copy(caloriesTarget = numericValue.toInt())
-                NutritionTargetField.CalorieSurplus -> it.copy(calorieSurplusTarget = numericValue.toInt())
-                NutritionTargetField.Protein -> it.copy(proteinTarget = numericValue)
-                NutritionTargetField.Carbs -> it.copy(carbsTarget = numericValue)
-                NutritionTargetField.Fat -> it.copy(fatTarget = numericValue)
-                NutritionTargetField.Fiber -> it.copy(fiberTarget = numericValue)
-                NutritionTargetField.Water -> it.copy(waterTargetLitres = numericValue)
-                NutritionTargetField.GlassSize -> it.copy(glassSizeMl = numericValue.toInt())
-                NutritionTargetField.Steps -> it.copy(stepsTarget = numericValue.toInt())
-                NutritionTargetField.TargetWeight -> it.copy(targetWeight = numericValue)
-                NutritionTargetField.SleepSchedule -> {
-                    val sleepTargetHours = numericValue.toCleanString()
-                    it.copy(
-                        sleepTargetHours = sleepTargetHours,
-                        formattedWakeTime = it.recalculateWakeTime(sleepTargetHours),
-                    )
-                }
-            }
+        val updatedState = when (field) {
+            NutritionTargetField.Calories -> state.copy(caloriesTarget = numericValue.toInt())
+            NutritionTargetField.CalorieSurplus -> state.copy(calorieSurplusTarget = numericValue.toInt())
+            NutritionTargetField.Protein -> state.copy(proteinTarget = numericValue)
+            NutritionTargetField.Carbs -> state.copy(carbsTarget = numericValue)
+            NutritionTargetField.Fat -> state.copy(fatTarget = numericValue)
+            NutritionTargetField.Fiber -> state.copy(fiberTarget = numericValue)
+            NutritionTargetField.Water -> state.copy(waterTargetLitres = numericValue)
+            NutritionTargetField.GlassSize -> state.copy(glassSizeMl = numericValue.toInt())
+            NutritionTargetField.Steps -> state.copy(stepsTarget = numericValue.toInt())
+            NutritionTargetField.TargetWeight -> state.copy(targetWeight = numericValue)
+            NutritionTargetField.SleepSchedule -> state.copy(
+                sleepTargetHours = numericValue.toCleanString(),
+                formattedWakeTime = state.recalculateWakeTime(numericValue.toCleanString()),
+            )
         }.copy(
             activeEditField = null,
             editValue = "",
@@ -251,6 +248,42 @@ class NutritionTargetsViewModel @Inject constructor(
         return bedTime
             .plusMinutes((duration * 60.0).roundToInt().toLong())
             .format(uiTimeFormatter)
+    }
+
+    private fun calculateSleepDuration(
+        sleepTime: String,
+        wakeTime: String,
+    ): String {
+        val sleep = parseUiTime(sleepTime) ?: return _uiState.value.sleepTargetHours
+        val wake = parseUiTime(wakeTime) ?: return _uiState.value.sleepTargetHours
+        val sleepMinutes = sleep.hour * 60 + sleep.minute
+        var wakeMinutes = wake.hour * 60 + wake.minute
+        if (wakeMinutes <= sleepMinutes) wakeMinutes += 24 * 60
+        return ((wakeMinutes - sleepMinutes) / 60.0).toCleanString()
+    }
+
+    private fun saveSleepSchedule(
+        sleepTime: String,
+        wakeTime: String,
+    ) {
+        val formattedSleepTime = parseUiTime(sleepTime)?.format(uiTimeFormatter)
+        val formattedWakeTime = parseUiTime(wakeTime)?.format(uiTimeFormatter)
+        if (formattedSleepTime == null || formattedWakeTime == null) {
+            emitEffect(NutritionTargetsEffect.ShowMessage("Use time format like 10:00 PM."))
+            return
+        }
+        val updatedState = _uiState.value.copy(
+            formattedSleepTime = formattedSleepTime,
+            formattedWakeTime = formattedWakeTime,
+            sleepTargetHours = calculateSleepDuration(formattedSleepTime, formattedWakeTime),
+            activeEditField = null,
+            editValue = "",
+        )
+        persistUpdatedState(
+            updatedState = updatedState,
+            successMessage = "Sleep schedule updated.",
+            successLabel = "Updated just now",
+        )
     }
 
     private fun parseUiTime(value: String): LocalTime? {

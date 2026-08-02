@@ -1,7 +1,7 @@
 # TNYX Android: Nutrition Feature Reference
 
 Document Status: Source-aligned nutrition reference
-Last Verified: 2026-07-30
+Last Verified: 2026-08-01
 Owner: Android Engineering
 Truth Boundary: This document describes checked-in Android source under `apps/features/nutrition` and shared reusable UI under `apps/core`. Runtime source remains final truth.
 
@@ -11,7 +11,7 @@ This document explains the current nutrition feature shape, especially the Meal 
 
 ## 1. Current Scope
 
-The current pushed nutrition work is primarily UI/design-system work, not persistence work.
+The current pushed nutrition work now spans both UI/design-system refinement and the first live Supabase nutrition diary schema slice.
 
 Implemented in current source:
 
@@ -28,18 +28,17 @@ Implemented in current source:
 
 Not implemented by this change:
 
-- Supabase-backed nutrition repository.
-- Real meal read/write persistence.
-- Auth-owned user nutrition data.
-- RLS-tested nutrition tables.
+- Device-validated Meal Diary / Meal Editor route behavior for the new live diary tables.
 - Meal add/edit/delete API writes.
 - Food search/catalog backend integration (documented in `NUTRITION_SEARCH_ARCHITECTURE.md`: FatSecret India, Edamam NLP, Open Food Facts, USDA Fallback).
 
 Important boundary: `MealDiaryViewModel` now reads through a repository
 boundary instead of owning sample meals directly. The current app bootstrap
-repository reads live Supabase nutrition targets when a real Supabase session
-exists, but diary meals are intentionally empty until meal-log tables and
-write flows land.
+repository reads live Supabase nutrition targets and targets live
+`meal_logs` / `meal_log_items` tables when a real Supabase session exists.
+One manual verification log plus item were inserted on 2026-08-01 to confirm
+the live write path, but device-side route validation is still a separate
+runtime concern.
 
 ---
 
@@ -476,20 +475,22 @@ Current data boundary:
 - `MealDiaryViewModel` no longer owns hardcoded meals as business truth.
 - The current app bootstrap repository can read target values from
   `user_nutrition_profiles` when a real Supabase auth session exists.
-- Diary meals are now empty until a real `meal_logs` slice exists.
-- Meal data is not loaded from real `meal_logs` tables yet.
+- Diary meals now depend on live `meal_logs` / `meal_log_items` rows for the
+  authenticated user.
 - Meal data is not loaded from backend API yet.
-- Add meal effect exists, but add/edit/delete persistence is not wired here.
+- Add meal effect exists, and repository-side add/edit/delete persistence now
+  targets live Supabase meal tables.
 - Water, vitamin, and mineral progress no longer use seeded fake values.
 
 Why this matters:
 
 - UI is now closer to production visual quality.
 - ViewModel is no longer the hardcoded source of truth.
-- Data source now reflects real profile targets without fake diary content, but
-  it is still not full persistent meal-log truth.
-- Do not mark nutrition as persistent or backend-backed until meal-log
-  repository/API/Supabase integration lands.
+- Data source now reflects real profile targets and a live meal-log schema, but
+  screen-route/device validation is still required before calling the diary UX
+  fully verified.
+- Do not mark nutrition as production-complete only from schema truth; route
+  behavior and authenticated device validation still matter.
 
 ---
 
@@ -599,11 +600,9 @@ Minimum future slice:
 - Keep screens dumb.
 - Validate signed-in/signed-out access.
 
-Likely future tables from the Supabase plan:
+Remaining likely future tables from the Supabase plan:
 
 - `nutrition_targets`
-- `meal_logs`
-- `meal_log_items`
 - `food_items`, if demo/catalog lookup is needed
 
 Important security rule:
@@ -620,8 +619,8 @@ Source-observed notes:
 
 - `MealDiaryViewModel` now reloads selected-date data through
   `NutritionRepository`.
-- The current repository returns empty diary meals until live meal tables
-  exist.
+- The current repository expects live meal tables to exist and now has them on
+  the connected project, but the device path still needs runtime validation.
 - `AddMealClicked` emits an effect, but actual add meal screen/persistence is not validated here.
 - `NutritionNutrientCard` accepts `icon: Any`, which is flexible but weakly typed.
 - Water, vitamin, and mineral progress are bootstrap repository values backed

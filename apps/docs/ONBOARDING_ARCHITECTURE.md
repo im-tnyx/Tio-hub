@@ -65,13 +65,15 @@ Implemented:
 - onboarding analytics event contracts and tracker/logger wiring with a local
   placeholder sink,
 - Welcome `Get Started` entry into `RootRoute.Onboarding`,
-- local Profile finalization for completed onboarding answers,
+- completed-onboarding sync to the owner-scoped Profile, Nutrition, and Workout
+  Supabase rows for fields represented by the current schema,
 - guest cold-start entry to `MainGraph` after completed onboarding.
 
 Not implemented:
 
 - guest-to-auth account handoff or full business-repository finalization,
-- backend or Supabase synchronization,
+- remote persistence for source attribution and answers not represented by the
+  current owner schemas,
 - conditional remote-config paths,
 - production analytics sink.
 
@@ -150,11 +152,13 @@ Review currently uses:
   completion is allowed.
 
 Welcome `Get Started` now opens onboarding and Welcome `Skip` still opens Main.
-The user-facing flow can now complete locally, finalize a subset of answers
-into the active local Profile, show a short local setup/ready completion path,
-and skip Welcome on future signed-out cold starts. This still must not be
-described as final product onboarding, because guest-to-auth handoff, backend
-finalization, and remote synchronization remain unimplemented.
+The user-facing flow can now complete locally, finalize Profile-owned answers,
+and synchronise the supported Profile, Nutrition, and Workout answers to the
+authenticated Supabase user's owner-scoped rows. It then shows a short local
+setup/ready completion path and skips Welcome on future cold starts. This still
+must not be described as final product onboarding: guest-to-auth handoff,
+source attribution persistence, and remote persistence for answers without an
+owning schema remain unimplemented.
 
 ## Stable Identity Rules
 
@@ -204,11 +208,15 @@ deliberate reset policy; a future flow version can replace it with an explicit
 migration.
 
 The checkpoint is currently device-local and is not scoped to an authenticated
-account. Completed onboarding currently finalizes Profile-owned fields into the
-active local profile and marks that profile as onboarded. Entry and future
-finalization work must still define guest-to-account handoff and clear behavior
-before backend synchronization is added. A future backend
-implementation may compose with the local repository without changing screens.
+account. Completed onboarding finalizes Profile-owned fields into the active
+profile and marks it onboarded, then maps the current schema-supported
+Nutrition and Workout answers to the authenticated user's remote rows. Entry
+and future finalization work must still define guest-to-account handoff and
+clear behavior. A future backend implementation may compose with the local
+repository without changing screens.
+
+Flow version `16` resets earlier local checkpoints so the current completion
+and remote-sync behavior starts from a valid current-flow position.
 
 When a signed-in or partially prefilled profile enters onboarding, checkpoint
 preparation can now seed name, dob, gender, mobile, height, current weight,

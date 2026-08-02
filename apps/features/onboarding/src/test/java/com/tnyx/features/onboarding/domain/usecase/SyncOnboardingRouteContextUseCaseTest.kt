@@ -60,4 +60,35 @@ class SyncOnboardingRouteContextUseCaseTest {
         assertTrue(result.routeContext.mobilePresent)
         assertEquals(false, result.routeContext.workoutPlanEnabled)
     }
+
+    @Test
+    fun keepsGuestSessionOnTheGetStartedFlow() {
+        val checkpoint = OnboardingCheckpoint(
+            progress = OnboardingProgress(
+                flowVersion = DefaultOnboardingFlow.VERSION,
+                position = OnboardingPosition(
+                    sectionId = OnboardingSectionIds.Intro,
+                    stepId = OnboardingStepIds.IntroWelcome,
+                ),
+            ),
+            routeContext = com.tnyx.features.onboarding.domain.model.OnboardingRouteContext(
+                authRequired = true,
+            ),
+        )
+
+        val result = useCase(
+            checkpoint = checkpoint,
+            currentProfile = null,
+            authSession = AuthSession(
+                userId = "guest-1",
+                email = "",
+                displayName = null,
+                isDemo = true,
+            ),
+        )
+
+        assertEquals(OnboardingAuthState.SignedOut, result.routeContext.authState)
+        assertEquals(false, result.routeContext.signupCompleted)
+        assertTrue(result.routeContext.authRequired)
+    }
 }

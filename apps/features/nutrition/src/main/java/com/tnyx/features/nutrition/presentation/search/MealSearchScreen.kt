@@ -86,39 +86,6 @@ fun MealSearchScreen(
                 )
             )
         },
-        bottomBar = {
-            Surface(
-                color = TnyxTheme.colors.surface,
-                tonalElevation = 8.dp,
-                border = BorderStroke(0.5.dp, TnyxTheme.colors.textPrimary.copy(alpha = 0.1f))
-            ) {
-                Box(
-                    modifier = Modifier
-                        .navigationBarsPadding()
-                        .padding(16.dp)
-                ) {
-                    Button(
-                        onClick = { onAction(MealSearchAction.CreateCustomMealClicked) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(44.dp),
-                        shape = CircleShape,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (TnyxTheme.colors.isDark) Color.White else Color(0xFF111111),
-                            contentColor = if (TnyxTheme.colors.isDark) Color(0xFF111111) else Color.White,
-                        )
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(imageVector = Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Text("Create Custom Meal", style = TnyxTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold))
-                        }
-                    }
-                }
-            }
-        },
         containerColor = TnyxTheme.colors.background
     ) { innerPadding ->
         Column(

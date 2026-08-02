@@ -44,6 +44,8 @@ object TnyxDimens {
     // Component Heights
     val ButtonHeight = 48.dp
     val ButtonHeightLarge = 56.dp
+    val CupertinoPickerHeight = 260.dp
+    val CupertinoPickerItemHeight = 32.dp
     val InputHeight = 56.dp
     val InputHeightCompact = 42.dp
     val TabSwitcherHeight = 48.dp

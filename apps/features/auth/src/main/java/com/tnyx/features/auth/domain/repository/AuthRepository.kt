@@ -1,6 +1,7 @@
 package com.tnyx.features.auth.domain.repository
 
 import com.tnyx.features.auth.domain.model.AuthResult
+import com.tnyx.shared.auth.domain.model.AuthSession
 
 interface AuthRepository {
     suspend fun signIn(email: String, password: String): AuthResult
@@ -18,6 +19,10 @@ interface AuthRepository {
     suspend fun verifyOtp(email: String, code: String): AuthResult
 
     suspend fun resendOtp(email: String): AuthResult
+
+    suspend fun restoreSessionIfAvailable(): AuthSession?
+
+    suspend fun signInAnonymously(): AuthResult
 
     suspend fun signOut()
 }

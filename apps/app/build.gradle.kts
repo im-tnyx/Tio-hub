@@ -17,6 +17,8 @@ val localProperties = Properties().apply {
 }
 val supabaseUrlProperty = localProperties.getProperty("supabase.url") ?: ""
 val supabaseAnonKeyProperty = localProperties.getProperty("supabase.anon_key") ?: ""
+val demoEmailProperty = localProperties.getProperty("demo.email") ?: ""
+val demoPasswordProperty = localProperties.getProperty("demo.password") ?: ""
 
 android {
     namespace = "com.tnyx"
@@ -33,6 +35,8 @@ android {
 
         buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrlProperty\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"$supabaseAnonKeyProperty\"")
+        buildConfigField("String", "DEMO_EMAIL", "\"$demoEmailProperty\"")
+        buildConfigField("String", "DEMO_PASSWORD", "\"$demoPasswordProperty\"")
     }
 
     buildTypes {

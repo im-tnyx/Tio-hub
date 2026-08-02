@@ -2,6 +2,8 @@ package com.tnyx.di
 
 import com.tnyx.data.onboarding.DataStoreOnboardingRepository
 import com.tnyx.data.onboarding.ResumeManager
+import com.tnyx.data.onboarding.SupabaseOnboardingCompletionSyncRepository
+import com.tnyx.features.onboarding.domain.repository.OnboardingCompletionSyncRepository
 import com.tnyx.features.onboarding.domain.repository.OnboardingRepository
 import com.tnyx.features.onboarding.domain.resume.ResumeManager as OnboardingResumeManager
 import dagger.Binds
@@ -18,6 +20,12 @@ abstract class OnboardingDataModule {
     abstract fun bindOnboardingRepository(
         repository: DataStoreOnboardingRepository,
     ): OnboardingRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindOnboardingCompletionSyncRepository(
+        repository: SupabaseOnboardingCompletionSyncRepository,
+    ): OnboardingCompletionSyncRepository
 
     @Binds
     @Singleton

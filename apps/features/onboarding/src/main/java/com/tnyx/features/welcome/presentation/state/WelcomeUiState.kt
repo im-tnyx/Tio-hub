@@ -23,7 +23,9 @@ data class WelcomeUiState(
     val termsSuffix: String = ".",
     
     // UI states for overlays
-    val showLanguageSheet: Boolean = false
+    val showLanguageSheet: Boolean = false,
+    val isSkipLoading: Boolean = false,
+    val skipError: String? = null,
 )
 
 sealed class WelcomeEffect {

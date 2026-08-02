@@ -16,13 +16,14 @@ class SyncOnboardingRouteContextUseCase @Inject constructor() {
         authSession: AuthSession?,
     ): OnboardingCheckpoint {
         val existingContext = checkpoint.routeContext
+        val hasPermanentSession = authSession != null && !authSession.isDemo
         val routeContext = existingContext.copy(
-            authState = if (authSession == null) {
-                OnboardingAuthState.SignedOut
-            } else {
+            authState = if (hasPermanentSession) {
                 OnboardingAuthState.SignedIn
+            } else {
+                OnboardingAuthState.SignedOut
             },
-            signupCompleted = existingContext.signupCompleted || authSession != null,
+            signupCompleted = existingContext.signupCompleted || hasPermanentSession,
             workoutPlanEnabled = workoutPlanEnabled(checkpoint, existingContext),
             mobilePresent = existingContext.mobilePresent ||
                 currentProfile?.mobile.orEmpty().isNotBlank(),
@@ -30,7 +31,7 @@ class SyncOnboardingRouteContextUseCase @Inject constructor() {
                 currentProfile?.displayName.orEmpty().isNotBlank() ||
                 currentProfile?.username.orEmpty().isNotBlank() ||
                 authSession?.displayName.orEmpty().isNotBlank(),
-            authRequired = existingContext.authRequired && authSession == null,
+            authRequired = existingContext.authRequired && !hasPermanentSession,
         )
 
         return checkpoint.copy(routeContext = routeContext)

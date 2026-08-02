@@ -18,10 +18,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.tnyx.features.auth.domain.repository.AuthRepository
+import com.tnyx.features.auth.domain.model.AuthResult
+
 @HiltViewModel
 class SplashViewModel @Inject constructor(
     private val sessionProvider: AuthSessionProvider,
     private val profileRepository: ProfileRepository,
+    private val authRepository: AuthRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SplashUiState())
@@ -43,15 +47,23 @@ class SplashViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            delay(2000L)
-            val session = sessionProvider.observeSession().first()
+            delay(1500L)
+            var session = sessionProvider.observeSession().first()
+                ?: authRepository.restoreSessionIfAvailable()
+            if (session == null) {
+                val result = authRepository.signInAnonymously()
+                if (result is AuthResult.Authenticated) {
+                    session = result.session
+                }
+            }
             val currentProfile = profileRepository.getCurrentProfile().first()
             val hasCompletedOnboarding = currentProfile.hasCompletedOnboarding
+            val hasPermanentSession = session != null && !session.isDemo
             _uiState.update { it.copy(isLoading = false) }
             _effect.emit(
                 if (hasCompletedOnboarding) {
                     SplashEffect.NavigateToMain
-                } else if (session != null) {
+                } else if (hasPermanentSession) {
                     SplashEffect.NavigateToOnboarding
                 } else {
                     SplashEffect.NavigateToWelcome

@@ -324,6 +324,7 @@ class OnboardingViewModel @Inject constructor(
                     status = OnboardingCheckpointUiStatus.PersistenceError,
                 )
             }
+
         }
     }
 

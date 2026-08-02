@@ -25,10 +25,9 @@ data class NutritionTargetsUiState(
     val formattedWakeTime: String = "06:00 AM",
 )
 
-// यहाँ से हमने एक्स्ट्रा 'object' वाली लाइनें हटा दी हैं
 enum class NutritionTargetField(
     val title: String,
-    val unit: String
+    val unit: String,
 ) {
     Calories("Calories", "kcal"),
     CalorieSurplus("Calorie Surplus", "kcal"),
@@ -40,7 +39,7 @@ enum class NutritionTargetField(
     GlassSize("Glass Size", "ml"),
     Steps("Steps", "steps"),
     TargetWeight("Target Weight", "kg"),
-    SleepSchedule("Sleep Schedule", "hrs") // आखिरी वैल्यू के बाद कोई कॉमा (,) नहीं आएगा
+    SleepSchedule("Sleep Schedule", "hrs"),
 }
 
 sealed interface NutritionTargetsAction {
@@ -50,6 +49,10 @@ sealed interface NutritionTargetsAction {
     data class EditValueChanged(val value: String) : NutritionTargetsAction
     data object EditDismissed : NutritionTargetsAction
     data object EditSaved : NutritionTargetsAction
+    data class SleepScheduleSaved(
+        val sleepTime: String,
+        val wakeTime: String,
+    ) : NutritionTargetsAction
     data object RecalculateClicked : NutritionTargetsAction
 }
 

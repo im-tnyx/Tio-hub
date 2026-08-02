@@ -70,6 +70,12 @@ fun ExpandableMealFab(
     val containerColor = if (isDark) Color.White else Color(0xFF111111)
     val iconColor = if (isDark) Color(0xFF111111) else Color.White
     val subBorderColor = TnyxTheme.colors.textSecondary.copy(alpha = 0.18f)
+    val mainFabProgress by animateFloatAsState(
+        targetValue = if (isExpanded) 1f else 0f,
+        animationSpec = tween(durationMillis = EXPAND_DURATION_MS, easing = FastOutSlowInEasing),
+        label = "main_fab_progress",
+    )
+    val showExpandedState = mainFabProgress > 0.12f
 
     Box(modifier = modifier) {
         // ── Backdrop overlay ──────────────────────────────────────────────
@@ -137,16 +143,16 @@ fun ExpandableMealFab(
         Surface(
             onClick = onToggle,
             shape = CircleShape,
-            color = if (isExpanded) Color.Transparent else containerColor,
-            shadowElevation = if (isExpanded) 0.dp else 4.dp,
+            color = if (showExpandedState) Color.Transparent else containerColor,
+            shadowElevation = if (showExpandedState) 0.dp else 4.dp,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .size(FAB_SIZE)
-                .semantics { contentDescription = if (isExpanded) "Close meal options" else "Open meal options" },
+                .semantics { contentDescription = if (showExpandedState) "Close meal options" else "Open meal options" },
         ) {
             Box(contentAlignment = Alignment.Center) {
                 AnimatedContent(
-                    targetState = isExpanded,
+                    targetState = showExpandedState,
                     transitionSpec = {
                         (scaleIn(tween(200, easing = FastOutSlowInEasing)) +
                             fadeIn(tween(200))) togetherWith

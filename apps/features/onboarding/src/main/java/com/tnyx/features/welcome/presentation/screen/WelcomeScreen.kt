@@ -60,6 +60,7 @@ fun WelcomeScreen(
             WelcomeTopSection(
                 localeCode = state.localeCode,
                 skipText = state.skipText,
+                isSkipLoading = state.isSkipLoading,
                 onAction = onAction,
                 modifier = Modifier.alpha(contentAlpha)
             )
@@ -83,6 +84,7 @@ fun WelcomeScreen(
                 WelcomeActionSection(
                     ctaText = state.ctaText,
                     signInText = state.signInText,
+                    errorText = state.skipError,
                     onAction = onAction
                 )
 

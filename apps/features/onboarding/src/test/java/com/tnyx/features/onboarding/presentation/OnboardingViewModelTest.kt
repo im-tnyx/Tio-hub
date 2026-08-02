@@ -1476,6 +1476,12 @@ class OnboardingViewModelTest {
                 .orEmpty()
                 .contains(OnboardingSectionIds.Workout),
         )
+        assertEquals(
+            OnboardingAnswer.Toggle(false),
+            repository.checkpoint
+                ?.draft
+                ?.answerFor(OnboardingStepIds.WorkoutIntroChoice),
+        )
     }
 
     @Test

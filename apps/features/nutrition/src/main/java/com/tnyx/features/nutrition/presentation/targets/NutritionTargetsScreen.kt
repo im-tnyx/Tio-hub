@@ -75,6 +75,7 @@ import com.tnyx.core.ui.components.buttons.TnyxPrimaryButton
 import com.tnyx.core.ui.components.buttons.TnyxSecondaryButton
 import com.tnyx.core.ui.components.cards.TnyxCard
 import com.tnyx.core.ui.components.cards.TnyxCardVariant
+import com.tnyx.core.ui.components.inputs.SleepScheduleBottomSheet
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -178,6 +179,20 @@ fun NutritionTargetsScreen(
         }
     }
     TargetEditDialog(state = state, onAction = onAction)
+    SleepScheduleBottomSheet(
+        visible = state.activeEditField == NutritionTargetField.SleepSchedule,
+        sleepTime = state.formattedSleepTime,
+        wakeTime = state.formattedWakeTime,
+        onDismissRequest = { onAction(NutritionTargetsAction.EditDismissed) },
+        onSave = { sleepTime, wakeTime ->
+            onAction(
+                NutritionTargetsAction.SleepScheduleSaved(
+                    sleepTime = sleepTime,
+                    wakeTime = wakeTime,
+                ),
+            )
+        },
+    )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -520,11 +535,21 @@ private fun RecoveryCard(
             Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceM))
 
             // Footer: Time Range + Edit Button
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
             ) {
+                SleepTimeTargetItem(
+                    title = "Bed time",
+                    value = state.formattedSleepTime,
+                    onEdit = { onEdit(NutritionTargetField.SleepSchedule) },
+                )
+                IndentDivider()
+                SleepTimeTargetItem(
+                    title = "Wake up time",
+                    value = state.formattedWakeTime,
+                    onEdit = { onEdit(NutritionTargetField.SleepSchedule) },
+                )
+                Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
                 Text(
                     // यहाँ Sleep Time और Wake Time आएगा (जैसे "10:30 PM - 06:30 AM")
                     text = "${state.formattedSleepTime} - ${state.formattedWakeTime}",
@@ -812,6 +837,7 @@ private fun TargetEditDialog(
     onAction: (NutritionTargetsAction) -> Unit
 ) {
     val field = state.activeEditField ?: return
+    if (field == NutritionTargetField.SleepSchedule) return
 
     AlertDialog(
         onDismissRequest = { onAction(NutritionTargetsAction.EditDismissed) },
@@ -852,6 +878,35 @@ private fun TargetEditDialog(
 // ─────────────────────────────────────────────────────────────────────────────
 // Utilities
 // ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun SleepTimeTargetItem(
+    title: String,
+    value: String,
+    onEdit: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = TnyxTheme.dimens.SpaceS),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = title,
+            style = TnyxTheme.typography.bodyLarge,
+            color = TnyxTheme.colors.textPrimary,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = value,
+            style = TnyxTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = TnyxTheme.colors.textPrimary,
+        )
+        Spacer(modifier = Modifier.width(TnyxTheme.dimens.SpaceM))
+        EditIconButton(onClick = onEdit)
+    }
+}
 
 private fun Double.toCleanString(): String =
     if (this % 1.0 == 0.0) toInt().toString() else String.format("%.1f", this)

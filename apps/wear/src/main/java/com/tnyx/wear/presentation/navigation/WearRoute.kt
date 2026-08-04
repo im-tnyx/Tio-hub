@@ -23,4 +23,10 @@ sealed interface WearRoute {
 
     @Serializable
     data object UnitsSettings : WearRoute
+
+    @Serializable
+    data object CalorieInput : WearRoute
+
+    @Serializable
+    data object LogFood : WearRoute
 }

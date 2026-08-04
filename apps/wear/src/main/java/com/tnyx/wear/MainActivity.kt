@@ -12,7 +12,9 @@ import com.google.android.horologist.annotations.ExperimentalHorologistApi
 import com.google.android.horologist.compose.layout.AppScaffold
 import com.tnyx.wear.presentation.history.WorkoutHistoryScreen
 import com.tnyx.wear.presentation.home.HomeDashboardScreen
+import com.tnyx.wear.presentation.nutrition.CalorieInputScreen
 import com.tnyx.wear.presentation.nutrition.CalorieSummaryScreen
+import com.tnyx.wear.presentation.nutrition.LogFoodScreen
 import com.tnyx.wear.presentation.nutrition.NutritionSummaryScreen
 import com.tnyx.wear.presentation.nutrition.WaterSelectionScreen
 import com.tnyx.wear.presentation.settings.SettingsScreen
@@ -48,7 +50,7 @@ fun TnyxWatchApp() {
                         onNavigateToHistory = { navController.navigate("history") },
                         onNavigateToSummary = { navController.navigate("summary") },
                         onNavigateToNutrition = { navController.navigate("summary") },
-                        onNavigateToAddFood = { Log.i("TnyxWatchApp", "Navigate to Add Food") },
+                        onNavigateToAddFood = { navController.navigate("log_food") },
                         onNavigateToAddWater = { navController.navigate("add_water") },
                         onNavigateToSettings = { navController.navigate("settings") }
                     )
@@ -67,6 +69,24 @@ fun TnyxWatchApp() {
                     WaterSelectionScreen(
                         onConfirm = { cups ->
                             Log.i("TnyxWatchApp", "Water logged: $cups cups")
+                            navController.popBackStack()
+                        },
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+                composable("log_food") {
+                    LogFoodScreen(
+                        onConfirm = { food ->
+                            Log.i("TnyxWatchApp", "Food Logged: ${food.name} (${food.calories} kcal)")
+                            navController.popBackStack()
+                        },
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+                composable("calorie_input") {
+                    CalorieInputScreen(
+                        onConfirm = { calories ->
+                            Log.i("TnyxWatchApp", "Calories Logged: $calories kcal")
                             navController.popBackStack()
                         },
                         onNavigateBack = { navController.popBackStack() }

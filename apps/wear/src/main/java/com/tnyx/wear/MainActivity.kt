@@ -110,6 +110,9 @@ fun TnyxWatchApp() {
                     SettingsScreen(
                         onNavigateBack = { navController.popBackStack() },
                         onNavigateToUnits = { navController.navigate("units_settings") },
+                        onOpenOnPhone = {
+                            Log.i("TnyxWatchApp", "RemoteIntent: Opening TNYX app on phone...")
+                        },
                         onLogoutConfirmed = {
                             Log.i("TnyxWatchApp", "User Logged Out!")
                             navController.popBackStack("home", false)

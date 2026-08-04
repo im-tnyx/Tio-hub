@@ -20,6 +20,9 @@ import com.google.android.horologist.compose.layout.ScreenScaffold
 import com.google.android.horologist.compose.layout.rememberColumnState
 import com.tnyx.wear.R
 import com.tnyx.wear.presentation.components.HealthCard
+import com.tnyx.wear.theme.ColorDailyActivity
+import com.tnyx.wear.theme.ColorSteps
+import com.tnyx.wear.theme.ColorWater
 import com.tnyx.wear.theme.WearTypography
 
 @OptIn(ExperimentalHorologistApi::class)
@@ -62,7 +65,8 @@ fun HomeDashboardScreen(
                     icon = painterResource(id = R.drawable.ic_routine),
                     title = "Exercise",
                     valueText = "Work out",
-                    onClick = onNavigateToWorkout
+                    onClick = onNavigateToWorkout,
+                    iconTint = ColorSteps
                 )
             }
             
@@ -72,7 +76,8 @@ fun HomeDashboardScreen(
                     icon = painterResource(id = R.drawable.ic_workout),
                     title = "Workouts this week",
                     valueText = "3 times",
-                    onClick = onNavigateToHistory
+                    onClick = onNavigateToHistory,
+                    iconTint = ColorSteps
                 )
             }
             
@@ -82,7 +87,8 @@ fun HomeDashboardScreen(
                     icon = painterResource(id = R.drawable.ic_summary),
                     title = "Daily Summary",
                     valueText = dailyCalories,
-                    onClick = onNavigateToSummary
+                    onClick = onNavigateToSummary,
+                    iconTint = ColorDailyActivity
                 )
             }
             
@@ -92,7 +98,8 @@ fun HomeDashboardScreen(
                     icon = painterResource(id = R.drawable.ic_food),
                     title = "Nutrition Log",
                     valueText = nutritionCalories,
-                    onClick = onNavigateToNutrition
+                    onClick = onNavigateToNutrition,
+                    iconTint = ColorWater
                 )
             }
             
@@ -102,7 +109,8 @@ fun HomeDashboardScreen(
                     icon = painterResource(id = R.drawable.ic_add),
                     title = "Add Food",
                     valueText = "Log calories",
-                    onClick = onNavigateToAddFood
+                    onClick = onNavigateToAddFood,
+                    iconTint = ColorDailyActivity
                 )
             }
             
@@ -112,7 +120,8 @@ fun HomeDashboardScreen(
                     icon = painterResource(id = R.drawable.ic_water),
                     title = "Add Water",
                     valueText = "Log cups",
-                    onClick = onNavigateToAddWater
+                    onClick = onNavigateToAddWater,
+                    iconTint = ColorWater
                 )
             }
             

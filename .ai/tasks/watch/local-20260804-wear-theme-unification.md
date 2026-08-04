@@ -1,7 +1,7 @@
 ---
 task_id: local-20260804-wear-theme-unification
 title: Wear OS Theme Unification and Dark Theme Standardization
-status: in_progress
+status: completed
 priority: medium
 owner: watch
 branch: feat/wear-theme-unification
@@ -22,11 +22,11 @@ Unify `:wear` OS visual theme with TNYX design system core tokens while maintain
 
 - [x] Rename `SamsungHealthWearTheme` to `TnyxWearTheme` in `:wear`.
 - [x] Remove all legacy `Samsung` brand references and code comments across `:wear` (`Theme.kt`, `MainActivity.kt`, `Color.kt`, `HomeDashboardScreen.kt`).
-- [ ] Refactor `:wear` icons from pre-baked static WebP images (`ic_routine.webp`, `ic_water.webp`, `ic_food.webp`) to Compose `Icon` / tintable vectors that dynamically consume `TnyxColors` / domain token colors.
+- [x] Refactor `:wear` icons from pre-baked static WebP images (`ic_routine.webp`, `ic_water.webp`, `ic_food.webp`) to Compose `Icon` / tintable vectors that dynamically consume `TnyxColors` / domain token colors.
 - [x] Connect `:wear` to shared core design tokens (`:core` or shared token definitions) without bringing heavy phone-only Compose dependencies.
 - [x] Ensure `:wear` uses strict AMOLED pitch black (`#000000`) background for battery efficiency on Wear OS devices.
 - [x] Map semantic domain colors (Steps, Water, Heart Rate, Stress, Sleep, Workout) to unified token source.
-- [ ] Replace hardcoded UI constants in `HealthCard` and `HomeDashboardScreen` with structured tokens.
+- [x] Replace hardcoded UI constants in `HealthCard` and `HomeDashboardScreen` with structured tokens.
 - [x] All `:wear` UI screens, tiles, and navigation pass compilation and preview checks.
 
 ## Scope

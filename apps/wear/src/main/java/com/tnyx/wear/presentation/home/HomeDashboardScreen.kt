@@ -91,6 +91,17 @@ fun HomeDashboardScreen(
                     iconTint = ColorDailyActivity
                 )
             }
+
+            // 3b. View Summary Card
+            item {
+                HealthCard(
+                    icon = painterResource(id = R.drawable.ic_view_summary),
+                    title = "View Summary",
+                    valueText = "Daily Overview",
+                    onClick = onNavigateToSummary,
+                    iconTint = ColorDailyActivity
+                )
+            }
             
             // 4. Nutrition Log Card
             item {

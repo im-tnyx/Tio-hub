@@ -10,12 +10,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.wear.compose.material.Chip
+import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.Text
+import com.google.android.horologist.annotations.ExperimentalHorologistApi
+import com.google.android.horologist.compose.layout.ScalingLazyColumn
+import com.google.android.horologist.compose.layout.ScreenScaffold
+import com.google.android.horologist.compose.layout.rememberColumnState
 import com.tnyx.wear.presentation.components.MacronutrientRing
 import com.tnyx.wear.theme.BackgroundBlack
 import com.tnyx.wear.theme.TextGray
 import com.tnyx.wear.theme.TextWhite
+import com.tnyx.wear.theme.WearTypography
 
+@OptIn(ExperimentalHorologistApi::class)
 @Composable
 fun NutritionSummaryScreen(
     onNavigateToCalorieSummary: () -> Unit,
@@ -32,95 +40,128 @@ fun NutritionSummaryScreen(
     waterCups: Int = 6,
     waterGoalCups: Int = 8
 ) {
+    val columnState = rememberColumnState()
+
     val calorieProgress = if (goalCalories > 0) consumedCalories.toFloat() / goalCalories else 0.0f
     val carbsProgress = if (carbsGoal > 0) carbsConsumed.toFloat() / carbsGoal else 0.0f
     val fatProgress = if (fatGoal > 0) fatConsumed.toFloat() / fatGoal else 0.0f
     val proteinProgress = if (proteinGoal > 0) proteinConsumed.toFloat() / proteinGoal else 0.0f
     val waterProgress = if (waterGoalCups > 0) waterCups.toFloat() / waterGoalCups else 0.0f
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(BackgroundBlack)
-            .padding(8.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
+    ScreenScaffold(scrollState = columnState) {
+        ScalingLazyColumn(
+            columnState = columnState,
+            modifier = modifier
+                .fillMaxSize()
+                .background(BackgroundBlack)
         ) {
-            // Headers
-            Text(
-                text = "Today",
-                color = TextWhite,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Daily Summary",
-                color = TextGray,
-                fontSize = 11.sp,
-                modifier = Modifier.padding(bottom = 6.dp)
-            )
-
-            // Row 1: Carbs, Fat, Protein
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                MacronutrientRing(
-                    label = "carbs",
-                    value = carbsConsumed,
-                    progress = carbsProgress,
-                    color = Color(0xFF2BB9B0)
-                )
-                MacronutrientRing(
-                    label = "fat",
-                    value = fatConsumed,
-                    progress = fatProgress,
-                    color = Color(0xFFC576E1)
-                )
-                MacronutrientRing(
-                    label = "protein",
-                    value = proteinConsumed,
-                    progress = proteinProgress,
-                    color = Color(0xFFFEB13D)
-                )
-            }
-
-            // Row 2: Calories (Clickable), Water
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .clickable { onNavigateToCalorieSummary() }
-                        .padding(horizontal = 6.dp)
+            // 1. Headers
+            item {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(bottom = 4.dp)
                 ) {
-                    MacronutrientRing(
-                        label = "calories",
-                        value = consumedCalories,
-                        progress = calorieProgress,
-                        color = Color(0xFF0056C6)
+                    Text(
+                        text = "Today",
+                        color = TextWhite,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Daily Summary",
+                        color = TextGray,
+                        fontSize = 11.sp
                     )
                 }
-                Spacer(modifier = Modifier.width(16.dp))
-                Box(
-                    modifier = Modifier.padding(horizontal = 6.dp)
+            }
+
+            // 2. Row 1: Carbs, Fat, Protein
+            item {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     MacronutrientRing(
-                        label = "water",
-                        value = waterCups,
-                        progress = waterProgress,
-                        color = Color(0xFF86AADA)
+                        label = "carbs",
+                        value = carbsConsumed,
+                        progress = carbsProgress,
+                        color = Color(0xFF2BB9B0)
+                    )
+                    MacronutrientRing(
+                        label = "fat",
+                        value = fatConsumed,
+                        progress = fatProgress,
+                        color = Color(0xFFC576E1)
+                    )
+                    MacronutrientRing(
+                        label = "protein",
+                        value = proteinConsumed,
+                        progress = proteinProgress,
+                        color = Color(0xFFFEB13D)
+                    )
+                }
+            }
+
+            // 3. Row 2: Calories (Clickable), Water
+            item {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clickable { onNavigateToCalorieSummary() }
+                            .padding(horizontal = 6.dp)
+                    ) {
+                        MacronutrientRing(
+                            label = "calories",
+                            value = consumedCalories,
+                            progress = calorieProgress,
+                            color = Color(0xFF0056C6)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Box(
+                        modifier = Modifier.padding(horizontal = 6.dp)
+                    ) {
+                        MacronutrientRing(
+                            label = "water",
+                            value = waterCups,
+                            progress = waterProgress,
+                            color = Color(0xFF86AADA)
+                        )
+                    }
+                }
+            }
+
+            // 4. Scrollable Calorie Detail Shortcut Pill
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Chip(
+                        onClick = onNavigateToCalorieSummary,
+                        label = {
+                            Text(
+                                text = "Calorie Details ›",
+                                style = WearTypography.title1,
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        },
+                        colors = ChipDefaults.secondaryChipColors(),
+                        modifier = Modifier
+                            .width(145.dp)
+                            .height(38.dp)
                     )
                 }
             }

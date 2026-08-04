@@ -23,6 +23,7 @@ import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.Text
 import coil.compose.rememberAsyncImagePainter
 import com.tnyx.wear.theme.ColorWater
+import com.tnyx.wear.theme.TextWhite
 import com.google.android.horologist.annotations.ExperimentalHorologistApi
 import com.google.android.horologist.compose.layout.ScalingLazyColumn
 import com.google.android.horologist.compose.layout.ScreenScaffold
@@ -183,14 +184,14 @@ fun WorkoutListScreen(
                                 text = "Live Sync",
                                 style = WearTypography.title1,
                                 fontSize = 14.sp,
-                                color = Color.White,
+                                color = TextWhite,
                                 textAlign = TextAlign.Start
                             )
                             Text(
                                 text = syncText,
                                 style = WearTypography.body1,
                                 fontSize = 10.sp,
-                                color = Color.White.copy(alpha = 0.85f),
+                                color = TextWhite.copy(alpha = 0.85f),
                                 textAlign = TextAlign.Start
                             )
                         }
@@ -319,7 +320,7 @@ fun ExerciseListItem(
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(Color.White)
+                    .background(TextWhite)
                     .padding(2.dp),
                 contentScale = ContentScale.Fit
             )

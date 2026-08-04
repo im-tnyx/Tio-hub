@@ -113,7 +113,7 @@ fun WaterSelectionScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.7f)),
+                    .background(BackgroundBlack.copy(alpha = 0.7f)),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(

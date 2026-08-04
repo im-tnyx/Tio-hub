@@ -12,6 +12,7 @@ import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.Icon
 import com.tnyx.wear.R
 import com.tnyx.wear.theme.GreenConfirm
+import com.tnyx.wear.theme.TextWhite
 
 @Composable
 fun CircularConfirmButton(
@@ -24,7 +25,7 @@ fun CircularConfirmButton(
         enabled = enabled,
         colors = ButtonDefaults.primaryButtonColors(
             backgroundColor = GreenConfirm,
-            contentColor = Color.White
+            contentColor = TextWhite
         ),
         modifier = modifier.size(46.dp)
     ) {
@@ -32,7 +33,7 @@ fun CircularConfirmButton(
             painter = painterResource(id = R.drawable.ic_checkmark),
             contentDescription = "Confirm",
             modifier = Modifier.size(22.dp),
-            tint = Color.White
+            tint = TextWhite
         )
     }
 }

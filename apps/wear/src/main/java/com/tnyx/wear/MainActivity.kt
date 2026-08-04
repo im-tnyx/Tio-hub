@@ -14,7 +14,7 @@ import com.tnyx.wear.presentation.history.WorkoutHistoryScreen
 import com.tnyx.wear.presentation.home.HomeDashboardScreen
 import com.tnyx.wear.presentation.settings.SettingsScreen
 import com.tnyx.wear.presentation.workout.WorkoutListScreen
-import com.tnyx.wear.theme.SamsungHealthWearTheme
+import com.tnyx.wear.theme.TnyxWearTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity() {
 fun TnyxWatchApp() {
     val navController = rememberSwipeDismissableNavController()
 
-    SamsungHealthWearTheme {
+    TnyxWearTheme {
         AppScaffold {
             SwipeDismissableNavHost(
                 navController = navController,

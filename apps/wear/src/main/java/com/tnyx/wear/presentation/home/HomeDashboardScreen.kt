@@ -116,7 +116,7 @@ fun HomeDashboardScreen(
                 )
             }
             
-            // 7. Settings Shortcut Button (Samsung style: centered pill button, height 40dp, width 140dp)
+            // 7. Settings Shortcut Button (TNYX Wear centered pill button)
             item {
                 Box(
                     modifier = Modifier

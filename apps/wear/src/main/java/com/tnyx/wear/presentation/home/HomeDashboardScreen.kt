@@ -81,13 +81,13 @@ fun HomeDashboardScreen(
                 )
             }
             
-            // 3. Daily Summary Card
+            // 3. Daily Summary Info Card
             item {
                 HealthCard(
                     icon = painterResource(id = R.drawable.ic_summary),
                     title = "Daily Summary",
                     valueText = dailyCalories,
-                    onClick = onNavigateToSummary,
+                    onClick = {},
                     iconTint = ColorDailyActivity
                 )
             }

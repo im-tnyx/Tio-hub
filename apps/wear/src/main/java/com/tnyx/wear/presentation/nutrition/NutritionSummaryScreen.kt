@@ -14,12 +14,15 @@ import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.HorizontalPageIndicator
 import androidx.wear.compose.material.PageIndicatorState
 import androidx.wear.compose.material.Text
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import com.google.android.horologist.annotations.ExperimentalHorologistApi
 import com.google.android.horologist.compose.layout.ScalingLazyColumn
 import com.google.android.horologist.compose.layout.ScreenScaffold
 import com.google.android.horologist.compose.layout.rememberColumnState
 import com.tnyx.wear.presentation.components.MacronutrientRing
 import com.tnyx.wear.theme.BackgroundBlack
+import com.tnyx.wear.theme.CardBackground
 import com.tnyx.wear.theme.ColorSleep
 import com.tnyx.wear.theme.ColorSteps
 import com.tnyx.wear.theme.ColorStress
@@ -43,10 +46,10 @@ fun NutritionSummaryScreen(
     waterCups: Int = 6,
     waterGoalCups: Int = 8
 ) {
-    val pagerState = rememberPagerState(pageCount = { 2 })
+    val pagerState = rememberPagerState(pageCount = { 3 })
 
     val pageIndicatorState = object : PageIndicatorState {
-        override val pageCount: Int = 2
+        override val pageCount: Int = 3
         override val pageOffset: Float = 0f
         override val selectedPage: Int
             get() = pagerState.currentPage
@@ -83,6 +86,14 @@ fun NutritionSummaryScreen(
                     fatGoal = fatGoal,
                     proteinConsumed = proteinConsumed,
                     proteinGoal = proteinGoal
+                )
+                2 -> NutrientsListPage(
+                    carbsConsumed = carbsConsumed.toFloat(),
+                    carbsGoal = carbsGoal.toFloat(),
+                    fatConsumed = fatConsumed.toFloat(),
+                    fatGoal = fatGoal.toFloat(),
+                    proteinConsumed = proteinConsumed.toFloat(),
+                    proteinGoal = proteinGoal.toFloat()
                 )
             }
         }
@@ -305,3 +316,144 @@ private fun CalorieDetailPage(
         }
     }
 }
+
+@OptIn(ExperimentalHorologistApi::class)
+@Composable
+private fun NutrientsListPage(
+    carbsConsumed: Float,
+    carbsGoal: Float,
+    fatConsumed: Float,
+    fatGoal: Float,
+    proteinConsumed: Float,
+    proteinGoal: Float
+) {
+    val columnState = rememberColumnState()
+
+    val nutrientsList = listOf(
+        NutrientItem("Protein", proteinConsumed, proteinGoal, "g", ColorStress),
+        NutrientItem("Carbohydrates", carbsConsumed, carbsGoal, "g", ColorSteps),
+        NutrientItem("Fiber", 18f, 30f, "g", ColorSteps),
+        NutrientItem("Sugar", 24f, 50f, "g", ColorSleep),
+        NutrientItem("Fat", fatConsumed, fatGoal, "g", ColorSleep),
+        NutrientItem("Saturated Fat", 12f, 20f, "g", ColorSleep),
+        NutrientItem("Polyunsaturated Fat", 6f, 10f, "g", ColorSleep),
+        NutrientItem("Monounsaturated Fat", 10f, 15f, "g", ColorSleep),
+        NutrientItem("Trans Fat", 0f, 2f, "g", ColorSleep),
+        NutrientItem("Cholesterol", 180f, 300f, "mg", ColorWater),
+        NutrientItem("Sodium", 1400f, 2300f, "mg", ColorWater),
+        NutrientItem("Potassium", 2200f, 3500f, "mg", ColorWater),
+        NutrientItem("Vitamin A", 80f, 100f, "%", ColorWater),
+        NutrientItem("Vitamin C", 90f, 100f, "%", ColorWater),
+        NutrientItem("Calcium", 75f, 100f, "%", ColorWater),
+        NutrientItem("Iron", 60f, 100f, "%", ColorWater)
+    )
+
+    ScreenScaffold(scrollState = columnState) {
+        ScalingLazyColumn(
+            columnState = columnState,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(BackgroundBlack)
+        ) {
+            item {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                ) {
+                    Text(
+                        text = "Nutrients",
+                        color = TextWhite,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Daily Intake",
+                        color = TextGray,
+                        fontSize = 11.sp
+                    )
+                }
+            }
+
+            items(nutrientsList.size) { index ->
+                val item = nutrientsList[index]
+                NutrientRow(
+                    name = item.name,
+                    consumed = item.consumed,
+                    goal = item.goal,
+                    unit = item.unit,
+                    color = item.color
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun NutrientRow(
+    name: String,
+    consumed: Float,
+    goal: Float,
+    unit: String,
+    color: Color
+) {
+    val progress = if (goal > 0) consumed / goal else 0.0f
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp, horizontal = 4.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = name,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextWhite
+            )
+            Text(
+                text = "${consumed.toInt()}/${goal.toInt()} $unit",
+                fontSize = 10.sp,
+                color = TextGray
+            )
+        }
+        Spacer(modifier = Modifier.height(3.dp))
+        NutrientProgressBar(
+            progress = progress,
+            color = color
+        )
+    }
+}
+
+@Composable
+private fun NutrientProgressBar(
+    progress: Float,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(4.dp)
+            .clip(RoundedCornerShape(2.dp))
+            .background(CardBackground)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(progress.coerceIn(0f, 1f))
+                .fillMaxHeight()
+                .clip(RoundedCornerShape(2.dp))
+                .background(color)
+        )
+    }
+}
+
+private data class NutrientItem(
+    val name: String,
+    val consumed: Float,
+    val goal: Float,
+    val unit: String,
+    val color: Color
+)

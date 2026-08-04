@@ -1,6 +1,6 @@
 package com.tnyx.wear.presentation.settings
 
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -10,15 +10,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
+import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Switch
+import androidx.wear.compose.material.SwitchDefaults
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.ToggleChip
+import androidx.wear.compose.material.ToggleChipDefaults
 import androidx.wear.compose.material.dialog.Alert
 import androidx.wear.compose.material.dialog.Dialog
 import com.google.android.horologist.annotations.ExperimentalHorologistApi
@@ -26,6 +28,11 @@ import com.google.android.horologist.compose.layout.ScalingLazyColumn
 import com.google.android.horologist.compose.layout.ScreenScaffold
 import com.google.android.horologist.compose.layout.rememberColumnState
 import com.tnyx.wear.presentation.components.CircularConfirmButton
+import com.tnyx.wear.theme.BackgroundBlack
+import com.tnyx.wear.theme.CardBackground
+import com.tnyx.wear.theme.ColorSteps
+import com.tnyx.wear.theme.TextGray
+import com.tnyx.wear.theme.TextWhite
 import com.tnyx.wear.theme.WearTypography
 
 @OptIn(ExperimentalHorologistApi::class)
@@ -49,12 +56,15 @@ fun SettingsScreen(
     ScreenScaffold(scrollState = columnState) {
         ScalingLazyColumn(
             columnState = columnState,
-            modifier = modifier.fillMaxSize()
+            modifier = modifier
+                .fillMaxSize()
+                .background(BackgroundBlack)
         ) {
             // Screen Header
             item {
                 Text(
                     text = "Settings",
+                    color = TextWhite,
                     style = WearTypography.title1,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
@@ -65,11 +75,20 @@ fun SettingsScreen(
                 ToggleChip(
                     checked = autoDetectWorkout,
                     onCheckedChange = { autoDetectWorkout = it },
-                    label = { Text("Auto Detect Workout") },
+                    label = { Text("Auto Detect Workout", color = TextWhite) },
+                    colors = ToggleChipDefaults.toggleChipColors(
+                        checkedStartBackgroundColor = CardBackground,
+                        checkedEndBackgroundColor = CardBackground,
+                        checkedToggleControlColor = ColorSteps
+                    ),
                     toggleControl = {
                         Switch(
                             checked = autoDetectWorkout,
-                            onCheckedChange = null
+                            onCheckedChange = null,
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = BackgroundBlack,
+                                checkedTrackColor = ColorSteps
+                            )
                         )
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -81,11 +100,20 @@ fun SettingsScreen(
                 ToggleChip(
                     checked = inactiveAlerts,
                     onCheckedChange = { inactiveAlerts = it },
-                    label = { Text("Inactive Alerts") },
+                    label = { Text("Inactive Alerts", color = TextWhite) },
+                    colors = ToggleChipDefaults.toggleChipColors(
+                        checkedStartBackgroundColor = CardBackground,
+                        checkedEndBackgroundColor = CardBackground,
+                        checkedToggleControlColor = ColorSteps
+                    ),
                     toggleControl = {
                         Switch(
                             checked = inactiveAlerts,
-                            onCheckedChange = null
+                            onCheckedChange = null,
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = BackgroundBlack,
+                                checkedTrackColor = ColorSteps
+                            )
                         )
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -96,9 +124,12 @@ fun SettingsScreen(
             item {
                 Chip(
                     onClick = onNavigateToUnits,
-                    label = { Text("Units") },
-                    secondaryLabel = { Text("kcal • kg • km") },
-                    colors = ChipDefaults.secondaryChipColors(),
+                    label = { Text("Units", color = TextWhite) },
+                    secondaryLabel = { Text("kcal • kg • km", color = TextGray) },
+                    colors = ChipDefaults.secondaryChipColors(
+                        backgroundColor = CardBackground,
+                        contentColor = TextWhite
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -109,9 +140,12 @@ fun SettingsScreen(
                     onClick = {
                         isSyncing = true
                     },
-                    label = { Text(if (isSyncing) "Syncing..." else "Sync Now") },
-                    secondaryLabel = { Text("Last sync: 5m ago") },
-                    colors = ChipDefaults.secondaryChipColors(),
+                    label = { Text(if (isSyncing) "Syncing..." else "Sync Now", color = TextWhite) },
+                    secondaryLabel = { Text("Last sync: 5m ago", color = TextGray) },
+                    colors = ChipDefaults.secondaryChipColors(
+                        backgroundColor = CardBackground,
+                        contentColor = TextWhite
+                    ),
                     enabled = !isSyncing,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -121,8 +155,11 @@ fun SettingsScreen(
             item {
                 Chip(
                     onClick = { showLogoutDialog = true },
-                    label = { Text("Log Out", color = androidx.wear.compose.material.MaterialTheme.colors.error) },
-                    colors = ChipDefaults.secondaryChipColors(),
+                    label = { Text("Log Out", color = MaterialTheme.colors.error) },
+                    colors = ChipDefaults.secondaryChipColors(
+                        backgroundColor = CardBackground,
+                        contentColor = TextWhite
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -137,7 +174,7 @@ fun SettingsScreen(
         onDismissRequest = { showLogoutDialog = false }
     ) {
         Alert(
-            title = { Text("Log Out", style = WearTypography.title1) },
+            title = { Text("Log Out", color = TextWhite, style = WearTypography.title1) },
             positiveButton = {
                 CircularConfirmButton(
                     onClick = {
@@ -151,12 +188,13 @@ fun SettingsScreen(
                     onClick = { showLogoutDialog = false },
                     colors = ButtonDefaults.secondaryButtonColors()
                 ) {
-                    Text("✕")
+                    Text("✕", color = TextWhite)
                 }
             }
         ) {
             Text(
                 text = "Are you sure you want to log out from this watch?",
+                color = TextGray,
                 style = WearTypography.body1
             )
         }

@@ -1,5 +1,6 @@
 package com.tnyx.wear.presentation.settings
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,11 @@ import com.google.android.horologist.annotations.ExperimentalHorologistApi
 import com.google.android.horologist.compose.layout.ScalingLazyColumn
 import com.google.android.horologist.compose.layout.ScreenScaffold
 import com.google.android.horologist.compose.layout.rememberColumnState
+import com.tnyx.wear.theme.BackgroundBlack
+import com.tnyx.wear.theme.CardBackground
+import com.tnyx.wear.theme.ColorSteps
+import com.tnyx.wear.theme.TextGray
+import com.tnyx.wear.theme.TextWhite
 import com.tnyx.wear.theme.WearTypography
 
 @OptIn(ExperimentalHorologistApi::class)
@@ -41,12 +47,15 @@ fun UnitsSettingsScreen(
     ScreenScaffold(scrollState = columnState) {
         ScalingLazyColumn(
             columnState = columnState,
-            modifier = modifier.fillMaxSize()
+            modifier = modifier
+                .fillMaxSize()
+                .background(BackgroundBlack)
         ) {
             // Header
             item {
                 Text(
                     text = "Units Settings",
+                    color = TextWhite,
                     style = WearTypography.title1,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
@@ -56,9 +65,12 @@ fun UnitsSettingsScreen(
             item {
                 Chip(
                     onClick = { showEnergyDialog = true },
-                    label = { Text("Energy Unit") },
-                    secondaryLabel = { Text(selectedEnergyUnit) },
-                    colors = ChipDefaults.secondaryChipColors(),
+                    label = { Text("Energy Unit", color = TextWhite) },
+                    secondaryLabel = { Text(selectedEnergyUnit, color = TextGray) },
+                    colors = ChipDefaults.secondaryChipColors(
+                        backgroundColor = CardBackground,
+                        contentColor = TextWhite
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -67,9 +79,12 @@ fun UnitsSettingsScreen(
             item {
                 Chip(
                     onClick = { showWeightDialog = true },
-                    label = { Text("Weight Unit") },
-                    secondaryLabel = { Text(selectedWeightUnit) },
-                    colors = ChipDefaults.secondaryChipColors(),
+                    label = { Text("Weight Unit", color = TextWhite) },
+                    secondaryLabel = { Text(selectedWeightUnit, color = TextGray) },
+                    colors = ChipDefaults.secondaryChipColors(
+                        backgroundColor = CardBackground,
+                        contentColor = TextWhite
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -78,9 +93,12 @@ fun UnitsSettingsScreen(
             item {
                 Chip(
                     onClick = { showDistanceDialog = true },
-                    label = { Text("Distance Unit") },
-                    secondaryLabel = { Text(selectedDistanceUnit) },
-                    colors = ChipDefaults.secondaryChipColors(),
+                    label = { Text("Distance Unit", color = TextWhite) },
+                    secondaryLabel = { Text(selectedDistanceUnit, color = TextGray) },
+                    colors = ChipDefaults.secondaryChipColors(
+                        backgroundColor = CardBackground,
+                        contentColor = TextWhite
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -98,11 +116,14 @@ fun UnitsSettingsScreen(
         ScreenScaffold(scrollState = dialogColumnState) {
             ScalingLazyColumn(
                 columnState = dialogColumnState,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(BackgroundBlack)
             ) {
                 item {
                     Text(
                         text = "Energy Unit",
+                        color = TextWhite,
                         style = WearTypography.title1,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
@@ -113,7 +134,12 @@ fun UnitsSettingsScreen(
                             selectedEnergyUnit = "kcal"
                             showEnergyDialog = false
                         },
-                        label = { Text("Calories (kcal)") },
+                        label = { Text("Calories (kcal)", color = if (selectedEnergyUnit == "kcal") BackgroundBlack else TextWhite) },
+                        colors = if (selectedEnergyUnit == "kcal") {
+                            ChipDefaults.primaryChipColors(backgroundColor = ColorSteps)
+                        } else {
+                            ChipDefaults.secondaryChipColors(backgroundColor = CardBackground)
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -123,7 +149,12 @@ fun UnitsSettingsScreen(
                             selectedEnergyUnit = "kJ"
                             showEnergyDialog = false
                         },
-                        label = { Text("Kilojoules (kJ)") },
+                        label = { Text("Kilojoules (kJ)", color = if (selectedEnergyUnit == "kJ") BackgroundBlack else TextWhite) },
+                        colors = if (selectedEnergyUnit == "kJ") {
+                            ChipDefaults.primaryChipColors(backgroundColor = ColorSteps)
+                        } else {
+                            ChipDefaults.secondaryChipColors(backgroundColor = CardBackground)
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -140,11 +171,14 @@ fun UnitsSettingsScreen(
         ScreenScaffold(scrollState = dialogColumnState) {
             ScalingLazyColumn(
                 columnState = dialogColumnState,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(BackgroundBlack)
             ) {
                 item {
                     Text(
                         text = "Weight Unit",
+                        color = TextWhite,
                         style = WearTypography.title1,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
@@ -155,7 +189,12 @@ fun UnitsSettingsScreen(
                             selectedWeightUnit = "kg"
                             showWeightDialog = false
                         },
-                        label = { Text("Kilograms (kg)") },
+                        label = { Text("Kilograms (kg)", color = if (selectedWeightUnit == "kg") BackgroundBlack else TextWhite) },
+                        colors = if (selectedWeightUnit == "kg") {
+                            ChipDefaults.primaryChipColors(backgroundColor = ColorSteps)
+                        } else {
+                            ChipDefaults.secondaryChipColors(backgroundColor = CardBackground)
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -165,7 +204,12 @@ fun UnitsSettingsScreen(
                             selectedWeightUnit = "lbs"
                             showWeightDialog = false
                         },
-                        label = { Text("Pounds (lbs)") },
+                        label = { Text("Pounds (lbs)", color = if (selectedWeightUnit == "lbs") BackgroundBlack else TextWhite) },
+                        colors = if (selectedWeightUnit == "lbs") {
+                            ChipDefaults.primaryChipColors(backgroundColor = ColorSteps)
+                        } else {
+                            ChipDefaults.secondaryChipColors(backgroundColor = CardBackground)
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -182,11 +226,14 @@ fun UnitsSettingsScreen(
         ScreenScaffold(scrollState = dialogColumnState) {
             ScalingLazyColumn(
                 columnState = dialogColumnState,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(BackgroundBlack)
             ) {
                 item {
                     Text(
                         text = "Distance Unit",
+                        color = TextWhite,
                         style = WearTypography.title1,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
@@ -197,7 +244,12 @@ fun UnitsSettingsScreen(
                             selectedDistanceUnit = "km"
                             showDistanceDialog = false
                         },
-                        label = { Text("Kilometers (km)") },
+                        label = { Text("Kilometers (km)", color = if (selectedDistanceUnit == "km") BackgroundBlack else TextWhite) },
+                        colors = if (selectedDistanceUnit == "km") {
+                            ChipDefaults.primaryChipColors(backgroundColor = ColorSteps)
+                        } else {
+                            ChipDefaults.secondaryChipColors(backgroundColor = CardBackground)
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -207,7 +259,12 @@ fun UnitsSettingsScreen(
                             selectedDistanceUnit = "mi"
                             showDistanceDialog = false
                         },
-                        label = { Text("Miles (mi)") },
+                        label = { Text("Miles (mi)", color = if (selectedDistanceUnit == "mi") BackgroundBlack else TextWhite) },
+                        colors = if (selectedDistanceUnit == "mi") {
+                            ChipDefaults.primaryChipColors(backgroundColor = ColorSteps)
+                        } else {
+                            ChipDefaults.secondaryChipColors(backgroundColor = CardBackground)
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }

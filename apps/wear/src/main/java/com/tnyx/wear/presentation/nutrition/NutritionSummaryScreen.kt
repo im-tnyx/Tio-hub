@@ -1,8 +1,9 @@
 package com.tnyx.wear.presentation.nutrition
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -10,8 +11,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.wear.compose.material.Chip
-import androidx.wear.compose.material.ChipDefaults
+import androidx.wear.compose.material.HorizontalPageIndicator
+import androidx.wear.compose.material.PageIndicatorState
 import androidx.wear.compose.material.Text
 import com.google.android.horologist.annotations.ExperimentalHorologistApi
 import com.google.android.horologist.compose.layout.ScalingLazyColumn
@@ -25,12 +26,10 @@ import com.tnyx.wear.theme.ColorStress
 import com.tnyx.wear.theme.ColorWater
 import com.tnyx.wear.theme.TextGray
 import com.tnyx.wear.theme.TextWhite
-import com.tnyx.wear.theme.WearTypography
 
 @OptIn(ExperimentalHorologistApi::class)
 @Composable
 fun NutritionSummaryScreen(
-    onNavigateToCalorieSummary: () -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
     consumedCalories: Int = 1450,
@@ -44,6 +43,73 @@ fun NutritionSummaryScreen(
     waterCups: Int = 6,
     waterGoalCups: Int = 8
 ) {
+    val pagerState = rememberPagerState(pageCount = { 2 })
+
+    val pageIndicatorState = object : PageIndicatorState {
+        override val pageCount: Int = 2
+        override val pageOffset: Float = 0f
+        override val selectedPage: Int
+            get() = pagerState.currentPage
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(BackgroundBlack)
+    ) {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            when (page) {
+                0 -> DailySummaryPage(
+                    consumedCalories = consumedCalories,
+                    goalCalories = goalCalories,
+                    carbsConsumed = carbsConsumed,
+                    carbsGoal = carbsGoal,
+                    fatConsumed = fatConsumed,
+                    fatGoal = fatGoal,
+                    proteinConsumed = proteinConsumed,
+                    proteinGoal = proteinGoal,
+                    waterCups = waterCups,
+                    waterGoalCups = waterGoalCups
+                )
+                1 -> CalorieDetailPage(
+                    consumedCalories = consumedCalories,
+                    goalCalories = goalCalories,
+                    carbsConsumed = carbsConsumed,
+                    carbsGoal = carbsGoal,
+                    fatConsumed = fatConsumed,
+                    fatGoal = fatGoal,
+                    proteinConsumed = proteinConsumed,
+                    proteinGoal = proteinGoal
+                )
+            }
+        }
+
+        HorizontalPageIndicator(
+            pageIndicatorState = pageIndicatorState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 4.dp)
+        )
+    }
+}
+
+@OptIn(ExperimentalHorologistApi::class)
+@Composable
+private fun DailySummaryPage(
+    consumedCalories: Int,
+    goalCalories: Int,
+    carbsConsumed: Int,
+    carbsGoal: Int,
+    fatConsumed: Int,
+    fatGoal: Int,
+    proteinConsumed: Int,
+    proteinGoal: Int,
+    waterCups: Int,
+    waterGoalCups: Int
+) {
     val columnState = rememberColumnState()
 
     val calorieProgress = if (goalCalories > 0) consumedCalories.toFloat() / goalCalories else 0.0f
@@ -55,7 +121,7 @@ fun NutritionSummaryScreen(
     ScreenScaffold(scrollState = columnState) {
         ScalingLazyColumn(
             columnState = columnState,
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxSize()
                 .background(BackgroundBlack)
         ) {
@@ -109,7 +175,7 @@ fun NutritionSummaryScreen(
                 }
             }
 
-            // 3. Row 2: Calories (Clickable), Water
+            // 3. Row 2: Calories, Water
             item {
                 Row(
                     horizontalArrangement = Arrangement.Center,
@@ -119,9 +185,7 @@ fun NutritionSummaryScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
-                        modifier = Modifier
-                            .clickable { onNavigateToCalorieSummary() }
-                            .padding(horizontal = 6.dp)
+                        modifier = Modifier.padding(horizontal = 6.dp)
                     ) {
                         MacronutrientRing(
                             label = "calories",
@@ -143,29 +207,98 @@ fun NutritionSummaryScreen(
                     }
                 }
             }
+        }
+    }
+}
 
-            // 4. Scrollable Calorie Detail Shortcut Pill
+@OptIn(ExperimentalHorologistApi::class)
+@Composable
+private fun CalorieDetailPage(
+    consumedCalories: Int,
+    goalCalories: Int,
+    carbsConsumed: Int,
+    carbsGoal: Int,
+    fatConsumed: Int,
+    fatGoal: Int,
+    proteinConsumed: Int,
+    proteinGoal: Int
+) {
+    val columnState = rememberColumnState()
+
+    val carbsProgress = if (carbsGoal > 0) carbsConsumed.toFloat() / carbsGoal else 0.0f
+    val fatProgress = if (fatGoal > 0) fatConsumed.toFloat() / fatGoal else 0.0f
+    val proteinProgress = if (proteinGoal > 0) proteinConsumed.toFloat() / proteinGoal else 0.0f
+
+    ScreenScaffold(scrollState = columnState) {
+        ScalingLazyColumn(
+            columnState = columnState,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(BackgroundBlack)
+        ) {
             item {
-                Box(
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(bottom = 2.dp)
+                ) {
+                    Text(
+                        text = "Today",
+                        color = TextWhite,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Calories",
+                        color = TextGray,
+                        fontSize = 12.sp
+                    )
+                }
+            }
+
+            item {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                ) {
+                    Text(
+                        text = consumedCalories.toString(),
+                        color = ColorWater,
+                        fontSize = 34.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "of $goalCalories kcal",
+                        color = TextGray,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            item {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    contentAlignment = Alignment.Center
+                        .padding(top = 10.dp)
                 ) {
-                    Chip(
-                        onClick = onNavigateToCalorieSummary,
-                        label = {
-                            Text(
-                                text = "Calorie Details ›",
-                                style = WearTypography.title1,
-                                modifier = Modifier.fillMaxWidth(),
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                            )
-                        },
-                        colors = ChipDefaults.secondaryChipColors(),
-                        modifier = Modifier
-                            .width(145.dp)
-                            .height(38.dp)
+                    MacronutrientRing(
+                        label = "carbs",
+                        value = carbsConsumed,
+                        progress = carbsProgress,
+                        color = ColorSteps
+                    )
+                    MacronutrientRing(
+                        label = "fat",
+                        value = fatConsumed,
+                        progress = fatProgress,
+                        color = ColorSleep
+                    )
+                    MacronutrientRing(
+                        label = "protein",
+                        value = proteinConsumed,
+                        progress = proteinProgress,
+                        color = ColorStress
                     )
                 }
             }

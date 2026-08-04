@@ -55,7 +55,6 @@ fun TnyxWatchApp() {
                 }
                 composable("summary") {
                     NutritionSummaryScreen(
-                        onNavigateToCalorieSummary = { navController.navigate("calorie_summary") },
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }

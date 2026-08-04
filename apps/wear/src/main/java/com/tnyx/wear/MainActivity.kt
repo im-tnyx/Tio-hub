@@ -12,6 +12,7 @@ import com.google.android.horologist.annotations.ExperimentalHorologistApi
 import com.google.android.horologist.compose.layout.AppScaffold
 import com.tnyx.wear.presentation.history.WorkoutHistoryScreen
 import com.tnyx.wear.presentation.home.HomeDashboardScreen
+import com.tnyx.wear.presentation.nutrition.WaterSelectionScreen
 import com.tnyx.wear.presentation.settings.SettingsScreen
 import com.tnyx.wear.presentation.workout.WorkoutListScreen
 import com.tnyx.wear.theme.TnyxWearTheme
@@ -45,8 +46,17 @@ fun TnyxWatchApp() {
                         onNavigateToSummary = { Log.i("TnyxWatchApp", "Navigate to Summary") },
                         onNavigateToNutrition = { Log.i("TnyxWatchApp", "Navigate to Nutrition") },
                         onNavigateToAddFood = { Log.i("TnyxWatchApp", "Navigate to Add Food") },
-                        onNavigateToAddWater = { Log.i("TnyxWatchApp", "Navigate to Add Water") },
+                        onNavigateToAddWater = { navController.navigate("add_water") },
                         onNavigateToSettings = { navController.navigate("settings") }
+                    )
+                }
+                composable("add_water") {
+                    WaterSelectionScreen(
+                        onConfirm = { cups ->
+                            Log.i("TnyxWatchApp", "Water logged: $cups cups")
+                            navController.popBackStack()
+                        },
+                        onNavigateBack = { navController.popBackStack() }
                     )
                 }
                 composable("workout") {

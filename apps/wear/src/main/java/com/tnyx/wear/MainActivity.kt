@@ -16,6 +16,7 @@ import com.tnyx.wear.presentation.nutrition.CalorieSummaryScreen
 import com.tnyx.wear.presentation.nutrition.NutritionSummaryScreen
 import com.tnyx.wear.presentation.nutrition.WaterSelectionScreen
 import com.tnyx.wear.presentation.settings.SettingsScreen
+import com.tnyx.wear.presentation.settings.UnitsSettingsScreen
 import com.tnyx.wear.presentation.workout.WorkoutListScreen
 import com.tnyx.wear.theme.TnyxWearTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -89,10 +90,16 @@ fun TnyxWatchApp() {
                 composable("settings") {
                     SettingsScreen(
                         onNavigateBack = { navController.popBackStack() },
+                        onNavigateToUnits = { navController.navigate("units_settings") },
                         onLogoutConfirmed = {
                             Log.i("TnyxWatchApp", "User Logged Out!")
                             navController.popBackStack("home", false)
                         }
+                    )
+                }
+                composable("units_settings") {
+                    UnitsSettingsScreen(
+                        onNavigateBack = { navController.popBackStack() }
                     )
                 }
             }

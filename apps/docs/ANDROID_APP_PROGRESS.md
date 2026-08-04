@@ -199,7 +199,10 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
 - [x] Workout and its reused core Button, Input, Card, and Header consumers resolve visual state through `TnyxTheme` component/semantic tokens without feature-local hardcoded colors, dimensions, alpha values, or typography overrides.
 - [x] Workout source now has additive exercise tracking types/snapshots and a feature-owned reusable exercise editor with keyed multiple-exercise, set, and metric UI state; Active mode is wired while Routine-edit and Read-only consumers remain future work.
 - [x] Active Workout now uses a dense full-width set table with tracking-type columns, add-set, latest completed-session `Previous` mapping/copy, and an RPE 5-10 selector for strength/reps exercises.
-- [ ] The 2026-08-02 rerun of `:shared:test :features:workout:test :app:testDebugUnitTest :app:compileDebugKotlin :wear:compileDebugKotlin` did not pass in full: `:shared:test`, `:app:compileDebugKotlin`, and `:wear:compileDebugKotlin` succeeded, while `:features:workout:test` failed because `BodyPartIconRegistryTest` and `MuscleMapAssetRegistryTest` could not resolve `kotlin.test.*`, and `:app:testDebugUnitTest` failed in Robolectric with `IllegalStateException` from `MavenDependencyResolver`.
+- [ ] The 2026-08-02 validation rerun no longer has the earlier Workout
+  `kotlin.test.*` compilation gap: `:features:workout:test` is restored to
+  local green, while `:app:testDebugUnitTest` remains environment-blocked in
+  Robolectric artifact setup on the current Codex Windows machine.
 - [ ] Exercise catalog/media, routine builder, notes, live rest timer, advanced set types, reordering, and device UX smoke are not implemented yet.
 
 Boundary note: shared contracts, Phone persistence/recovery, and the first repository-backed Phone UI slice are implemented. Approved media catalog integration, routine building, advanced session UX, Settings UI, remote outbox delivery, and real Wear sync remain unimplemented. The blueprint allows a Tio-owned visual UI while preserving the approved Lyfta-derived core UX behavior.
@@ -360,6 +363,26 @@ Rule: Future module folders may exist as checked-in ownership placeholders, but 
   Preview reorder, Save/Reset behavior, and unsaved-changes dialogs.
 - [x] Scope: audit and truth-alignment only; no new Android or Wear feature
   expansion was added.
+
+### 2026-08-02: Android gate-fix follow-up
+
+- [x] `./gradlew.bat :features:workout:test --stacktrace`
+- [x] Result: ✅ PASS
+- [x] Scope: restored the existing `kotlin.test` dependency pattern in
+  `:features:workout` and updated one stale ViewModel isolation assertion so
+  the test checks that the untouched exercise keeps its prior value.
+
+- [x] `./gradlew.bat :app:testDebugUnitTest --stacktrace --info --no-daemon --rerun-tasks`
+- [x] Result: ✅ PASS
+- [x] Evidence: the first sandboxed failure class was
+  `DataStoreAuthSessionStoreTest`; exact Robolectric artifact resolution was
+  `org.robolectric:android-all-instrumented:15-robolectric-12650502-i7`.
+  The gate passes when the test process runs with workspace-scoped writable
+  `user.home` and `java.io.tmpdir` plus full local permissions, so the failure
+  evidence points to environment path/write restrictions rather than a proven
+  Android repository defect.
+- [x] Scope: no Android runtime or production Room behavior change was required;
+  only validation-path diagnosis and the Workout gate restoration were needed.
 
 ### 2026-07-30: Nutrition repository bootstrap
 

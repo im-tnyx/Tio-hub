@@ -114,6 +114,13 @@ class WorkoutViewModelTest {
             advanceUntilIdle()
 
             val firstExercise = viewModel.uiState.value.exercises.first()
+            val untouchedExerciseMetric = viewModel.uiState.value.exercises
+                .last()
+                .sets
+                .single()
+                .metrics
+                .single()
+                .value
             viewModel.handleAction(
                 WorkoutAction.MetricChanged(
                     exerciseEntryId = firstExercise.id,
@@ -125,7 +132,7 @@ class WorkoutViewModelTest {
 
             val exercises = viewModel.uiState.value.exercises
             assertEquals("12", exercises.first().sets.single().metrics.single().value)
-            assertEquals("10", exercises.last().sets.single().metrics.single().value)
+            assertEquals(untouchedExerciseMetric, exercises.last().sets.single().metrics.single().value)
         }
 }
 

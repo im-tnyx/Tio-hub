@@ -14,4 +14,10 @@ sealed interface WearRoute {
 
     @Serializable
     data object AddWater : WearRoute
+
+    @Serializable
+    data object Summary : WearRoute
+
+    @Serializable
+    data object CalorieSummary : WearRoute
 }

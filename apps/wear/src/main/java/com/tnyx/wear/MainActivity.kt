@@ -12,6 +12,8 @@ import com.google.android.horologist.annotations.ExperimentalHorologistApi
 import com.google.android.horologist.compose.layout.AppScaffold
 import com.tnyx.wear.presentation.history.WorkoutHistoryScreen
 import com.tnyx.wear.presentation.home.HomeDashboardScreen
+import com.tnyx.wear.presentation.nutrition.CalorieSummaryScreen
+import com.tnyx.wear.presentation.nutrition.NutritionSummaryScreen
 import com.tnyx.wear.presentation.nutrition.WaterSelectionScreen
 import com.tnyx.wear.presentation.settings.SettingsScreen
 import com.tnyx.wear.presentation.workout.WorkoutListScreen
@@ -43,11 +45,22 @@ fun TnyxWatchApp() {
                     HomeDashboardScreen(
                         onNavigateToWorkout = { navController.navigate("workout") },
                         onNavigateToHistory = { navController.navigate("history") },
-                        onNavigateToSummary = { Log.i("TnyxWatchApp", "Navigate to Summary") },
-                        onNavigateToNutrition = { Log.i("TnyxWatchApp", "Navigate to Nutrition") },
+                        onNavigateToSummary = { navController.navigate("summary") },
+                        onNavigateToNutrition = { navController.navigate("summary") },
                         onNavigateToAddFood = { Log.i("TnyxWatchApp", "Navigate to Add Food") },
                         onNavigateToAddWater = { navController.navigate("add_water") },
                         onNavigateToSettings = { navController.navigate("settings") }
+                    )
+                }
+                composable("summary") {
+                    NutritionSummaryScreen(
+                        onNavigateToCalorieSummary = { navController.navigate("calorie_summary") },
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+                composable("calorie_summary") {
+                    CalorieSummaryScreen(
+                        onNavigateBack = { navController.popBackStack() }
                     )
                 }
                 composable("add_water") {

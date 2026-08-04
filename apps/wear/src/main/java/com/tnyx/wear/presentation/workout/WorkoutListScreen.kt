@@ -22,6 +22,7 @@ import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.Text
 import coil.compose.rememberAsyncImagePainter
+import com.tnyx.wear.theme.ColorWater
 import com.google.android.horologist.annotations.ExperimentalHorologistApi
 import com.google.android.horologist.compose.layout.ScalingLazyColumn
 import com.google.android.horologist.compose.layout.ScreenScaffold
@@ -164,7 +165,7 @@ fun WorkoutListScreen(
                             .fillMaxWidth(0.92f)
                             .height(52.dp)
                             .clip(RoundedCornerShape(26.dp))
-                            .background(Color(0xFF1D60FC)) // Hevy's official brand blue accent
+                            .background(ColorWater)
                             .clickable { isSyncing = true }
                             .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically

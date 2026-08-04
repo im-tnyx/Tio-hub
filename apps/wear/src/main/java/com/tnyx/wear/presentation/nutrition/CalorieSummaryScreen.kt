@@ -16,6 +16,9 @@ import com.google.android.horologist.compose.layout.ScreenScaffold
 import com.google.android.horologist.compose.layout.rememberColumnState
 import com.tnyx.wear.presentation.components.MacronutrientRing
 import com.tnyx.wear.theme.BackgroundBlack
+import com.tnyx.wear.theme.ColorSleep
+import com.tnyx.wear.theme.ColorSteps
+import com.tnyx.wear.theme.ColorStress
 import com.tnyx.wear.theme.ColorWater
 import com.tnyx.wear.theme.TextGray
 import com.tnyx.wear.theme.TextWhite
@@ -97,19 +100,19 @@ fun CalorieSummaryScreen(
                         label = "carbs",
                         value = carbsConsumed,
                         progress = carbsProgress,
-                        color = Color(0xFF2BB9B0)
+                        color = ColorSteps
                     )
                     MacronutrientRing(
                         label = "fat",
                         value = fatConsumed,
                         progress = fatProgress,
-                        color = Color(0xFFC576E1)
+                        color = ColorSleep
                     )
                     MacronutrientRing(
                         label = "protein",
                         value = proteinConsumed,
                         progress = proteinProgress,
-                        color = Color(0xFFFEB13D)
+                        color = ColorStress
                     )
                 }
             }

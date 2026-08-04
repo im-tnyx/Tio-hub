@@ -122,7 +122,7 @@ fun SettingsScreen(
             item {
                 Chip(
                     onClick = { showLogoutDialog = true },
-                    label = { Text("Log Out", color = Color.Red) },
+                    label = { Text("Log Out", color = androidx.wear.compose.material.MaterialTheme.colors.error) },
                     colors = ChipDefaults.secondaryChipColors(),
                     modifier = Modifier.fillMaxWidth()
                 )

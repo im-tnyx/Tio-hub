@@ -45,7 +45,7 @@ kotlin {
 
 dependencies {
     implementation(project(":shared"))
-    // implementation(project(":core")) // core abhi phone-specific hai, wear-core baad mein banega
+    implementation(project(":core"))
 
     // Wear OS UI
     implementation(libs.androidx.wear.compose.material)

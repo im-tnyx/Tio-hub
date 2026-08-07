@@ -12,9 +12,15 @@ import com.google.android.horologist.annotations.ExperimentalHorologistApi
 import com.google.android.horologist.compose.layout.AppScaffold
 import com.tnyx.wear.presentation.history.WorkoutHistoryScreen
 import com.tnyx.wear.presentation.home.HomeDashboardScreen
+import com.tnyx.wear.presentation.nutrition.CalorieInputScreen
+import com.tnyx.wear.presentation.nutrition.CalorieSummaryScreen
+import com.tnyx.wear.presentation.nutrition.LogFoodScreen
+import com.tnyx.wear.presentation.nutrition.NutritionSummaryScreen
+import com.tnyx.wear.presentation.nutrition.WaterSelectionScreen
 import com.tnyx.wear.presentation.settings.SettingsScreen
+import com.tnyx.wear.presentation.settings.UnitsSettingsScreen
 import com.tnyx.wear.presentation.workout.WorkoutListScreen
-import com.tnyx.wear.theme.SamsungHealthWearTheme
+import com.tnyx.wear.theme.TnyxWearTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -32,7 +38,7 @@ class MainActivity : ComponentActivity() {
 fun TnyxWatchApp() {
     val navController = rememberSwipeDismissableNavController()
 
-    SamsungHealthWearTheme {
+    TnyxWearTheme {
         AppScaffold {
             SwipeDismissableNavHost(
                 navController = navController,
@@ -42,11 +48,48 @@ fun TnyxWatchApp() {
                     HomeDashboardScreen(
                         onNavigateToWorkout = { navController.navigate("workout") },
                         onNavigateToHistory = { navController.navigate("history") },
-                        onNavigateToSummary = { Log.i("TnyxWatchApp", "Navigate to Summary") },
-                        onNavigateToNutrition = { Log.i("TnyxWatchApp", "Navigate to Nutrition") },
-                        onNavigateToAddFood = { Log.i("TnyxWatchApp", "Navigate to Add Food") },
-                        onNavigateToAddWater = { Log.i("TnyxWatchApp", "Navigate to Add Water") },
+                        onNavigateToSummary = { navController.navigate("summary") },
+                        onNavigateToNutrition = { navController.navigate("summary") },
+                        onNavigateToAddFood = { navController.navigate("log_food") },
+                        onNavigateToAddWater = { navController.navigate("add_water") },
                         onNavigateToSettings = { navController.navigate("settings") }
+                    )
+                }
+                composable("summary") {
+                    NutritionSummaryScreen(
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+                composable("calorie_summary") {
+                    CalorieSummaryScreen(
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+                composable("add_water") {
+                    WaterSelectionScreen(
+                        onConfirm = { cups ->
+                            Log.i("TnyxWatchApp", "Water logged: $cups cups")
+                            navController.popBackStack()
+                        },
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+                composable("log_food") {
+                    LogFoodScreen(
+                        onConfirm = { food ->
+                            Log.i("TnyxWatchApp", "Food Logged: ${food.name} (${food.calories} kcal)")
+                            navController.popBackStack()
+                        },
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+                composable("calorie_input") {
+                    CalorieInputScreen(
+                        onConfirm = { calories ->
+                            Log.i("TnyxWatchApp", "Calories Logged: $calories kcal")
+                            navController.popBackStack()
+                        },
+                        onNavigateBack = { navController.popBackStack() }
                     )
                 }
                 composable("workout") {
@@ -66,10 +109,19 @@ fun TnyxWatchApp() {
                 composable("settings") {
                     SettingsScreen(
                         onNavigateBack = { navController.popBackStack() },
+                        onNavigateToUnits = { navController.navigate("units_settings") },
+                        onOpenOnPhone = {
+                            Log.i("TnyxWatchApp", "RemoteIntent: Opening TNYX app on phone...")
+                        },
                         onLogoutConfirmed = {
                             Log.i("TnyxWatchApp", "User Logged Out!")
                             navController.popBackStack("home", false)
                         }
+                    )
+                }
+                composable("units_settings") {
+                    UnitsSettingsScreen(
+                        onNavigateBack = { navController.popBackStack() }
                     )
                 }
             }

@@ -1,7 +1,7 @@
 # Active Task
 
-Status: Idle
-Active Task: none
-Branch: main
-Platform Scope: none
+Status: In Progress
+Active Task: `.ai/tasks/watch/local-20260804-wear-theme-unification.md`
+Branch: feat/wear-theme-unification
+Platform Scope: wear-theme
 Last Updated: 2026-08-04

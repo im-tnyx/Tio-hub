@@ -10,6 +10,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.CircularProgressIndicator
 
+import com.tnyx.wear.theme.CardBackground
+
 @Composable
 fun CircularBezelProgress(
     progress: Float,
@@ -25,7 +27,7 @@ fun CircularBezelProgress(
         CircularProgressIndicator(
             progress = 1.0f,
             modifier = Modifier.fillMaxSize().padding(6.dp),
-            indicatorColor = Color(0xFF202124),
+            indicatorColor = CardBackground,
             strokeWidth = 5.dp
         )
         

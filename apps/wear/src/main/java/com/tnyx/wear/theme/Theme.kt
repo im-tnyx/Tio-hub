@@ -17,7 +17,7 @@ private val WearColorPalette = Colors(
 )
 
 @Composable
-fun SamsungHealthWearTheme(content: @Composable () -> Unit) {
+fun TnyxWearTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colors = WearColorPalette,
         typography = WearTypography,

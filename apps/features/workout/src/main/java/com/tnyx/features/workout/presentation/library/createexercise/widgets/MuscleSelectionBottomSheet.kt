@@ -34,6 +34,9 @@ import com.tnyx.features.workout.presentation.components.musclemap.MuscleMapView
 import com.tnyx.features.workout.presentation.components.musclemap.TioMuscleMap
 import com.tnyx.shared.workout.domain.model.ExerciseMediaVariant
 
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
+
 @Composable
 fun MuscleSelectionBottomSheet(
     visible: Boolean,
@@ -54,7 +57,7 @@ fun MuscleSelectionBottomSheet(
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 420.dp)
+                .heightIn(max = 440.dp)
         ) {
             items(muscles, key = { it.name }) { region ->
                 val formattedName = remember(region) {
@@ -70,56 +73,64 @@ fun MuscleSelectionBottomSheet(
                     else -> MuscleMapView.FRONT
                 }
 
-                Row(
+                Surface(
+                    shape = RoundedCornerShape(TnyxDimens.RadiusM),
+                    color = if (isSelected) TnyxTheme.colors.accent.copy(alpha = 0.12f) else TnyxTheme.colors.surface,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(vertical = TnyxDimens.SpaceXXS)
                         .clickable { onMuscleSelected(formattedName) }
-                        .padding(vertical = TnyxDimens.SpaceS, horizontal = TnyxDimens.SpaceXXS),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = TnyxDimens.SpaceS, horizontal = TnyxDimens.SpaceS),
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f)
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Surface(
-                            shape = RoundedCornerShape(TnyxDimens.RadiusS),
-                            color = TnyxTheme.colors.surfaceVariant,
-                            border = BorderStroke(TnyxDimens.BorderThin, TnyxTheme.colors.surfaceVariant),
-                            modifier = Modifier.size(56.dp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
                         ) {
-                            TioMuscleMap(
-                                muscleGroups = listOf(region.name),
-                                variant = ExerciseMediaVariant.MALE,
-                                view = defaultView,
-                                contentDescription = formattedName,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(TnyxDimens.SpaceXXS)
+                            Surface(
+                                shape = RoundedCornerShape(TnyxDimens.RadiusS),
+                                color = TnyxTheme.colors.surfaceVariant,
+                                border = BorderStroke(TnyxDimens.BorderThin, TnyxTheme.colors.surfaceVariant),
+                                modifier = Modifier.size(58.dp)
+                            ) {
+                                TioMuscleMap(
+                                    muscleGroups = listOf(region.name),
+                                    variant = ExerciseMediaVariant.MALE,
+                                    view = defaultView,
+                                    contentDescription = formattedName,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(TnyxDimens.SpaceXXS)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(TnyxDimens.SpaceM))
+
+                            Text(
+                                text = formattedName,
+                                style = TnyxTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                                color = if (isSelected) TnyxTheme.colors.accent else TnyxTheme.colors.textPrimary
                             )
                         }
 
-                        Spacer(modifier = Modifier.width(TnyxDimens.SpaceM))
-
-                        Text(
-                            text = formattedName,
-                            style = TnyxTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                            color = if (isSelected) TnyxTheme.colors.accent else TnyxTheme.colors.textPrimary
-                        )
-                    }
-
-                    if (isSelected) {
-                        Icon(
-                            imageVector = Icons.Outlined.Check,
-                            contentDescription = "Selected",
-                            tint = TnyxTheme.colors.accent,
-                            modifier = Modifier.size(TnyxDimens.IconM)
+                        RadioButton(
+                            selected = isSelected,
+                            onClick = null,
+                            colors = RadioButtonDefaults.colors(
+                                selectedColor = TnyxTheme.colors.accent,
+                                unselectedColor = TnyxTheme.colors.textSecondary.copy(alpha = 0.5f)
+                            )
                         )
                     }
                 }
 
                 HorizontalDivider(
-                    color = TnyxTheme.colors.surfaceVariant.copy(alpha = 0.5f),
+                    color = TnyxTheme.colors.surfaceVariant.copy(alpha = 0.3f),
                     thickness = TnyxDimens.BorderSubtle
                 )
             }

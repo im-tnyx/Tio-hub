@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.VolumeMute
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
@@ -32,6 +33,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -170,7 +172,11 @@ fun AppPreferencesScreen(
                         CardDivider()
                         ValueRow(label = "Unit System", value = state.unitSystemSummary)
                         CardDivider()
-                        ValueRow(label = "First Day of Week", value = state.firstDayOfWeek)
+                        ValueRow(
+                            label = "First Day of Week",
+                            value = state.firstDayOfWeek,
+                            onClick = { onAction(AppPreferencesAction.FirstDayOfWeekClicked) }
+                        )
                         CardDivider()
                         ValueRow(
                             label = "Bottom navigation",
@@ -213,6 +219,61 @@ fun AppPreferencesScreen(
             }
 
             item { Spacer(modifier = Modifier.height(24.dp)) }
+        }
+
+        // --- First Day of Week Selection BottomSheet ---
+        FirstDayOfWeekBottomSheet(
+            visible = state.showFirstDayOfWeekBottomSheet,
+            selectedDay = state.firstDayOfWeek,
+            onDaySelected = { onAction(AppPreferencesAction.FirstDayOfWeekSelected(it)) },
+            onDismissRequest = { onAction(AppPreferencesAction.FirstDayOfWeekBottomSheetDismissed) }
+        )
+    }
+}
+
+@Composable
+private fun FirstDayOfWeekBottomSheet(
+    visible: Boolean,
+    selectedDay: String,
+    onDaySelected: (String) -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    val options = remember { listOf("Sunday", "Monday", "Saturday") }
+
+    com.tnyx.core.ui.components.sheets.TnyxModalBottomSheet(
+        visible = visible,
+        onDismissRequest = onDismissRequest,
+        title = "First Day of Week",
+    ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+            options.forEach { day ->
+                val isSelected = selectedDay.equals(day, ignoreCase = true)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .clickable { onDaySelected(day) }
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(
+                        text = if (day == "Sunday") "Sunday (Default)" else day,
+                        style = TnyxTheme.typography.bodyLarge,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) TnyxTheme.colors.accent else TnyxTheme.colors.textPrimary,
+                    )
+
+                    if (isSelected) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Selected",
+                            tint = TnyxTheme.colors.accent,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }

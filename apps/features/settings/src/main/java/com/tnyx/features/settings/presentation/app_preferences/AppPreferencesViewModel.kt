@@ -63,6 +63,18 @@ class AppPreferencesViewModel @Inject constructor() : ViewModel() {
             is AppPreferencesAction.SoundVolumeChanged -> {
                 _uiState.value = _uiState.value.copy(soundVolume = action.value)
             }
+            AppPreferencesAction.FirstDayOfWeekClicked -> {
+                _uiState.value = _uiState.value.copy(showFirstDayOfWeekBottomSheet = true)
+            }
+            is AppPreferencesAction.FirstDayOfWeekSelected -> {
+                _uiState.value = _uiState.value.copy(
+                    firstDayOfWeek = action.day,
+                    showFirstDayOfWeekBottomSheet = false
+                )
+            }
+            AppPreferencesAction.FirstDayOfWeekBottomSheetDismissed -> {
+                _uiState.value = _uiState.value.copy(showFirstDayOfWeekBottomSheet = false)
+            }
         }
     }
 }

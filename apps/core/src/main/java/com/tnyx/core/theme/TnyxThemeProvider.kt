@@ -1,4 +1,4 @@
-﻿package com.tnyx.core.theme
+package com.tnyx.core.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -84,7 +84,7 @@ fun TnyxThemeProvider(
                     palette.surfaceRaised.copy(alpha = 0.72f)
                 },
                 glassBorderColor = palette.textPrimary.copy(alpha = 0.16f),
-                outlinedBorderColor = palette.textPrimary.copy(alpha = 0.16f)
+                outlinedBorderColor = palette.textPrimary.copy(alpha = 0.22f)
             ),
             sheet = DefaultSheetTokens.copy(
                 containerColor = palette.surfaceRaised,

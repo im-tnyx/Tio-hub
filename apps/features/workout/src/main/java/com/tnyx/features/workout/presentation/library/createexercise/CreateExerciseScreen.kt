@@ -3,26 +3,58 @@ package com.tnyx.features.workout.presentation.library.createexercise
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Accessibility
+import androidx.compose.material.icons.outlined.AccessibilityNew
+import androidx.compose.material.icons.outlined.FitnessCenter
+import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.PhotoCamera
-import androidx.compose.material3.*
+import androidx.compose.material.icons.outlined.Repeat
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.tnyx.core.theme.TnyxTheme
+import com.tnyx.core.theme.tokens.foundation.TnyxDimens
+import com.tnyx.core.R as CoreR
 import com.tnyx.core.ui.components.buttons.TnyxPrimaryButton
-
-private val AccentBlue = Color(0xFF3B82F6)
+import com.tnyx.features.workout.presentation.components.bodypart.BodyPartIconRegistry
+import com.tnyx.features.workout.presentation.components.bodypart.toMuscleRegionKey
+import com.tnyx.features.workout.presentation.library.createexercise.widgets.BodyPartSelectionBottomSheet
+import com.tnyx.features.workout.presentation.library.createexercise.widgets.CreateExerciseOptionRow
+import com.tnyx.features.workout.presentation.library.createexercise.widgets.EquipmentSelectionBottomSheet
+import com.tnyx.features.workout.presentation.library.createexercise.widgets.ExerciseTypeSelectionBottomSheet
+import com.tnyx.features.workout.presentation.library.createexercise.widgets.MuscleSelectionBottomSheet
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,8 +70,7 @@ fun CreateExerciseScreen(
                     Text(
                         text = "Create Exercise",
                         style = TnyxTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 18.sp
+                            fontWeight = FontWeight.Bold,
                         ),
                         color = TnyxTheme.colors.textPrimary,
                     )
@@ -58,7 +89,8 @@ fun CreateExerciseScreen(
                         text = "Save",
                         onPressed = { onAction(CreateExerciseAction.SaveClicked) },
                         enabled = !state.isSaving,
-                        height = 36.dp
+                        height = 36.dp,
+                        modifier = Modifier.padding(end = TnyxDimens.SpaceS)
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -74,196 +106,247 @@ fun CreateExerciseScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+                .padding(vertical = TnyxDimens.SpaceSM),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Hero Camera / Add Asset Section
-            Spacer(modifier = Modifier.height(12.dp))
+            val hasAsset = !state.assetUri.isNullOrBlank()
+            val assetLabel = if (hasAsset) "Replace Asset" else "Add Asset"
+
+            Spacer(modifier = Modifier.height(TnyxDimens.SpaceM))
             Surface(
                 shape = CircleShape,
-                color = Color.Black,
-                border = BorderStroke(1.dp, TnyxTheme.colors.textPrimary.copy(alpha = 0.2f)),
+                color = TnyxTheme.colors.surfaceVariant,
+                border = BorderStroke(TnyxDimens.BorderSubtle, TnyxTheme.colors.textSecondary.copy(alpha = 0.25f)),
                 modifier = Modifier
                     .size(110.dp)
                     .clickable { onAction(CreateExerciseAction.AddAssetClicked) }
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Outlined.PhotoCamera,
-                        contentDescription = "Camera",
-                        tint = TnyxTheme.colors.textPrimary,
-                        modifier = Modifier.size(32.dp)
-                    )
+                    if (hasAsset) {
+                        AsyncImage(
+                            model = state.assetUri,
+                            contentDescription = "Asset Preview",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Icon(
+                            painter = painterResource(id = CoreR.drawable.ic_camera),
+                            contentDescription = "Camera",
+                            tint = TnyxTheme.colors.textSecondary,
+                            modifier = Modifier.size(TnyxDimens.IconM)
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(TnyxDimens.SpaceSM))
 
             Text(
-                text = "Add Asset",
-                style = TnyxTheme.typography.labelLarge.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    color = AccentBlue
+                text = assetLabel,
+                style = TnyxTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.Medium,
+                    color = TnyxTheme.colors.accent
                 ),
                 modifier = Modifier.clickable { onAction(CreateExerciseAction.AddAssetClicked) }
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(TnyxDimens.SpaceXL))
 
-            // Exercise Name Field
-            OutlinedTextField(
-                value = state.exerciseName,
-                onValueChange = { onAction(CreateExerciseAction.NameChanged(it)) },
-                placeholder = {
-                    Text(
-                        text = "Exercise Name",
-                        style = TnyxTheme.typography.bodyLarge,
-                        color = TnyxTheme.colors.textSecondary.copy(alpha = 0.6f)
-                    )
-                },
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    focusedTextColor = TnyxTheme.colors.textPrimary,
-                    unfocusedTextColor = TnyxTheme.colors.textPrimary,
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
+            // Basic Exercise Info Section (Flat Layout)
+            Column(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = state.exerciseName,
+                    onValueChange = { onAction(CreateExerciseAction.NameChanged(it)) },
+                    placeholder = {
+                        Text(
+                            text = "Exercise Name",
+                            style = TnyxTheme.typography.bodyLarge,
+                            color = TnyxTheme.colors.textSecondary.copy(alpha = 0.6f)
+                        )
+                    },
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedTextColor = TnyxTheme.colors.textPrimary,
+                        unfocusedTextColor = TnyxTheme.colors.textPrimary,
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = TnyxDimens.SpaceM)
+                )
 
-            HorizontalDivider(
-                color = TnyxTheme.colors.textPrimary.copy(alpha = 0.12f),
-                thickness = 1.dp
-            )
+                HorizontalDivider(
+                    color = TnyxTheme.colors.textPrimary.copy(alpha = 0.12f),
+                    thickness = TnyxDimens.BorderThin
+                )
 
-            // Add Instruction (Optional) Field
-            OutlinedTextField(
-                value = state.instructions,
-                onValueChange = { onAction(CreateExerciseAction.InstructionsChanged(it)) },
-                placeholder = {
-                    Text(
-                        text = "Add instruction (optional)",
-                        style = TnyxTheme.typography.bodyLarge,
-                        color = TnyxTheme.colors.textSecondary.copy(alpha = 0.6f)
-                    )
-                },
-                singleLine = false,
-                maxLines = 3,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    focusedTextColor = TnyxTheme.colors.textPrimary,
-                    unfocusedTextColor = TnyxTheme.colors.textPrimary,
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
+                OutlinedTextField(
+                    value = state.instructions,
+                    onValueChange = { onAction(CreateExerciseAction.InstructionsChanged(it)) },
+                    placeholder = {
+                        Text(
+                            text = "Add instruction (optional)",
+                            style = TnyxTheme.typography.bodyLarge,
+                            color = TnyxTheme.colors.textSecondary.copy(alpha = 0.6f)
+                        )
+                    },
+                    singleLine = false,
+                    maxLines = 3,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedTextColor = TnyxTheme.colors.textPrimary,
+                        unfocusedTextColor = TnyxTheme.colors.textPrimary,
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = TnyxDimens.SpaceM)
+                )
 
-            HorizontalDivider(
-                color = TnyxTheme.colors.textPrimary.copy(alpha = 0.12f),
-                thickness = 1.dp
-            )
+                HorizontalDivider(
+                    color = TnyxTheme.colors.textPrimary.copy(alpha = 0.12f),
+                    thickness = TnyxDimens.BorderThin
+                )
+            }
 
-            // Equipment Selector Row (Optional)
-            CreateExerciseOptionRow(
-                title = "Equipment",
-                selectedText = state.equipment,
-                hasOptionalText = state.equipment.contains("optional"),
-                onClick = { onAction(CreateExerciseAction.EquipmentClicked) }
-            )
+            Spacer(modifier = Modifier.height(TnyxDimens.SpaceSM))
 
-            HorizontalDivider(
-                color = TnyxTheme.colors.textPrimary.copy(alpha = 0.12f),
-                thickness = 1.dp
-            )
+            // Categorization & Details Options Section (Flat Layout)
+            Column(modifier = Modifier.fillMaxWidth()) {
+                // Equipment Selector Row
+                CreateExerciseOptionRow(
+                    icon = Icons.Outlined.FitnessCenter,
+                    title = "Equipment",
+                    selectedText = state.equipment,
+                    hasOptionalText = state.equipment.contains("optional"),
+                    onClick = { onAction(CreateExerciseAction.EquipmentClicked) }
+                )
 
-            // Primary Muscle Group Row
-            CreateExerciseOptionRow(
-                title = "Primary Muscle Group",
-                selectedText = state.primaryMuscleGroup,
-                onClick = { onAction(CreateExerciseAction.PrimaryMuscleClicked) }
-            )
+                HorizontalDivider(
+                    color = TnyxTheme.colors.textPrimary.copy(alpha = 0.12f),
+                    thickness = TnyxDimens.BorderThin
+                )
 
-            HorizontalDivider(
-                color = TnyxTheme.colors.textPrimary.copy(alpha = 0.12f),
-                thickness = 1.dp
-            )
+                // Body Part Row (Optional)
+                CreateExerciseOptionRow(
+                    icon = Icons.Outlined.Accessibility,
+                    title = "Body Part",
+                    selectedText = state.bodyPart,
+                    hasOptionalText = state.bodyPart.contains("optional"),
+                    onClick = { onAction(CreateExerciseAction.BodyPartClicked) }
+                )
 
-            // Other Muscles Row (Optional)
-            CreateExerciseOptionRow(
-                title = "Other Muscles",
-                selectedText = state.otherMuscles,
-                hasOptionalText = state.otherMuscles.contains("optional"),
-                onClick = { onAction(CreateExerciseAction.OtherMusclesClicked) }
-            )
+                HorizontalDivider(
+                    color = TnyxTheme.colors.textPrimary.copy(alpha = 0.12f),
+                    thickness = TnyxDimens.BorderThin
+                )
 
-            HorizontalDivider(
-                color = TnyxTheme.colors.textPrimary.copy(alpha = 0.12f),
-                thickness = 1.dp
-            )
+                // Primary Muscle Group Row
+                CreateExerciseOptionRow(
+                    icon = Icons.Outlined.AccessibilityNew,
+                    title = "Primary Muscle Group",
+                    selectedText = state.primaryMuscleGroup,
+                    onClick = { onAction(CreateExerciseAction.PrimaryMuscleClicked) }
+                )
 
-            // Exercise Type Row
-            CreateExerciseOptionRow(
-                title = "Exercise Type",
-                selectedText = state.exerciseType,
-                onClick = { onAction(CreateExerciseAction.ExerciseTypeClicked) }
-            )
-        }
-    }
-}
+                HorizontalDivider(
+                    color = TnyxTheme.colors.textPrimary.copy(alpha = 0.12f),
+                    thickness = TnyxDimens.BorderThin
+                )
 
-@Composable
-private fun CreateExerciseOptionRow(
-    title: String,
-    selectedText: String,
-    hasOptionalText: Boolean = false,
-    onClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 16.dp, horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Column {
-            Text(
-                text = title,
-                style = TnyxTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                color = TnyxTheme.colors.textPrimary,
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            if (hasOptionalText) {
-                Row {
-                    Text(
-                        text = "Select ",
-                        style = TnyxTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                        color = AccentBlue,
-                    )
-                    Text(
-                        text = "(optional)",
-                        style = TnyxTheme.typography.bodySmall,
-                        color = TnyxTheme.colors.textSecondary,
-                    )
-                }
-            } else {
-                Text(
-                    text = selectedText,
-                    style = TnyxTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                    color = AccentBlue,
+                // Other Muscles Row (Optional)
+                CreateExerciseOptionRow(
+                    icon = Icons.Outlined.Layers,
+                    title = "Other Muscles",
+                    selectedText = state.otherMuscles,
+                    hasOptionalText = state.otherMuscles.contains("optional"),
+                    onClick = { onAction(CreateExerciseAction.OtherMusclesClicked) }
+                )
+
+                HorizontalDivider(
+                    color = TnyxTheme.colors.textPrimary.copy(alpha = 0.12f),
+                    thickness = TnyxDimens.BorderThin
+                )
+
+                // Exercise Type Row
+                CreateExerciseOptionRow(
+                    icon = Icons.Outlined.Repeat,
+                    title = "Exercise Type",
+                    selectedText = state.exerciseType,
+                    onClick = { onAction(CreateExerciseAction.ExerciseTypeClicked) }
+                )
+
+                HorizontalDivider(
+                    color = TnyxTheme.colors.textPrimary.copy(alpha = 0.12f),
+                    thickness = TnyxDimens.BorderThin
                 )
             }
         }
-
-        Icon(
-            imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-            contentDescription = "Select $title",
-            tint = TnyxTheme.colors.textSecondary,
-            modifier = Modifier.size(20.dp)
-        )
     }
+
+    // Derive body part filter for muscle sheet (supports multi-selected body parts)
+    val activeMuscleFilter = remember(state.bodyPart) {
+        if (state.bodyPart.isBlank() || state.bodyPart.contains("optional", ignoreCase = true) || state.bodyPart.equals("Select", ignoreCase = true)) {
+            null
+        } else {
+            state.bodyPart.split(",")
+                .mapNotNull { BodyPartIconRegistry.resolve(it.trim())?.toMuscleRegionKey() }
+                .distinct()
+                .joinToString(",")
+                .ifBlank { null }
+        }
+    }
+
+    // Equipment Selection Bottom Sheet
+    EquipmentSelectionBottomSheet(
+        visible = state.showEquipmentBottomSheet,
+        selectedEquipment = state.equipment,
+        onEquipmentSelected = { onAction(CreateExerciseAction.EquipmentSelected(it)) },
+        onDismissRequest = { onAction(CreateExerciseAction.EquipmentBottomSheetDismissed) }
+    )
+
+    // Body Part Selection Bottom Sheet
+    BodyPartSelectionBottomSheet(
+        visible = state.showBodyPartBottomSheet,
+        selectedBodyPart = state.bodyPart,
+        onBodyPartSelected = { onAction(CreateExerciseAction.BodyPartSelected(it)) },
+        onDismissRequest = { onAction(CreateExerciseAction.BodyPartBottomSheetDismissed) }
+    )
+
+    // Primary Muscle Group Selection Bottom Sheet
+    MuscleSelectionBottomSheet(
+        visible = state.showPrimaryMuscleBottomSheet,
+        title = if (activeMuscleFilter != null) "Select Primary Muscles" else "Select Primary Muscle Group",
+        selectedMuscle = state.primaryMuscleGroup,
+        isMultiSelect = true,
+        bodyPartFilter = activeMuscleFilter,
+        onMuscleSelected = { onAction(CreateExerciseAction.PrimaryMuscleSelected(it)) },
+        onDismissRequest = { onAction(CreateExerciseAction.PrimaryMuscleBottomSheetDismissed) }
+    )
+
+    // Other Muscles Selection Bottom Sheet (secondary blue tint)
+    MuscleSelectionBottomSheet(
+        visible = state.showOtherMusclesBottomSheet,
+        title = "Select Other Muscles",
+        selectedMuscle = state.otherMuscles,
+        isMultiSelect = true,
+        isSecondarySheet = true,
+        onMuscleSelected = { onAction(CreateExerciseAction.OtherMusclesSelected(it)) },
+        onDismissRequest = { onAction(CreateExerciseAction.OtherMusclesBottomSheetDismissed) }
+    )
+
+    // Exercise Type Selection Bottom Sheet
+    ExerciseTypeSelectionBottomSheet(
+        visible = state.showExerciseTypeBottomSheet,
+        selectedExerciseType = state.exerciseType,
+        onExerciseTypeSelected = { onAction(CreateExerciseAction.ExerciseTypeSelected(it)) },
+        onDismissRequest = { onAction(CreateExerciseAction.ExerciseTypeBottomSheetDismissed) }
+    )
 }

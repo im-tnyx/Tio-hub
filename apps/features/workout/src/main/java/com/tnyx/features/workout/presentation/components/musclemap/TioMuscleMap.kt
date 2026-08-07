@@ -8,7 +8,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -19,6 +23,20 @@ import com.tnyx.shared.workout.domain.model.ExerciseMediaVariant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+/** Default secondary muscle highlight tint color (Vibrant Sky Blue #38BDF8 for high contrast). */
+val DefaultSecondaryMuscleColor = Color(0xFF38BDF8)
+
+/**
+ * Render a layered anatomical muscle map with support for primary and secondary highlighted muscles.
+ *
+ * @param muscleGroups      Primary highlighted muscle keys or aliases.
+ * @param secondaryMuscles  Secondary highlighted muscle keys or aliases (tinted with [secondaryColor]).
+ * @param variant           Gender variant ([ExerciseMediaVariant.MALE] or [ExerciseMediaVariant.FEMALE]).
+ * @param view              Side of body to render ([MuscleMapView.FRONT] or [MuscleMapView.BACK]).
+ * @param contentDescription Accessibility description.
+ * @param primaryColor      Optional custom tint for primary muscles (null = original red webp asset).
+ * @param secondaryColor    Tint color for secondary muscles (default: Lyfta blue #0C6FFF).
+ */
 @Composable
 fun TioMuscleMap(
     muscleGroups: Iterable<String>,
@@ -26,33 +44,91 @@ fun TioMuscleMap(
     view: MuscleMapView,
     contentDescription: String?,
     modifier: Modifier = Modifier,
+    secondaryMuscles: Iterable<String> = emptyList(),
+    primaryColor: Color? = null,
+    secondaryColor: Color = DefaultSecondaryMuscleColor,
+    contentScale: ContentScale = ContentScale.FillBounds,
+    alignment: Alignment = Alignment.Center,
 ) {
-    val layerSet = MuscleMapAssetRegistry.resolve(
+    val primaryLayerSet = MuscleMapAssetRegistry.resolve(
         rawMuscleGroups = muscleGroups,
         variant = variant,
     )
-    val assetNames = layerSet?.assetsFor(view).orEmpty()
-    val bitmaps by rememberAssetBitmaps(assetNames)
-    val loadedLayers = bitmaps
+    val secondaryLayerSet = MuscleMapAssetRegistry.resolve(
+        rawMuscleGroups = secondaryMuscles,
+        variant = variant,
+    )
 
-    if (assetNames.isEmpty() || loadedLayers == null || loadedLayers.firstOrNull() == null) {
+    val baseAsset = when (variant) {
+        ExerciseMediaVariant.MALE -> if (view == MuscleMapView.FRONT) "front_grey_body_male.webp" else "back_body_male.webp"
+        ExerciseMediaVariant.FEMALE -> if (view == MuscleMapView.FRONT) "front_grey_body_female.webp" else "back_body_female.webp"
+        ExerciseMediaVariant.NEUTRAL -> "front_grey_body_male.webp"
+    }
+
+    val primaryOverlays = when (view) {
+        MuscleMapView.FRONT -> primaryLayerSet?.frontOverlayAssets.orEmpty()
+        MuscleMapView.BACK -> primaryLayerSet?.backOverlayAssets.orEmpty()
+    }
+
+    val secondaryOverlays = when (view) {
+        MuscleMapView.FRONT -> secondaryLayerSet?.frontOverlayAssets.orEmpty()
+        MuscleMapView.BACK -> secondaryLayerSet?.backOverlayAssets.orEmpty()
+    }.filter { it !in primaryOverlays } // Primary takes precedence over secondary
+
+    val allAssetsToLoad = listOf(baseAsset) + primaryOverlays + secondaryOverlays
+    val bitmaps by rememberAssetBitmaps(allAssetsToLoad)
+    val loadedMap = bitmaps
+
+    if (loadedMap == null || loadedMap[baseAsset] == null) {
         Image(
             painter = painterResource(R.drawable.tio_body_part_placeholder),
             contentDescription = contentDescription,
             modifier = modifier,
             contentScale = ContentScale.Fit,
+            alignment = alignment,
         )
         return
     }
 
     Box(modifier = modifier) {
-        loadedLayers.forEachIndexed { index, bitmap ->
-            if (bitmap != null) {
+        // 1. Render Base Grey Body (0.45f opacity)
+        loadedMap[baseAsset]?.let { baseBitmap ->
+            Image(
+                bitmap = baseBitmap,
+                contentDescription = contentDescription,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = contentScale,
+                alignment = alignment,
+                alpha = 0.45f,
+            )
+        }
+
+        // 2. Render Secondary Overlays (Tinted with secondaryColor preserving muscle detail lines)
+        secondaryOverlays.forEach { assetName ->
+            loadedMap[assetName]?.let { overlayBitmap ->
                 Image(
-                    bitmap = bitmap,
-                    contentDescription = contentDescription.takeIf { index == 0 },
+                    bitmap = overlayBitmap,
+                    contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.FillBounds,
+                    contentScale = contentScale,
+                    alignment = alignment,
+                    colorFilter = ColorFilter.tint(secondaryColor, BlendMode.Modulate),
+                    alpha = 1.0f,
+                )
+            }
+        }
+
+        // 3. Render Primary Overlays (Red asset / primaryColor tint preserving muscle detail lines)
+        primaryOverlays.forEach { assetName ->
+            loadedMap[assetName]?.let { overlayBitmap ->
+                Image(
+                    bitmap = overlayBitmap,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = contentScale,
+                    alignment = alignment,
+                    colorFilter = primaryColor?.let { ColorFilter.tint(it, BlendMode.Modulate) },
+                    alpha = 1.0f,
                 )
             }
         }
@@ -60,7 +136,7 @@ fun TioMuscleMap(
 }
 
 @Composable
-private fun rememberAssetBitmaps(assetNames: List<String>): State<List<ImageBitmap?>?> {
+private fun rememberAssetBitmaps(assetNames: List<String>): State<Map<String, ImageBitmap?>?> {
     val assetManager = LocalContext.current.applicationContext.assets
     return produceState(
         initialValue = null,
@@ -68,16 +144,23 @@ private fun rememberAssetBitmaps(assetNames: List<String>): State<List<ImageBitm
         key2 = assetManager,
     ) {
         if (assetNames.isEmpty()) {
-            value = emptyList()
+            value = emptyMap()
             return@produceState
         }
         value = withContext(Dispatchers.IO) {
-            assetNames.map { assetName ->
+            assetNames.distinct().associateWith { assetName ->
                 runCatching {
-                    assetManager.open(assetName).use { stream ->
+                    val path = if (assetName.contains("/")) assetName else "musclemap/$assetName"
+                    assetManager.open(path).use { stream ->
                         BitmapFactory.decodeStream(stream)?.asImageBitmap()
                     }
-                }.getOrNull()
+                }.getOrElse {
+                    runCatching {
+                        assetManager.open(assetName).use { stream ->
+                            BitmapFactory.decodeStream(stream)?.asImageBitmap()
+                        }
+                    }.getOrNull()
+                }
             }
         }
     }

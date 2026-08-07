@@ -79,3 +79,6 @@ apps/assets/*
 apps/assets/final/*
 !apps/assets/final/musclemap/
 !apps/assets/final/musclemap/**
+
+# Temporary smoke test / inspection outputs
+device-smoke/

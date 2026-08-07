@@ -35,6 +35,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tnyx.core.R as CoreR
 import com.tnyx.core.theme.TnyxTheme
 import com.tnyx.features.nutrition.R
 import kotlin.math.PI
@@ -110,7 +111,7 @@ fun ExpandableMealFab(
         // ── Sub-action: Camera (directly above) ───────────────────────────
         AnimatedSubFab(
             isExpanded = isExpanded,
-            drawableResId = R.drawable.ic_camera,
+            drawableResId = CoreR.drawable.ic_camera,
             contentDescription = "Add meal by photo",
             targetOffsetX = 0.dp,
             targetOffsetY = -TRAVEL_DISTANCE,

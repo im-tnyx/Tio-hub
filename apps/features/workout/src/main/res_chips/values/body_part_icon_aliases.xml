@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- मांसपेशियों के आइकन्स के लिए आसान नाम (Aliases for easy access) -->
+    <!-- Body Part Chip Icon Aliases -->
     <drawable name="ic_body_part_abs">@drawable/chip_abs</drawable>
     <drawable name="ic_body_part_back">@drawable/chip_back</drawable>
     <drawable name="ic_body_part_biceps">@drawable/chip_biceps</drawable>
@@ -13,8 +13,6 @@
     <drawable name="ic_body_part_quadriceps">@drawable/chip_quadriceps</drawable>
     <drawable name="ic_body_part_shoulders">@drawable/chip_shoulders</drawable>
     <drawable name="ic_body_part_triceps">@drawable/chip_triceps</drawable>
-
-    <!-- विशेष गतिविधियों के आइकन्स (Special activity icons) -->
     <drawable name="ic_body_part_cardio">@drawable/ic_chip_cardio</drawable>
     <drawable name="ic_body_part_stretching">@drawable/ic_chip_streatching</drawable>
 </resources>

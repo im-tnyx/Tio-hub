@@ -1,7 +1,9 @@
-﻿package com.tnyx.core.ui.components.cards
+package com.tnyx.core.ui.components.cards
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,29 +29,35 @@ enum class TnyxCardVariant {
 
 /**
  * Tnyx Standard Card.
- * Support for onClick and custom padding added for high reusability.
+ * Support for onClick, onLongClick and custom padding added for high reusability.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TnyxCard(
     modifier: Modifier = Modifier,
     variant: TnyxCardVariant = TnyxCardVariant.Surface,
     shape: Shape? = null,
     padding: Dp? = null, // Custom padding support
+    containerColor: Color? = null,
+    borderColor: Color? = null,
+    borderWidth: Dp? = null,
     onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     val tokens = TnyxTheme.components.card
     val finalShape = shape ?: RoundedCornerShape(tokens.cornerRadius)
     val finalPadding = padding ?: tokens.contentPadding
+    val finalBorderWidth = borderWidth ?: tokens.borderWidth
 
-    val backgroundColor = when {
-        variant == TnyxCardVariant.Glass -> tokens.glassContainerColor
-        variant == TnyxCardVariant.Normal -> tokens.normalContainerColor
-        variant == TnyxCardVariant.Outlined -> Color.Transparent
+    val backgroundColor = containerColor ?: when (variant) {
+        TnyxCardVariant.Glass -> tokens.glassContainerColor
+        TnyxCardVariant.Normal -> tokens.normalContainerColor
+        TnyxCardVariant.Outlined -> Color.Transparent
         else -> tokens.containerColor
     }
 
-    val borderColor = when (variant) {
+    val finalBorderColor = borderColor ?: when (variant) {
         TnyxCardVariant.Glass -> tokens.glassBorderColor
         TnyxCardVariant.Outlined -> tokens.outlinedBorderColor
         TnyxCardVariant.Normal -> Color.Transparent
@@ -58,14 +66,21 @@ fun TnyxCard(
 
     val cardModifier = modifier
         .then(if (variant == TnyxCardVariant.Elevated) Modifier.tnyxShadow(TnyxTheme.shadows.Subtle) else Modifier)
-        .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
+        .then(
+            if (onClick != null || onLongClick != null) {
+                Modifier.combinedClickable(
+                    onClick = { onClick?.invoke() },
+                    onLongClick = { onLongClick?.invoke() }
+                )
+            } else Modifier
+        )
 
     Surface(
         modifier = cardModifier,
         shape = finalShape,
         color = backgroundColor,
         contentColor = TnyxTheme.colors.textPrimary,
-        border = BorderStroke(tokens.borderWidth, borderColor),
+        border = BorderStroke(finalBorderWidth, finalBorderColor),
         shadowElevation = if (variant == TnyxCardVariant.Elevated) tokens.elevation else TnyxTheme.elevation.None,
         tonalElevation = TnyxTheme.elevation.None
     ) {

@@ -26,7 +26,8 @@ object TnyxPalette {
     val Neutral950 = Color(0xFF121212)
 
     // Domain Primitives (Fixed values for visualization)
-    val Blue = Color(0xFF3B82F6)
+    val Blue = Color(0xFF0C6FFF)
+    val ElectricBlue = Color(0xFF0C6FFF)
     val Amber = Color(0xFFF59E0B)
     val Emerald = Color(0xFF10B981)
     val Indigo = Color(0xFF6366F1)

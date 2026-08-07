@@ -1,4 +1,4 @@
-﻿package com.tnyx.core.ui.components.sheets
+package com.tnyx.core.ui.components.sheets
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -15,7 +15,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tnyx.core.theme.TnyxTheme
+
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
 
 /**
  * Tnyx reusable modal bottom sheet.
@@ -31,6 +36,8 @@ fun TnyxModalBottomSheet(
     showDivider: Boolean = true,
     skipPartiallyExpanded: Boolean = true,
     contentBottomPadding: Dp? = null,
+    /** Override horizontal padding for edge-to-edge content (e.g. full-width lists). Defaults to tokens value. */
+    contentHorizontalPadding: Dp? = null,
     dragHandle: @Composable (() -> Unit)? = { BottomSheetDefaults.DragHandle() },
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -43,35 +50,39 @@ fun TnyxModalBottomSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
-        modifier = modifier,
+        modifier = modifier.statusBarsPadding(),
         sheetState = sheetState,
         shape = tokens.shape,
         containerColor = tokens.containerColor,
         contentColor = tokens.contentColor,
         scrimColor = tokens.scrimColor,
         tonalElevation = TnyxTheme.elevation.None,
-        dragHandle = dragHandle
+        dragHandle = dragHandle,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(horizontal = tokens.horizontalPadding)
+                .padding(horizontal = contentHorizontalPadding ?: tokens.horizontalPadding)
                 .padding(bottom = contentBottomPadding ?: tokens.bottomPadding)
         ) {
             if (!title.isNullOrBlank()) {
+                // When content is edge-to-edge (contentHorizontalPadding=0), title still needs
+                // standard horizontal padding so it is never flush against the screen edge.
+                val titleHorizontalPadding = if (contentHorizontalPadding != null) tokens.horizontalPadding else 0.dp
                 Text(
                     text = title,
                     style = tokens.titleStyle ?: TnyxTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = tokens.contentColor,
-                    modifier = Modifier.padding(bottom = TnyxTheme.dimens.SpaceM)
+                    modifier = Modifier
+                        .padding(horizontal = titleHorizontalPadding)
+                        .padding(bottom = TnyxTheme.dimens.SpaceS)
                 )
                 if (showDivider) {
                     HorizontalDivider(
-                        color = tokens.dividerColor,
-                        thickness = TnyxTheme.dimens.BorderThin,
-                        modifier = Modifier.padding(bottom = TnyxTheme.dimens.SpaceM)
+                        color = tokens.dividerColor.copy(alpha = 0.12f),
+                        thickness = 1.dp,
                     )
                 }
             }

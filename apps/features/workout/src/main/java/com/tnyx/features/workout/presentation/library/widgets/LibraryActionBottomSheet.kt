@@ -1,7 +1,16 @@
 package com.tnyx.features.workout.presentation.library.widgets
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Assignment
@@ -17,8 +26,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tnyx.core.theme.TnyxTheme
+import com.tnyx.core.theme.tokens.foundation.TnyxDimens
 import com.tnyx.core.ui.components.sheets.TnyxModalBottomSheet
 
+/**
+ * Creation options bottom sheet triggered by (+) icon in Exercise Library screen.
+ * Refactored for edge-to-edge row selection, zero extra bottom padding, and TnyxDimens tokens.
+ */
 @Composable
 fun LibraryActionBottomSheet(
     visible: Boolean,
@@ -32,13 +46,15 @@ fun LibraryActionBottomSheet(
         visible = visible,
         onDismissRequest = onDismissRequest,
         showDivider = false,
+        contentHorizontalPadding = 0.dp,
+        contentBottomPadding = TnyxDimens.SpaceXS,
         modifier = modifier
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(vertical = TnyxDimens.SpaceXXS),
+            verticalArrangement = Arrangement.spacedBy(TnyxDimens.SpaceXXS)
         ) {
             // Program Option
             LibraryActionRowItem(
@@ -88,34 +104,34 @@ private fun LibraryActionRowItem(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = 8.dp, horizontal = 4.dp),
+            .padding(vertical = TnyxDimens.SpaceSM, horizontal = TnyxDimens.SpaceM),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Circular Dark Container for Icon
         Surface(
             shape = CircleShape,
             color = TnyxTheme.colors.surfaceVariant,
-            modifier = Modifier.size(56.dp)
+            modifier = Modifier.size(48.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                     tint = TnyxTheme.colors.textPrimary,
-                    modifier = Modifier.size(26.dp)
+                    modifier = Modifier.size(TnyxDimens.IconM)
                 )
             }
         }
 
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(TnyxDimens.SpaceM))
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                style = TnyxTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                style = TnyxTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 color = TnyxTheme.colors.textPrimary,
             )
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(TnyxDimens.SpaceXXS))
             Text(
                 text = subtitle,
                 style = TnyxTheme.typography.bodyMedium,

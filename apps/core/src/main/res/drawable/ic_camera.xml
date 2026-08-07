@@ -1,0 +1,24 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="40dp"
+    android:height="40dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+  <!-- Outer camera body with top rounded bump -->
+  <path
+      android:fillColor="#00000000"
+      android:strokeColor="#FFFFFFFF"
+      android:strokeWidth="28"
+      android:strokeLineCap="round"
+      android:strokeLineJoin="round"
+      android:pathData="M165,112 L200,64 C206,56 216,48 228,48 L284,48 C296,48 306,56 312,64 L347,112 L416,112 C446,112 470,136 470,166 L470,410 C470,440 446,464 416,464 L96,464 C66,464 42,440 42,410 L42,166 C42,136 66,112 96,112 Z"/>
+  <!-- Large center lens ring -->
+  <path
+      android:fillColor="#00000000"
+      android:strokeColor="#FFFFFFFF"
+      android:strokeWidth="28"
+      android:pathData="M256,288m-112,0a112,112 0 1,0 224,0a112,112 0 1,0 -224,0"/>
+  <!-- Top right small sensor dot -->
+  <path
+      android:fillColor="#FFFFFFFF"
+      android:pathData="M400,180m-16,0a16,16 0 1,0 32,0a16,16 0 1,0 -32,0"/>
+</vector>

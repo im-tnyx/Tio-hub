@@ -36,9 +36,6 @@ android {
                 "src/main/res-images",
             )
         }
-        getByName("debug") {
-            assets.srcDir("../../assets/final/musclemap")
-        }
     }
 }
 
@@ -56,6 +53,7 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.coil.compose)
     implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.junit)

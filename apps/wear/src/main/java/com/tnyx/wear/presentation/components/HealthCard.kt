@@ -9,8 +9,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
+import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.Text
 import com.tnyx.wear.theme.CardBackground
 import com.tnyx.wear.theme.TextGray
@@ -23,7 +25,8 @@ fun HealthCard(
     title: String,
     valueText: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    iconTint: Color? = null
 ) {
     Row(
         modifier = modifier
@@ -35,11 +38,20 @@ fun HealthCard(
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
-            painter = icon,
-            contentDescription = title,
-            modifier = Modifier.size(32.dp)
-        )
+        if (iconTint != null) {
+            Icon(
+                painter = icon,
+                contentDescription = title,
+                tint = iconTint,
+                modifier = Modifier.size(32.dp)
+            )
+        } else {
+            Image(
+                painter = icon,
+                contentDescription = title,
+                modifier = Modifier.size(32.dp)
+            )
+        }
         
         Spacer(modifier = Modifier.width(10.dp))
         
@@ -61,3 +73,4 @@ fun HealthCard(
         }
     }
 }
+

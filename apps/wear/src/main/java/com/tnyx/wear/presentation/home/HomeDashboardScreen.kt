@@ -20,6 +20,9 @@ import com.google.android.horologist.compose.layout.ScreenScaffold
 import com.google.android.horologist.compose.layout.rememberColumnState
 import com.tnyx.wear.R
 import com.tnyx.wear.presentation.components.HealthCard
+import com.tnyx.wear.theme.ColorDailyActivity
+import com.tnyx.wear.theme.ColorSteps
+import com.tnyx.wear.theme.ColorWater
 import com.tnyx.wear.theme.WearTypography
 
 @OptIn(ExperimentalHorologistApi::class)
@@ -62,7 +65,8 @@ fun HomeDashboardScreen(
                     icon = painterResource(id = R.drawable.ic_routine),
                     title = "Exercise",
                     valueText = "Work out",
-                    onClick = onNavigateToWorkout
+                    onClick = onNavigateToWorkout,
+                    iconTint = ColorSteps
                 )
             }
             
@@ -72,17 +76,30 @@ fun HomeDashboardScreen(
                     icon = painterResource(id = R.drawable.ic_workout),
                     title = "Workouts this week",
                     valueText = "3 times",
-                    onClick = onNavigateToHistory
+                    onClick = onNavigateToHistory,
+                    iconTint = ColorSteps
                 )
             }
             
-            // 3. Daily Summary Card
+            // 3. Daily Summary Info Card
             item {
                 HealthCard(
                     icon = painterResource(id = R.drawable.ic_summary),
                     title = "Daily Summary",
                     valueText = dailyCalories,
-                    onClick = onNavigateToSummary
+                    onClick = {},
+                    iconTint = ColorDailyActivity
+                )
+            }
+
+            // 3b. View Summary Card
+            item {
+                HealthCard(
+                    icon = painterResource(id = R.drawable.ic_view_summary),
+                    title = "View Summary",
+                    valueText = "Daily Overview",
+                    onClick = onNavigateToSummary,
+                    iconTint = ColorDailyActivity
                 )
             }
             
@@ -92,7 +109,8 @@ fun HomeDashboardScreen(
                     icon = painterResource(id = R.drawable.ic_food),
                     title = "Nutrition Log",
                     valueText = nutritionCalories,
-                    onClick = onNavigateToNutrition
+                    onClick = onNavigateToNutrition,
+                    iconTint = ColorWater
                 )
             }
             
@@ -102,7 +120,8 @@ fun HomeDashboardScreen(
                     icon = painterResource(id = R.drawable.ic_add),
                     title = "Add Food",
                     valueText = "Log calories",
-                    onClick = onNavigateToAddFood
+                    onClick = onNavigateToAddFood,
+                    iconTint = ColorDailyActivity
                 )
             }
             
@@ -112,11 +131,12 @@ fun HomeDashboardScreen(
                     icon = painterResource(id = R.drawable.ic_water),
                     title = "Add Water",
                     valueText = "Log cups",
-                    onClick = onNavigateToAddWater
+                    onClick = onNavigateToAddWater,
+                    iconTint = ColorWater
                 )
             }
             
-            // 7. Settings Shortcut Button (Samsung style: centered pill button, height 40dp, width 140dp)
+            // 7. Settings Shortcut Button (TNYX Wear centered pill button)
             item {
                 Box(
                     modifier = Modifier

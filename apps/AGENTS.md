@@ -31,6 +31,17 @@ Before creating or materially changing any Compose screen:
 
 A screen review is incomplete until it confirms that no existing core component or token was unnecessarily duplicated.
 
+### Reference UI Adaptation Gate
+
+When a task includes a reference file, screenshot, image, mockup, external app, decompiled screen, or URL:
+
+1. Use the reference only to understand the requested content, information hierarchy, states, flow, and interaction intent.
+2. Treat the checked-in Tio/TNYX design system as the only visual authority. Implement the result with `TnyxTheme` and existing `Tnyx*` components even when the reference looks different.
+3. Do not pixel-copy or import the reference's colors, typography, spacing, shapes, shadows, icons, illustrations, branding, animations, or component styling.
+4. Map each relevant reference element to an existing project token or component before implementation. If no equivalent exists, follow the core-versus-feature ownership rules instead of creating a feature-local visual imitation.
+5. Do not add a reference image or asset to runtime source unless the user explicitly requests that exact asset and its provenance, licence, and product ownership are cleared.
+6. When reference styling conflicts with the current project, preserve the current project UI and report the intentional difference.
+
 ## 3. Navigation (Source: NAVIGATION_GUIDE.md)
 - **Type-Safety:** केवल `@Serializable` रूट्स का उपयोग करें।
 - **Detection Logic:** Navigation 2.8.5+ के लिए हमेशा `it.hasRoute(Class::class)` जैसे Explicit Class checks का उपयोग करें ताकि Nested Graphs में डिटेक्शन फेल न हो।
@@ -47,5 +58,5 @@ A screen review is incomplete until it confirms that no existing core component 
 
 ---
 
-*Last Updated: 2026-07-16*
+*Last Updated: 2026-08-02*
 *Maintainer: TNYX Lead Architect*

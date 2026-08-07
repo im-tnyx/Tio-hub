@@ -7,13 +7,13 @@
 
 ## Primary Objective
 
-Audit and refine the Android Onboarding flow (`apps/features/onboarding/`) according to `ONBOARDING_FLOW_DETAILED.md` and `ONBOARDING_ARCHITECTURE.md`, ensuring all onboarding steps, step transitions, state persistence, design system UI alignment, and target calculations operate smoothly without crashes or broken state transitions.
+Audit and refine the Android Onboarding flow (`apps/features/onboarding/`) using `ONBOARDING_FLOW_DETAILED.md` and `ONBOARDING_ARCHITECTURE.md` as flow, behavior, and architecture requirements. Render all UI through the checked-in Tio/TNYX design system; reference files or images do not override `TnyxTheme`, existing core components, or product-owned visual styling. Ensure all onboarding steps, step transitions, state persistence, design system UI alignment, and target calculations operate smoothly without crashes or broken state transitions.
 
 ## Key Focus Areas
 
 1. **Step Sequence & Navigation Audit**: Verify all onboarding steps (Welcome, Goal, Experience, Gender, DOB, Height, Weight, Activity, Targets Review, etc.) transition cleanly.
 2. **State & Draft Persistence**: Ensure user selections are saved correctly to draft and Supabase profile repository.
-3. **UI/Design System Parity**: Check that all onboarding screens use `TnyxTheme` tokens, `TnyxTextField`, `TnyxPrimaryButton`, and core design system components.
+3. **UI/Design System Parity**: Check that all onboarding screens use `TnyxTheme` tokens, `TnyxTextField`, `TnyxPrimaryButton`, and core design system components. Treat screenshots, images, mockups, and other visual references as structural or behavioral guidance only; do not copy their visual theme.
 4. **Validation & Edge Cases**: Validate input bounds (Height, Weight, Target Weight, Target Date, DOB) and smooth next/back button behavior.
 
 ## Key Checkpoints
@@ -58,3 +58,10 @@ Audit and refine the Android Onboarding flow (`apps/features/onboarding/`) accor
 - Validation passed: `:features:onboarding:test` and `:app:assembleDebug`.
   The verified APK was reinstalled over the connected test device without
   clearing app data and launched to Home without a crash.
+
+## 2026-08-02 Checkpoint
+
+- Clarified the reference adaptation boundary: onboarding documents and any
+  supplied files or images guide content, hierarchy, behavior, and flow only.
+  Runtime UI must continue to use the current Tio/TNYX theme, core components,
+  and product-owned visual language rather than copying reference styling.

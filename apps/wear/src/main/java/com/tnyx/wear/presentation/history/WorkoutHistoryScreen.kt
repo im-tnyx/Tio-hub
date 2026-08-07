@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.Text
 import coil.compose.rememberAsyncImagePainter
 import com.google.android.horologist.annotations.ExperimentalHorologistApi
+import com.tnyx.wear.theme.TextWhite
 import com.google.android.horologist.compose.layout.ScalingLazyColumn
 import com.google.android.horologist.compose.layout.ScreenScaffold
 import com.google.android.horologist.compose.layout.rememberColumnState
@@ -316,7 +317,7 @@ fun WorkoutCard(
             modifier = Modifier
                 .size(32.dp)
                 .clip(androidx.compose.foundation.shape.CircleShape)
-                .background(androidx.compose.ui.graphics.Color.White)
+                .background(TextWhite)
                 .padding(2.dp),
             contentScale = androidx.compose.ui.layout.ContentScale.Fit
         )

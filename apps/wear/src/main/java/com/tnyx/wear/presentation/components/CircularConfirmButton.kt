@@ -6,31 +6,34 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.painterResource
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
-import androidx.wear.compose.material.Text
+import androidx.wear.compose.material.Icon
+import com.tnyx.wear.R
 import com.tnyx.wear.theme.GreenConfirm
+import com.tnyx.wear.theme.TextWhite
 
 @Composable
 fun CircularConfirmButton(
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Button(
         onClick = onClick,
+        enabled = enabled,
         colors = ButtonDefaults.primaryButtonColors(
             backgroundColor = GreenConfirm,
-            contentColor = Color.White
+            contentColor = TextWhite
         ),
         modifier = modifier.size(46.dp)
     ) {
-        // Fallback to text checkmark if vector icons aren't imported
-        Text(
-            text = "✓",
-            style = androidx.compose.ui.text.TextStyle(
-                fontSize = 20.sp,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-            )
+        Icon(
+            painter = painterResource(id = R.drawable.ic_checkmark),
+            contentDescription = "Confirm",
+            modifier = Modifier.size(22.dp),
+            tint = TextWhite
         )
     }
 }

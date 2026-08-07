@@ -53,6 +53,11 @@ Keep feature semantics in the owning feature. A component may move to `apps/core
 ## Reference And Provenance Rules
 
 - `design/references/` is reference material, not product-owned runtime source.
+- Any user-provided file, screenshot, image, mockup, decompiled screen, external app, or URL is a reference for requested content, information hierarchy, behavior, and interaction intent only. It is not visual-theme authority for this repository.
+- Render every referenced concept through the current Tio design language: reuse `TnyxTheme` tokens, existing `Tnyx*` components, current navigation/architecture contracts, and product-owned assets.
+- Do not copy a reference's branding, colors, typography, spacing scale, shapes, shadows, icons, illustrations, animations, or component styling into runtime UI. If the reference conflicts with the checked-in design system, the current project design system wins and the difference must be reported.
+- Before implementing reference-driven UI, map the relevant reference elements to existing project tokens and components. Add or extend a design-system primitive only when the current project genuinely needs it; do not create a one-off imitation of the reference.
+- A reference asset may enter runtime source only when the user explicitly requests that asset and its provenance, licence, and product ownership are cleared.
 - Decompiled apps may explain behavior and UX patterns, but must not be copied as architecture or implementation source.
 - Do not ship copied third-party code, datasets, media, body maps, branding, strings, or remote asset dependencies without explicit provenance and licence clearance.
 - Product concepts may be independently implemented using Tio contracts, design system, and security boundaries.

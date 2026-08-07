@@ -72,7 +72,24 @@ class MealDiaryViewModel @Inject constructor(
                     _effect.emit(MealDiaryEffect.NavigateToSearch(_uiState.value.selectedDate))
                 }
             }
-
+            MealDiaryAction.OptionsMenuToggled -> {
+                _uiState.update { it.copy(isOptionsMenuExpanded = !it.isOptionsMenuExpanded) }
+            }
+            MealDiaryAction.OptionsMenuDismissed -> {
+                _uiState.update { it.copy(isOptionsMenuExpanded = false) }
+            }
+            MealDiaryAction.NutritionSettingsClicked -> {
+                _uiState.update { it.copy(isOptionsMenuExpanded = false) }
+                viewModelScope.launch {
+                    _effect.emit(MealDiaryEffect.NavigateToNutritionSettings)
+                }
+            }
+            MealDiaryAction.AppSettingsClicked -> {
+                _uiState.update { it.copy(isOptionsMenuExpanded = false) }
+                viewModelScope.launch {
+                    _effect.emit(MealDiaryEffect.NavigateToAppSettings)
+                }
+            }
         }
     }
 

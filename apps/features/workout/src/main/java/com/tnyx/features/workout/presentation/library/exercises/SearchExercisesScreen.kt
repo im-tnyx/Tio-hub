@@ -78,7 +78,10 @@ import com.tnyx.core.ui.components.cards.TnyxCard
 import com.tnyx.core.ui.components.cards.TnyxCardVariant
 import com.tnyx.core.ui.components.inputs.TnyxTextField
 import com.tnyx.core.ui.components.inputs.TnyxTextFieldVariant
+import com.tnyx.shared.workout.domain.catalog.ExerciseCatalogDto
+import com.tnyx.shared.workout.domain.logic.ExerciseMediaResolver
 import com.tnyx.shared.workout.domain.model.ExerciseDefinition
+import com.tnyx.shared.workout.domain.model.ExerciseMediaPreference
 
 @Composable
 fun SearchExercisesScreen(
@@ -258,8 +261,12 @@ private fun ExerciseGridItem(
     onLongCardClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val mediaAsset = exercise.mediaAssets.firstOrNull()
-    val imageUrl = mediaAsset?.thumbnailRef ?: mediaAsset?.imageRef
+    val resolvedMedia = ExerciseMediaResolver.resolve(
+        exercise = exercise,
+        preference = ExerciseMediaPreference.AUTO,
+    )
+    val mediaAsset = resolvedMedia.asset ?: exercise.mediaAssets.firstOrNull()
+    val imageUrl = mediaAsset?.thumbnailRef ?: mediaAsset?.imageRef ?: mediaAsset?.videoRef
 
     TnyxCard(
         modifier = modifier.fillMaxWidth(),
@@ -382,8 +389,12 @@ private fun ExerciseCardItem(
     onLongCardClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val mediaAsset = exercise.mediaAssets.firstOrNull()
-    val thumbnailUrl = mediaAsset?.thumbnailRef ?: mediaAsset?.imageRef
+    val resolvedMedia = ExerciseMediaResolver.resolve(
+        exercise = exercise,
+        preference = ExerciseMediaPreference.AUTO,
+    )
+    val mediaAsset = resolvedMedia.asset ?: exercise.mediaAssets.firstOrNull()
+    val thumbnailUrl = mediaAsset?.thumbnailRef ?: mediaAsset?.imageRef ?: mediaAsset?.videoRef
 
     TnyxCard(
         modifier = modifier.fillMaxWidth(),

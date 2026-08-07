@@ -35,6 +35,9 @@ android {
                 "src/main/res-icons",
                 "src/main/res-images",
             )
+            assets.srcDirs(
+                "src/main/res-assets",
+            )
         }
     }
 }

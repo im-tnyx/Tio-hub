@@ -24,6 +24,7 @@ data class TnyxColors(
     
     // Monochrome Contextual Accent
     val accent: Color,       
+    val secondaryMuscle: Color,
     
     // Content Roles
     val textPrimary: Color,

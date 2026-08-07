@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tnyx.core.theme.TnyxTheme
+import com.tnyx.core.theme.tokens.components.TnyxHeaderSize
+import com.tnyx.core.theme.tokens.foundation.TnyxDimens
 import com.tnyx.core.ui.components.calendar.TnyxWeeklyCalendar
 import com.tnyx.core.ui.components.layouts.TnyxScreenHeader
 import com.tnyx.features.nutrition.domain.models.NutritionMeal
@@ -32,8 +34,8 @@ fun MealDiaryScreen(
     val scrollState = rememberLazyListState()
     val density = LocalDensity.current
 
-    // Dimensions for manual sticky logic
-    val headerHeight = 32.dp // Compact header
+    // Dimensions for manual sticky logic — driven by design tokens
+    val headerHeight = TnyxDimens.ScreenHeaderHeightCompact
     val calendarHeight = 56.dp // Matching CalendarTokens height
     val headerHeightPx = with(density) { headerHeight.toPx() }
 
@@ -66,7 +68,7 @@ fun MealDiaryScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 150.dp)
         ) {
-            // Placeholder for Header + Calendar
+            // Placeholder for Header + Calendar (Zero gap)
             item {
                 Spacer(modifier = Modifier.height(headerHeight + calendarHeight))
             }
@@ -130,7 +132,8 @@ fun MealDiaryScreen(
             TnyxScreenHeader(
                 title = "Meal Diary",
                 alpha = headerState.second,
-                height = headerHeight,
+                size = TnyxHeaderSize.Compact,
+                uppercaseTitle = false,
                 actions = {
                     IconButton(onClick = { /* Handle notification click */ }) {
                         Icon(
@@ -141,7 +144,6 @@ fun MealDiaryScreen(
                     }
                 }
             )
-            Spacer(modifier = Modifier.height(4.dp))
             // Calendar (Stays visible as the Column offset stops at -headerHeightPx)
             TnyxWeeklyCalendar(
                 selectedDate = state.selectedDate,

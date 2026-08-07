@@ -24,6 +24,7 @@ val TnyxLightColors = TnyxColors(
     primaryButtonContent = TnyxPalette.White,
 
     accent = TnyxPalette.ElectricBlue,
+    secondaryMuscle = TnyxPalette.SkyBlue,
     textPrimary = TnyxPalette.Black,
     textSecondary = TnyxPalette.Neutral600,
     textMuted = TnyxPalette.Neutral400,

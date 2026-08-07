@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.BlendMode
@@ -23,8 +24,10 @@ import com.tnyx.shared.workout.domain.model.ExerciseMediaVariant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** Default secondary muscle highlight tint color (Vibrant Sky Blue #38BDF8 for high contrast). */
-val DefaultSecondaryMuscleColor = Color(0xFF38BDF8)
+import com.tnyx.core.theme.tokens.foundation.TnyxPalette
+
+/** Default secondary muscle highlight tint color (Vibrant Sky Blue from TnyxPalette for high contrast). */
+val DefaultSecondaryMuscleColor = TnyxPalette.SkyBlue
 
 /**
  * Render a layered anatomical muscle map with support for primary and secondary highlighted muscles.
@@ -103,7 +106,8 @@ fun TioMuscleMap(
             )
         }
 
-        // 2. Render Secondary Overlays (Tinted with secondaryColor preserving muscle detail lines)
+        // 2. Render Secondary Overlays (Tinted with secondaryColor using texture-preserving ColorMatrix)
+        val secondaryFilter = remember(secondaryColor) { createMuscleTextureColorFilter(secondaryColor) }
         secondaryOverlays.forEach { assetName ->
             loadedMap[assetName]?.let { overlayBitmap ->
                 Image(
@@ -112,13 +116,14 @@ fun TioMuscleMap(
                     modifier = Modifier.fillMaxSize(),
                     contentScale = contentScale,
                     alignment = alignment,
-                    colorFilter = ColorFilter.tint(secondaryColor, BlendMode.Modulate),
+                    colorFilter = secondaryFilter,
                     alpha = 1.0f,
                 )
             }
         }
 
-        // 3. Render Primary Overlays (Red asset / primaryColor tint preserving muscle detail lines)
+        // 3. Render Primary Overlays (Red asset / custom primaryColor tint)
+        val primaryFilter = remember(primaryColor) { primaryColor?.let { createMuscleTextureColorFilter(it) } }
         primaryOverlays.forEach { assetName ->
             loadedMap[assetName]?.let { overlayBitmap ->
                 Image(
@@ -127,12 +132,35 @@ fun TioMuscleMap(
                     modifier = Modifier.fillMaxSize(),
                     contentScale = contentScale,
                     alignment = alignment,
-                    colorFilter = primaryColor?.let { ColorFilter.tint(it, BlendMode.Modulate) },
+                    colorFilter = primaryFilter,
                     alpha = 1.0f,
                 )
             }
         }
     }
+}
+
+/**
+ * Creates a texture-preserving ColorFilter for red WebP muscle overlays.
+ *
+ * Maps the Red channel (which contains muscle fiber details and depth) directly to
+ * the target [color] RGB, preserving 100% of muscle fiber lines and contours without
+ * getting dark/muddy from simple RGB multiplication.
+ */
+private fun createMuscleTextureColorFilter(color: Color): ColorFilter {
+    val r = color.red
+    val g = color.green
+    val b = color.blue
+    return ColorFilter.colorMatrix(
+        androidx.compose.ui.graphics.ColorMatrix(
+            floatArrayOf(
+                r, 0f, 0f, 0f, 0f,
+                g, 0f, 0f, 0f, 0f,
+                b, 0f, 0f, 0f, 0f,
+                0f, 0f, 0f, 1f, 0f
+            )
+        )
+    )
 }
 
 @Composable

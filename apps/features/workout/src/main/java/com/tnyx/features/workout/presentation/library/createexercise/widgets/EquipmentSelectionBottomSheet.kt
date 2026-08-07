@@ -16,8 +16,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -119,12 +120,12 @@ fun EquipmentSelectionBottomSheet(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.weight(1f)
                         ) {
-                            // ── Equipment Icon (48dp x 48dp) ──
+                            // ── Equipment Icon (48dp x 48dp, solid white bg) ──
                             Box(
                                 modifier = Modifier
                                     .size(48.dp)
                                     .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = 0.08f)),
+                                    .background(Color.White),
                                 contentAlignment = Alignment.Center
                             ) {
                                 AsyncImage(
@@ -148,15 +149,17 @@ fun EquipmentSelectionBottomSheet(
                             )
                         }
 
-                        // ── Round Radio Button Indicator ──
-                        RadioButton(
-                            selected = isSelected,
-                            onClick = null,
-                            colors = RadioButtonDefaults.colors(
-                                selectedColor = TnyxTheme.colors.accent,
-                                unselectedColor = TnyxTheme.colors.textSecondary.copy(alpha = 0.4f),
+                        // ── Standalone Checkmark indicator (✓ no box/circle) ──
+                        if (isSelected) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Selected",
+                                tint = TnyxTheme.colors.accent,
+                                modifier = Modifier.size(24.dp)
                             )
-                        )
+                        } else {
+                            Spacer(modifier = Modifier.size(24.dp))
+                        }
                     }
 
                     // ── Inset Divider (1dp, alpha=0.12) ──

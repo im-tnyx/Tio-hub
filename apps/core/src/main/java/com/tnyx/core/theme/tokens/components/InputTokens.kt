@@ -28,8 +28,8 @@ data class InputTokens(
 
 val DefaultInputTokens = InputTokens(
     height = TnyxDimens.InputHeight,
-    borderWidthFocused = TnyxDimens.BorderMedium,
-    borderWidthUnfocused = TnyxDimens.BorderThin,
+    borderWidthFocused = TnyxDimens.BorderThin,
+    borderWidthUnfocused = TnyxDimens.BorderSubtle,
     containerColor = TnyxPalette.White,
     focusedIndicatorColor = TnyxPalette.Black,
     unfocusedIndicatorColor = TnyxPalette.Neutral200,

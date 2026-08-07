@@ -61,12 +61,12 @@ fun CreateExerciseOptionRow(
                     style = TnyxTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
                     color = TnyxTheme.colors.textPrimary,
                 )
-                Spacer(modifier = Modifier.height(TnyxDimens.SpaceXXS))
+                Spacer(modifier = Modifier.height(TnyxDimens.SpaceS))
                 if (hasOptionalText && (selectedText.equals("Select", ignoreCase = true) || selectedText.contains("optional", ignoreCase = true))) {
                     Row {
                         Text(
                             text = "Select ",
-                            style = TnyxTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                            style = TnyxTheme.typography.bodyMedium,
                             color = TnyxTheme.colors.accent,
                         )
                         Text(
@@ -78,7 +78,7 @@ fun CreateExerciseOptionRow(
                 } else {
                     Text(
                         text = selectedText,
-                        style = TnyxTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                        style = TnyxTheme.typography.bodyMedium,
                         color = TnyxTheme.colors.accent,
                     )
                 }

@@ -1,4 +1,4 @@
-﻿package com.tnyx.core.theme.tokens.foundation
+package com.tnyx.core.theme.tokens.foundation
 
 import androidx.compose.ui.unit.dp
 
@@ -51,6 +51,8 @@ object TnyxDimens {
     val TabSwitcherHeight = 48.dp
     val HeaderGradientHeight = 96.dp
     val ScreenHeaderHeight = 44.dp
+    val ScreenHeaderHeightCompact = 36.dp
+    val ScreenHeaderHeightStandard = 56.dp
     val ScreenHeaderActionSize = 48.dp
 
     // Component Internals

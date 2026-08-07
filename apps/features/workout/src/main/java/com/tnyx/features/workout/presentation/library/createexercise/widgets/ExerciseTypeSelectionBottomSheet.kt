@@ -12,12 +12,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -197,14 +199,17 @@ fun ExerciseTypeSelectionBottomSheet(
 
                         Spacer(modifier = Modifier.width(TnyxDimens.SpaceSM))
 
-                        RadioButton(
-                            selected = isSelected,
-                            onClick = null,
-                            colors = RadioButtonDefaults.colors(
-                                selectedColor = TnyxTheme.colors.accent,
-                                unselectedColor = TnyxTheme.colors.textSecondary.copy(alpha = 0.4f),
+                        // ── Standalone Checkmark indicator (✓ no box/circle) ──
+                        if (isSelected) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Selected",
+                                tint = TnyxTheme.colors.accent,
+                                modifier = Modifier.size(24.dp)
                             )
-                        )
+                        } else {
+                            Spacer(modifier = Modifier.size(24.dp))
+                        }
                     }
 
                     // ── Inset Divider (1dp, alpha=0.12) ──

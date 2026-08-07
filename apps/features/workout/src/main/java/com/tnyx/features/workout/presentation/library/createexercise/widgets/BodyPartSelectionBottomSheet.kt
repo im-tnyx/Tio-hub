@@ -16,8 +16,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -120,12 +120,12 @@ fun BodyPartSelectionBottomSheet(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.weight(1f)
                         ) {
-                            // ── Body Part Icon (48dp x 48dp) ──
+                            // ── Body Part Icon (48dp x 48dp, solid white bg) ──
                             Box(
                                 modifier = Modifier
                                     .size(48.dp)
                                     .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = 0.08f)),
+                                    .background(Color.White),
                                 contentAlignment = Alignment.Center
                             ) {
                                 TioBodyPartIcon(
@@ -146,13 +146,14 @@ fun BodyPartSelectionBottomSheet(
                             )
                         }
 
-                        // ── Round Radio Button Indicator ──
-                        RadioButton(
-                            selected = isSelected,
-                            onClick = null,
-                            colors = RadioButtonDefaults.colors(
-                                selectedColor = TnyxTheme.colors.accent,
-                                unselectedColor = TnyxTheme.colors.textSecondary.copy(alpha = 0.4f),
+                        // ── Checkbox Indicator (Square with Checkmark for Multi-Selection) ──
+                        Checkbox(
+                            checked = isSelected,
+                            onCheckedChange = null,
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = TnyxTheme.colors.accent,
+                                uncheckedColor = TnyxTheme.colors.textSecondary.copy(alpha = 0.4f),
+                                checkmarkColor = Color.White,
                             )
                         )
                     }

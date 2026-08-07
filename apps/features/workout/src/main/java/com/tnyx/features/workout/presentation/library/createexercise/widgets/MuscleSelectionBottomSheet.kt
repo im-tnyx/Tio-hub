@@ -17,8 +17,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -160,6 +160,8 @@ private fun MuscleItemRow(
         else -> Alignment.Center
     }
 
+    val activeColor = if (isSecondarySheet) TnyxTheme.colors.secondaryMuscle else TnyxTheme.colors.accent
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -171,7 +173,7 @@ private fun MuscleItemRow(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(TnyxTheme.colors.accent.copy(alpha = 0.12f))
+                    .background(activeColor.copy(alpha = 0.12f))
             )
         }
 
@@ -187,10 +189,10 @@ private fun MuscleItemRow(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
             ) {
-                // ── Avatar circle (58dp, white bg, CardView parity) ──
+                // ── Avatar circle (48dp, white bg, matching Body Part & Equipment parity) ──
                 Box(
                     modifier = Modifier
-                        .size(58.dp)
+                        .size(48.dp)
                         .clip(CircleShape)
                         .background(Color.White)
                 ) {
@@ -212,17 +214,18 @@ private fun MuscleItemRow(
                 Text(
                     text = item.displayName,
                     style = TnyxTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                    color = if (isSelected) TnyxTheme.colors.accent else TnyxTheme.colors.textPrimary,
+                    color = if (isSelected) activeColor else TnyxTheme.colors.textPrimary,
                 )
             }
 
-            // ── Round radio indicator (24dp, 16dp from end — Lyfta MaterialRadioButton parity) ──
-            RadioButton(
-                selected = isSelected,
-                onClick = null,
-                colors = RadioButtonDefaults.colors(
-                    selectedColor = TnyxTheme.colors.accent,
-                    unselectedColor = TnyxTheme.colors.textSecondary.copy(alpha = 0.4f),
+            // ── Checkbox Indicator (Square with Checkmark for Multi-Selection) ──
+            Checkbox(
+                checked = isSelected,
+                onCheckedChange = null,
+                colors = CheckboxDefaults.colors(
+                    checkedColor = activeColor,
+                    uncheckedColor = TnyxTheme.colors.textSecondary.copy(alpha = 0.4f),
+                    checkmarkColor = Color.White,
                 )
             )
         }

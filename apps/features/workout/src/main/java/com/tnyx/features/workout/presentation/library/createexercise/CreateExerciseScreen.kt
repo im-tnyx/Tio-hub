@@ -20,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Accessibility
 import androidx.compose.material.icons.outlined.AccessibilityNew
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.Layers
@@ -232,6 +233,20 @@ fun CreateExerciseScreen(
                         selectedText = state.equipment,
                         hasOptionalText = state.equipment.contains("optional"),
                         onClick = { onAction(CreateExerciseAction.EquipmentClicked) }
+                    )
+
+                    HorizontalDivider(
+                        color = TnyxTheme.colors.background,
+                        thickness = TnyxDimens.BorderThin
+                    )
+
+                    // Body Part Row (Optional)
+                    CreateExerciseOptionRow(
+                        icon = Icons.Outlined.Accessibility,
+                        title = "Body Part",
+                        selectedText = state.bodyPart,
+                        hasOptionalText = state.bodyPart.contains("optional"),
+                        onClick = { onAction(CreateExerciseAction.BodyPartClicked) }
                     )
 
                     HorizontalDivider(

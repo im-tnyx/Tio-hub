@@ -35,6 +35,9 @@ fun CreateExerciseRoute(
                 CreateExerciseAction.EquipmentClicked -> {
                     // Select equipment
                 }
+                CreateExerciseAction.BodyPartClicked -> {
+                    // Select body part
+                }
                 CreateExerciseAction.PrimaryMuscleClicked -> {
                     // Select primary muscle
                 }

@@ -53,8 +53,8 @@ fun TnyxThemeProvider(
         LocalTnyxShadows provides TnyxShadows,
         LocalTnyxComponentTokens provides TnyxComponentTokens(
             button = DefaultButtonTokens.copy(
-                containerColor = palette.primary,
-                contentColor = palette.onPrimary,
+                containerColor = palette.primaryButtonContainer,
+                contentColor = palette.primaryButtonContent,
                 disabledContainerColor = palette.surfaceVariant,
                 disabledContentColor = palette.textMuted,
                 secondaryContentColor = palette.textPrimary,

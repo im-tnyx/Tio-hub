@@ -65,8 +65,8 @@ data class ExerciseCatalogDto(
                 ExerciseMediaAsset(
                     id = "${id}_male",
                     variant = ExerciseMediaVariant.MALE,
-                    imageRef = null,
-                    videoRef = url,
+                    imageRef = if (url?.endsWith(".mp4", ignoreCase = true) != true) url else null,
+                    videoRef = if (url?.endsWith(".mp4", ignoreCase = true) == true) url else null,
                     thumbnailRef = thumbnailUrl,
                     mediaVersion = 1,
                     provenanceId = "exercise_data_json",
@@ -80,8 +80,8 @@ data class ExerciseCatalogDto(
                 ExerciseMediaAsset(
                     id = "${id}_female",
                     variant = ExerciseMediaVariant.FEMALE,
-                    imageRef = null,
-                    videoRef = urlFemale,
+                    imageRef = if (urlFemale?.endsWith(".mp4", ignoreCase = true) != true) urlFemale else null,
+                    videoRef = if (urlFemale?.endsWith(".mp4", ignoreCase = true) == true) urlFemale else null,
                     thumbnailRef = thumbnailUrlFemale,
                     mediaVersion = 1,
                     provenanceId = "exercise_data_json",

@@ -258,7 +258,8 @@ private fun ExerciseGridItem(
     onLongCardClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val thumbnailUrl = exercise.mediaAssets.firstOrNull()?.thumbnailRef
+    val mediaAsset = exercise.mediaAssets.firstOrNull()
+    val imageUrl = mediaAsset?.thumbnailRef ?: mediaAsset?.imageRef
 
     TnyxCard(
         modifier = modifier.fillMaxWidth(),
@@ -277,9 +278,9 @@ private fun ExerciseGridItem(
                     .background(TnyxTheme.colors.surfaceVariant),
                 contentAlignment = Alignment.Center,
             ) {
-                if (!thumbnailUrl.isNullOrBlank()) {
+                if (!imageUrl.isNullOrBlank()) {
                     SubcomposeAsyncImage(
-                        model = thumbnailUrl,
+                        model = imageUrl,
                         contentDescription = exercise.name,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize(),
@@ -381,7 +382,8 @@ private fun ExerciseCardItem(
     onLongCardClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val thumbnailUrl = exercise.mediaAssets.firstOrNull()?.thumbnailRef
+    val mediaAsset = exercise.mediaAssets.firstOrNull()
+    val thumbnailUrl = mediaAsset?.thumbnailRef ?: mediaAsset?.imageRef
 
     TnyxCard(
         modifier = modifier.fillMaxWidth(),

@@ -4,5 +4,5 @@
     <color name="chip_muscle_base">#E0E0E0</color>
 
     <!-- हाईलाइटेड मांसपेशियों के लिए कलर (Active/Highlighted muscle color) -->
-    <color name="chip_muscle_highlight">#E74C3C</color>
+    <color name="chip_muscle_highlight">#3C75E7</color>
 </resources>

@@ -74,10 +74,17 @@ private fun rememberAssetBitmaps(assetNames: List<String>): State<List<ImageBitm
         value = withContext(Dispatchers.IO) {
             assetNames.map { assetName ->
                 runCatching {
-                    assetManager.open(assetName).use { stream ->
+                    val path = if (assetName.contains("/")) assetName else "musclemap/$assetName"
+                    assetManager.open(path).use { stream ->
                         BitmapFactory.decodeStream(stream)?.asImageBitmap()
                     }
-                }.getOrNull()
+                }.getOrElse {
+                    runCatching {
+                        assetManager.open(assetName).use { stream ->
+                            BitmapFactory.decodeStream(stream)?.asImageBitmap()
+                        }
+                    }.getOrNull()
+                }
             }
         }
     }

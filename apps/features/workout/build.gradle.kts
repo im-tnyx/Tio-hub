@@ -36,9 +36,6 @@ android {
                 "src/main/res-images",
             )
         }
-        getByName("debug") {
-            assets.srcDir("../../assets/final/musclemap")
-        }
     }
 }
 

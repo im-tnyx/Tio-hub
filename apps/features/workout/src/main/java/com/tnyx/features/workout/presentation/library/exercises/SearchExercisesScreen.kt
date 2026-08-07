@@ -691,8 +691,8 @@ private fun SearchExercisesTopBar(
         modifier = modifier
             .fillMaxWidth()
             .statusBarsPadding(),
-        color = TnyxTheme.colors.surface,
-        tonalElevation = 1.dp
+        color = TnyxTheme.colors.background,
+        tonalElevation = 0.dp
     ) {
         Row(
             modifier = Modifier

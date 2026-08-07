@@ -6,4 +6,5 @@ import kotlinx.coroutines.flow.Flow
 interface ExerciseCatalogRepository {
     fun getExercises(): Flow<List<ExerciseDefinition>>
     fun searchExercises(query: String, muscleGroupFilter: String = "ALL"): Flow<List<ExerciseDefinition>>
+    suspend fun saveCustomExercise(exercise: ExerciseDefinition)
 }

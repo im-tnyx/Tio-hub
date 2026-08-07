@@ -38,6 +38,9 @@ fun TnyxCard(
     variant: TnyxCardVariant = TnyxCardVariant.Surface,
     shape: Shape? = null,
     padding: Dp? = null, // Custom padding support
+    containerColor: Color? = null,
+    borderColor: Color? = null,
+    borderWidth: Dp? = null,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
@@ -45,15 +48,16 @@ fun TnyxCard(
     val tokens = TnyxTheme.components.card
     val finalShape = shape ?: RoundedCornerShape(tokens.cornerRadius)
     val finalPadding = padding ?: tokens.contentPadding
+    val finalBorderWidth = borderWidth ?: tokens.borderWidth
 
-    val backgroundColor = when {
-        variant == TnyxCardVariant.Glass -> tokens.glassContainerColor
-        variant == TnyxCardVariant.Normal -> tokens.normalContainerColor
-        variant == TnyxCardVariant.Outlined -> Color.Transparent
+    val backgroundColor = containerColor ?: when (variant) {
+        TnyxCardVariant.Glass -> tokens.glassContainerColor
+        TnyxCardVariant.Normal -> tokens.normalContainerColor
+        TnyxCardVariant.Outlined -> Color.Transparent
         else -> tokens.containerColor
     }
 
-    val borderColor = when (variant) {
+    val finalBorderColor = borderColor ?: when (variant) {
         TnyxCardVariant.Glass -> tokens.glassBorderColor
         TnyxCardVariant.Outlined -> tokens.outlinedBorderColor
         TnyxCardVariant.Normal -> Color.Transparent
@@ -76,7 +80,7 @@ fun TnyxCard(
         shape = finalShape,
         color = backgroundColor,
         contentColor = TnyxTheme.colors.textPrimary,
-        border = BorderStroke(tokens.borderWidth, borderColor),
+        border = BorderStroke(finalBorderWidth, finalBorderColor),
         shadowElevation = if (variant == TnyxCardVariant.Elevated) tokens.elevation else TnyxTheme.elevation.None,
         tonalElevation = TnyxTheme.elevation.None
     ) {

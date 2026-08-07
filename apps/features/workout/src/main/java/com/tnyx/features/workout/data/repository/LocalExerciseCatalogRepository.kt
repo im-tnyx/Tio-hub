@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -35,6 +36,12 @@ class LocalExerciseCatalogRepository @Inject constructor() : ExerciseCatalogRepo
 
                 matchesQuery && matchesMuscle
             }
+        }
+    }
+
+    override suspend fun saveCustomExercise(exercise: ExerciseDefinition) {
+        exercisesState.update { current ->
+            listOf(exercise) + current
         }
     }
 }

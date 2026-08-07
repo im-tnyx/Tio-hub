@@ -51,6 +51,8 @@ class SearchExercisesViewModelTest {
             }
             return flowOf(filtered)
         }
+
+        override suspend fun saveCustomExercise(exercise: ExerciseDefinition) {}
     }
 
     private val fakeViewPreferencesRepository = object : ExerciseViewPreferencesRepository {

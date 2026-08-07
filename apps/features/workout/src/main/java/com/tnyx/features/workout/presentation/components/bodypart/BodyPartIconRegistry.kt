@@ -52,3 +52,25 @@ private fun String.normalizeBodyPartKey(): String = trim()
     .lowercase(Locale.ROOT)
     .replace(bodyPartSeparator, "_")
     .trim('_')
+
+/**
+ * Maps a [BodyPartIconKey] to the corresponding muscle [regionKey] used in
+ * [com.tnyx.features.workout.presentation.components.musclemap.DetailedMuscleItem].
+ * Returns null for body parts that have no direct muscle mapping (CARDIO, STRETCHING).
+ */
+fun BodyPartIconKey.toMuscleRegionKey(): String? = when (this) {
+    BodyPartIconKey.ABS         -> "abs"
+    BodyPartIconKey.BACK        -> "back"
+    BodyPartIconKey.BICEPS      -> "biceps"
+    BodyPartIconKey.CALVES      -> "calves"
+    BodyPartIconKey.CHEST       -> "chest"
+    BodyPartIconKey.FOREARMS    -> "forearms"
+    BodyPartIconKey.HAMSTRINGS  -> "hamstrings"
+    BodyPartIconKey.HIPS        -> "hips"
+    BodyPartIconKey.NECK        -> "neck"
+    BodyPartIconKey.QUADRICEPS  -> "quadriceps"
+    BodyPartIconKey.SHOULDERS   -> "shoulders"
+    BodyPartIconKey.TRICEPS     -> "triceps"
+    BodyPartIconKey.CARDIO,
+    BodyPartIconKey.STRETCHING  -> null  // no anatomical muscle filter
+}

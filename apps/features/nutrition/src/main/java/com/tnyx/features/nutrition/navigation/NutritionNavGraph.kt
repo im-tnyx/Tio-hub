@@ -28,7 +28,18 @@ fun NavGraphBuilder.nutritionGraph(
                 onNavigateToAddMeal = { date ->
                     navController.navigate(NutritionScreen.MealEditor(date = date.toString()))
                 },
-                onShowOverview = onShowOverview
+                onShowOverview = { target ->
+                    navController.navigate(NutritionScreen.Overview(target))
+                },
+                onNavigateToNutritionSettings = {
+                    navController.navigate(NutritionScreen.Targets)
+                }
+            )
+        }
+
+        composable<NutritionScreen.Overview> {
+            com.tnyx.features.nutrition.presentation.nutrition_overview.NutritionOverviewRoute(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 
@@ -80,4 +91,7 @@ sealed interface NutritionScreen {
 
     @kotlinx.serialization.Serializable
     data object Targets : NutritionScreen
+
+    @kotlinx.serialization.Serializable
+    data class Overview(val target: String? = "all") : NutritionScreen
 }

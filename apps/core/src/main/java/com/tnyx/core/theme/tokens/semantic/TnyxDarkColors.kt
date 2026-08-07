@@ -5,7 +5,7 @@ import com.tnyx.core.theme.tokens.domain.DefaultNutritionColors
 import com.tnyx.core.theme.tokens.foundation.TnyxPalette
 
 /**
- * Tnyx Dark Mode Theme Palette
+ * Tnyx Dark Mode Theme Palette (Google Material 3 Compliant)
  */
 val TnyxDarkColors = TnyxColors(
     primary = TnyxPalette.White,
@@ -13,6 +13,16 @@ val TnyxDarkColors = TnyxColors(
     surface = TnyxPalette.Neutral900,
     surfaceRaised = TnyxPalette.Neutral800,
     surfaceVariant = TnyxPalette.Neutral800,
+
+    // Material 3 Surface Containers
+    surfaceContainerLow = Color(0xFF16191C),
+    surfaceContainerHigh = Color(0xFF1E2227),
+    surfaceContainerHighest = Color(0xFF262B32),
+
+    // Dynamic Primary Action Roles (Dark Mode: Solid White Primary Button with Black text)
+    primaryButtonContainer = TnyxPalette.White,
+    primaryButtonContent = TnyxPalette.Black,
+
     accent = TnyxPalette.ElectricBlue,
     textPrimary = TnyxPalette.White,
     textSecondary = TnyxPalette.Neutral400,

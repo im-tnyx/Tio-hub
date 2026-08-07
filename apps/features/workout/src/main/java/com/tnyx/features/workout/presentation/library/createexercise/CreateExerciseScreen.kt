@@ -94,7 +94,7 @@ fun CreateExerciseScreen(
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = TnyxTheme.colors.background,
+                    containerColor = TnyxTheme.colors.surface,
                 )
             )
         },

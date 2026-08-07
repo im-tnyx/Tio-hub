@@ -1,9 +1,17 @@
 package com.tnyx.features.workout.presentation.library.createexercise
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -11,18 +19,25 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.PhotoCamera
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.tnyx.core.theme.TnyxTheme
+import com.tnyx.core.theme.tokens.foundation.TnyxDimens
 import com.tnyx.core.ui.components.buttons.TnyxPrimaryButton
-
-private val AccentBlue = Color(0xFF3B82F6)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,8 +53,7 @@ fun CreateExerciseScreen(
                     Text(
                         text = "Create Exercise",
                         style = TnyxTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 18.sp
+                            fontWeight = FontWeight.Bold,
                         ),
                         color = TnyxTheme.colors.textPrimary,
                     )
@@ -58,11 +72,11 @@ fun CreateExerciseScreen(
                         text = "Save",
                         onPressed = { onAction(CreateExerciseAction.SaveClicked) },
                         enabled = !state.isSaving,
-                        height = 36.dp
+                        height = TnyxDimens.ScreenHeaderHeight,
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = TnyxTheme.colors.background,
+                    containerColor = TnyxTheme.colors.surface,
                 )
             )
         },
@@ -74,17 +88,17 @@ fun CreateExerciseScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+                .padding(horizontal = TnyxDimens.SpaceM, vertical = TnyxDimens.SpaceSM),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Hero Camera / Add Asset Section
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(TnyxDimens.SpaceSM))
             Surface(
                 shape = CircleShape,
-                color = Color.Black,
-                border = BorderStroke(1.dp, TnyxTheme.colors.textPrimary.copy(alpha = 0.2f)),
+                color = TnyxTheme.colors.surfaceVariant,
+                border = BorderStroke(TnyxDimens.BorderThin, TnyxTheme.colors.textMuted.copy(alpha = 0.3f)),
                 modifier = Modifier
-                    .size(110.dp)
+                    .size(TnyxDimens.HeaderGradientHeight)
                     .clickable { onAction(CreateExerciseAction.AddAssetClicked) }
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -92,23 +106,23 @@ fun CreateExerciseScreen(
                         imageVector = Icons.Outlined.PhotoCamera,
                         contentDescription = "Camera",
                         tint = TnyxTheme.colors.textPrimary,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(TnyxDimens.IconL)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(TnyxDimens.SpaceSM))
 
             Text(
                 text = "Add Asset",
                 style = TnyxTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.SemiBold,
-                    color = AccentBlue
+                    color = TnyxTheme.colors.accent
                 ),
                 modifier = Modifier.clickable { onAction(CreateExerciseAction.AddAssetClicked) }
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(TnyxDimens.SpaceL))
 
             // Exercise Name Field
             OutlinedTextField(
@@ -134,8 +148,8 @@ fun CreateExerciseScreen(
             )
 
             HorizontalDivider(
-                color = TnyxTheme.colors.textPrimary.copy(alpha = 0.12f),
-                thickness = 1.dp
+                color = TnyxTheme.colors.surfaceVariant,
+                thickness = TnyxDimens.BorderThin
             )
 
             // Add Instruction (Optional) Field
@@ -163,8 +177,8 @@ fun CreateExerciseScreen(
             )
 
             HorizontalDivider(
-                color = TnyxTheme.colors.textPrimary.copy(alpha = 0.12f),
-                thickness = 1.dp
+                color = TnyxTheme.colors.surfaceVariant,
+                thickness = TnyxDimens.BorderThin
             )
 
             // Equipment Selector Row (Optional)
@@ -176,8 +190,8 @@ fun CreateExerciseScreen(
             )
 
             HorizontalDivider(
-                color = TnyxTheme.colors.textPrimary.copy(alpha = 0.12f),
-                thickness = 1.dp
+                color = TnyxTheme.colors.surfaceVariant,
+                thickness = TnyxDimens.BorderThin
             )
 
             // Primary Muscle Group Row
@@ -188,8 +202,8 @@ fun CreateExerciseScreen(
             )
 
             HorizontalDivider(
-                color = TnyxTheme.colors.textPrimary.copy(alpha = 0.12f),
-                thickness = 1.dp
+                color = TnyxTheme.colors.surfaceVariant,
+                thickness = TnyxDimens.BorderThin
             )
 
             // Other Muscles Row (Optional)
@@ -201,8 +215,8 @@ fun CreateExerciseScreen(
             )
 
             HorizontalDivider(
-                color = TnyxTheme.colors.textPrimary.copy(alpha = 0.12f),
-                thickness = 1.dp
+                color = TnyxTheme.colors.surfaceVariant,
+                thickness = TnyxDimens.BorderThin
             )
 
             // Exercise Type Row
@@ -226,7 +240,7 @@ private fun CreateExerciseOptionRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = 16.dp, horizontal = 4.dp),
+            .padding(vertical = TnyxDimens.SpaceSM, horizontal = TnyxDimens.SpaceXXS),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -236,13 +250,13 @@ private fun CreateExerciseOptionRow(
                 style = TnyxTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                 color = TnyxTheme.colors.textPrimary,
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(TnyxDimens.SpaceXXS))
             if (hasOptionalText) {
                 Row {
                     Text(
                         text = "Select ",
                         style = TnyxTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                        color = AccentBlue,
+                        color = TnyxTheme.colors.accent,
                     )
                     Text(
                         text = "(optional)",
@@ -254,7 +268,7 @@ private fun CreateExerciseOptionRow(
                 Text(
                     text = selectedText,
                     style = TnyxTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                    color = AccentBlue,
+                    color = TnyxTheme.colors.accent,
                 )
             }
         }
@@ -263,7 +277,7 @@ private fun CreateExerciseOptionRow(
             imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
             contentDescription = "Select $title",
             tint = TnyxTheme.colors.textSecondary,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(TnyxDimens.IconS)
         )
     }
 }

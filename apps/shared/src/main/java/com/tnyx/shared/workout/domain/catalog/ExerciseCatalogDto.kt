@@ -61,13 +61,14 @@ data class ExerciseCatalogDto(
         val mediaList = mutableListOf<ExerciseMediaAsset>()
 
         if (!thumbnailUrl.isNullOrBlank() || !url.isNullOrBlank()) {
+            val mainImage = if (!thumbnailUrl.isNullOrBlank()) thumbnailUrl else url
             mediaList.add(
                 ExerciseMediaAsset(
                     id = "${id}_male",
                     variant = ExerciseMediaVariant.MALE,
-                    imageRef = if (url?.endsWith(".mp4", ignoreCase = true) != true) url else null,
-                    videoRef = if (url?.endsWith(".mp4", ignoreCase = true) == true) url else null,
-                    thumbnailRef = thumbnailUrl,
+                    imageRef = mainImage,
+                    videoRef = url,
+                    thumbnailRef = mainImage,
                     mediaVersion = 1,
                     provenanceId = "exercise_data_json",
                     releaseStatus = ExerciseMediaReleaseStatus.APPROVED
@@ -76,13 +77,14 @@ data class ExerciseCatalogDto(
         }
 
         if (!thumbnailUrlFemale.isNullOrBlank() || !urlFemale.isNullOrBlank()) {
+            val femaleImage = if (!thumbnailUrlFemale.isNullOrBlank()) thumbnailUrlFemale else urlFemale
             mediaList.add(
                 ExerciseMediaAsset(
                     id = "${id}_female",
                     variant = ExerciseMediaVariant.FEMALE,
-                    imageRef = if (urlFemale?.endsWith(".mp4", ignoreCase = true) != true) urlFemale else null,
-                    videoRef = if (urlFemale?.endsWith(".mp4", ignoreCase = true) == true) urlFemale else null,
-                    thumbnailRef = thumbnailUrlFemale,
+                    imageRef = femaleImage,
+                    videoRef = urlFemale,
+                    thumbnailRef = femaleImage,
                     mediaVersion = 1,
                     provenanceId = "exercise_data_json",
                     releaseStatus = ExerciseMediaReleaseStatus.APPROVED

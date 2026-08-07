@@ -4,9 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -14,8 +16,6 @@ import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.HorizontalPageIndicator
 import androidx.wear.compose.material.PageIndicatorState
 import androidx.wear.compose.material.Text
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
 import com.google.android.horologist.annotations.ExperimentalHorologistApi
 import com.google.android.horologist.compose.layout.ScalingLazyColumn
 import com.google.android.horologist.compose.layout.ScreenScaffold
@@ -46,10 +46,10 @@ fun NutritionSummaryScreen(
     waterCups: Int = 6,
     waterGoalCups: Int = 8
 ) {
-    val pagerState = rememberPagerState(pageCount = { 3 })
+    val pagerState = rememberPagerState(pageCount = { 2 })
 
     val pageIndicatorState = object : PageIndicatorState {
-        override val pageCount: Int = 3
+        override val pageCount: Int = 2
         override val pageOffset: Float = 0f
         override val selectedPage: Int
             get() = pagerState.currentPage
@@ -87,14 +87,6 @@ fun NutritionSummaryScreen(
                     proteinConsumed = proteinConsumed,
                     proteinGoal = proteinGoal
                 )
-                2 -> NutrientsListPage(
-                    carbsConsumed = carbsConsumed.toFloat(),
-                    carbsGoal = carbsGoal.toFloat(),
-                    fatConsumed = fatConsumed.toFloat(),
-                    fatGoal = fatGoal.toFloat(),
-                    proteinConsumed = proteinConsumed.toFloat(),
-                    proteinGoal = proteinGoal.toFloat()
-                )
             }
         }
 
@@ -128,6 +120,25 @@ private fun DailySummaryPage(
     val fatProgress = if (fatGoal > 0) fatConsumed.toFloat() / fatGoal else 0.0f
     val proteinProgress = if (proteinGoal > 0) proteinConsumed.toFloat() / proteinGoal else 0.0f
     val waterProgress = if (waterGoalCups > 0) waterCups.toFloat() / waterGoalCups else 0.0f
+
+    val nutrientsList = listOf(
+        NutrientItem("Protein", proteinConsumed.toFloat(), proteinGoal.toFloat(), "g", ColorStress),
+        NutrientItem("Carbohydrates", carbsConsumed.toFloat(), carbsGoal.toFloat(), "g", ColorSteps),
+        NutrientItem("Fiber", 18f, 30f, "g", ColorSteps),
+        NutrientItem("Sugar", 24f, 50f, "g", ColorSleep),
+        NutrientItem("Fat", fatConsumed.toFloat(), fatGoal.toFloat(), "g", ColorSleep),
+        NutrientItem("Saturated Fat", 12f, 20f, "g", ColorSleep),
+        NutrientItem("Polyunsaturated Fat", 6f, 10f, "g", ColorSleep),
+        NutrientItem("Monounsaturated Fat", 10f, 15f, "g", ColorSleep),
+        NutrientItem("Trans Fat", 0f, 2f, "g", ColorSleep),
+        NutrientItem("Cholesterol", 180f, 300f, "mg", ColorWater),
+        NutrientItem("Sodium", 1400f, 2300f, "mg", ColorWater),
+        NutrientItem("Potassium", 2200f, 3500f, "mg", ColorWater),
+        NutrientItem("Vitamin A", 80f, 100f, "%", ColorWater),
+        NutrientItem("Vitamin C", 90f, 100f, "%", ColorWater),
+        NutrientItem("Calcium", 75f, 100f, "%", ColorWater),
+        NutrientItem("Iron", 60f, 100f, "%", ColorWater)
+    )
 
     ScreenScaffold(scrollState = columnState) {
         ScalingLazyColumn(
@@ -217,6 +228,38 @@ private fun DailySummaryPage(
                         )
                     }
                 }
+            }
+
+            // 4. Section Divider & Header: Nutrients Daily Intake
+            item {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(top = 16.dp, bottom = 6.dp)
+                ) {
+                    Text(
+                        text = "Nutrients",
+                        color = TextWhite,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Daily Intake",
+                        color = TextGray,
+                        fontSize = 10.sp
+                    )
+                }
+            }
+
+            // 5. Detailed Nutrients Breakdown List
+            items(nutrientsList.size) { index ->
+                val item = nutrientsList[index]
+                NutrientRow(
+                    name = item.name,
+                    consumed = item.consumed,
+                    goal = item.goal,
+                    unit = item.unit,
+                    color = item.color
+                )
             }
         }
     }
@@ -312,77 +355,6 @@ private fun CalorieDetailPage(
                         color = ColorStress
                     )
                 }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalHorologistApi::class)
-@Composable
-private fun NutrientsListPage(
-    carbsConsumed: Float,
-    carbsGoal: Float,
-    fatConsumed: Float,
-    fatGoal: Float,
-    proteinConsumed: Float,
-    proteinGoal: Float
-) {
-    val columnState = rememberColumnState()
-
-    val nutrientsList = listOf(
-        NutrientItem("Protein", proteinConsumed, proteinGoal, "g", ColorStress),
-        NutrientItem("Carbohydrates", carbsConsumed, carbsGoal, "g", ColorSteps),
-        NutrientItem("Fiber", 18f, 30f, "g", ColorSteps),
-        NutrientItem("Sugar", 24f, 50f, "g", ColorSleep),
-        NutrientItem("Fat", fatConsumed, fatGoal, "g", ColorSleep),
-        NutrientItem("Saturated Fat", 12f, 20f, "g", ColorSleep),
-        NutrientItem("Polyunsaturated Fat", 6f, 10f, "g", ColorSleep),
-        NutrientItem("Monounsaturated Fat", 10f, 15f, "g", ColorSleep),
-        NutrientItem("Trans Fat", 0f, 2f, "g", ColorSleep),
-        NutrientItem("Cholesterol", 180f, 300f, "mg", ColorWater),
-        NutrientItem("Sodium", 1400f, 2300f, "mg", ColorWater),
-        NutrientItem("Potassium", 2200f, 3500f, "mg", ColorWater),
-        NutrientItem("Vitamin A", 80f, 100f, "%", ColorWater),
-        NutrientItem("Vitamin C", 90f, 100f, "%", ColorWater),
-        NutrientItem("Calcium", 75f, 100f, "%", ColorWater),
-        NutrientItem("Iron", 60f, 100f, "%", ColorWater)
-    )
-
-    ScreenScaffold(scrollState = columnState) {
-        ScalingLazyColumn(
-            columnState = columnState,
-            modifier = Modifier
-                .fillMaxSize()
-                .background(BackgroundBlack)
-        ) {
-            item {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(bottom = 6.dp)
-                ) {
-                    Text(
-                        text = "Nutrients",
-                        color = TextWhite,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Daily Intake",
-                        color = TextGray,
-                        fontSize = 11.sp
-                    )
-                }
-            }
-
-            items(nutrientsList.size) { index ->
-                val item = nutrientsList[index]
-                NutrientRow(
-                    name = item.name,
-                    consumed = item.consumed,
-                    goal = item.goal,
-                    unit = item.unit,
-                    color = item.color
-                )
             }
         }
     }

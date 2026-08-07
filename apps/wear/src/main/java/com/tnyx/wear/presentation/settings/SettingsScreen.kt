@@ -128,7 +128,7 @@ fun SettingsScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_units),
                             contentDescription = "Units",
-                            tint = ColorSteps,
+                            tint = TextWhite,
                             modifier = Modifier.size(22.dp)
                         )
                     },
@@ -150,7 +150,7 @@ fun SettingsScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_open_in_phone),
                             contentDescription = "Open on Phone",
-                            tint = ColorWater,
+                            tint = TextWhite,
                             modifier = Modifier.size(22.dp)
                         )
                     },
@@ -174,7 +174,7 @@ fun SettingsScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_sync_vector),
                             contentDescription = "Sync",
-                            tint = ColorWater,
+                            tint = TextWhite,
                             modifier = Modifier.size(22.dp)
                         )
                     },

@@ -9,8 +9,24 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
+@Serializable
+data class ExerciseMediaVariantDto(
+    @SerialName("videoUrl") val videoUrl: String? = null,
+    @SerialName("thumbnailUrl") val thumbnailUrl: String? = null,
+    @SerialName("imageUrl") val imageUrl: String? = null
+)
+
+@Serializable
+data class ExerciseMediaGroupDto(
+    val type: String? = null,
+    val defaultGender: String? = null,
+    val male: ExerciseMediaVariantDto? = null,
+    val female: ExerciseMediaVariantDto? = null
+)
+
 /**
  * Raw DTO matching `apps/shared/exerciseData.json`.
+ * Supports both legacy flat media keys and future structured nested `media` objects.
  */
 @Serializable
 data class ExerciseCatalogDto(
@@ -38,6 +54,11 @@ data class ExerciseCatalogDto(
     val thumbnailUrl: String? = null,
     @SerialName("thumbnail_url_female")
     val thumbnailUrlFemale: String? = null,
+    @SerialName("image_url")
+    val imageUrl: String? = null,
+    @SerialName("image_url_female")
+    val imageUrlFemale: String? = null,
+    val media: ExerciseMediaGroupDto? = null,
     @SerialName("manual_tag")
     val manualTag: String? = null,
     @SerialName("volume_doubling_supported")
@@ -60,15 +81,19 @@ data class ExerciseCatalogDto(
     fun toDomain(): ExerciseDefinition {
         val mediaList = mutableListOf<ExerciseMediaAsset>()
 
-        if (!thumbnailUrl.isNullOrBlank() || !url.isNullOrBlank()) {
-            val mainImage = if (!thumbnailUrl.isNullOrBlank()) thumbnailUrl else url
+        // Male media asset resolution with nested & flat fallback chain
+        val maleVideo = media?.male?.videoUrl ?: url
+        val maleThumb = media?.male?.thumbnailUrl ?: thumbnailUrl
+        val maleImage = media?.male?.imageUrl ?: imageUrl ?: maleThumb ?: maleVideo
+
+        if (!maleImage.isNullOrBlank() || !maleThumb.isNullOrBlank() || !maleVideo.isNullOrBlank()) {
             mediaList.add(
                 ExerciseMediaAsset(
                     id = "${id}_male",
                     variant = ExerciseMediaVariant.MALE,
-                    imageRef = mainImage,
-                    videoRef = url,
-                    thumbnailRef = mainImage,
+                    imageRef = maleImage,
+                    videoRef = maleVideo,
+                    thumbnailRef = maleThumb ?: maleImage,
                     mediaVersion = 1,
                     provenanceId = "exercise_data_json",
                     releaseStatus = ExerciseMediaReleaseStatus.APPROVED
@@ -76,15 +101,19 @@ data class ExerciseCatalogDto(
             )
         }
 
-        if (!thumbnailUrlFemale.isNullOrBlank() || !urlFemale.isNullOrBlank()) {
-            val femaleImage = if (!thumbnailUrlFemale.isNullOrBlank()) thumbnailUrlFemale else urlFemale
+        // Female media asset resolution with nested & flat fallback chain
+        val femaleVideo = media?.female?.videoUrl ?: urlFemale
+        val femaleThumb = media?.female?.thumbnailUrl ?: thumbnailUrlFemale
+        val femaleImage = media?.female?.imageUrl ?: imageUrlFemale ?: femaleThumb ?: femaleVideo
+
+        if (!femaleImage.isNullOrBlank() || !femaleThumb.isNullOrBlank() || !femaleVideo.isNullOrBlank()) {
             mediaList.add(
                 ExerciseMediaAsset(
                     id = "${id}_female",
                     variant = ExerciseMediaVariant.FEMALE,
                     imageRef = femaleImage,
-                    videoRef = urlFemale,
-                    thumbnailRef = femaleImage,
+                    videoRef = femaleVideo,
+                    thumbnailRef = femaleThumb ?: femaleImage,
                     mediaVersion = 1,
                     provenanceId = "exercise_data_json",
                     releaseStatus = ExerciseMediaReleaseStatus.APPROVED

@@ -1,7 +1,7 @@
 # Active Task
 
-Status: Idle
-Active Task: none
-Branch: main
-Platform Scope: none
-Last Updated: 2026-08-04
+Status: Completed
+Active Task: `.ai/tasks/android/local-20260804-search-exercise-library.md`
+Branch: feat/android-search-exercise-library
+Platform Scope: android-workout-library
+Last Updated: 2026-08-07

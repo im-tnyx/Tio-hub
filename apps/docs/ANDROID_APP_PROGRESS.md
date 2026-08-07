@@ -676,12 +676,19 @@ Rule: Future module folders may exist as checked-in ownership placeholders, but 
 - [x] Result: BUILD SUCCESSFUL
 - [x] Scope: AuthRepository boundary, FakeAuthRepository, Auth minimum screens, and AuthGraph wiring compile with app.
 
+### 2026-08-07: Workout Exercise Library Search & DTO Catalog Mapping
+
+- [x] `./gradlew.bat :shared:test :features:workout:test :app:assembleDebug`
+- [x] Result: BUILD SUCCESSFUL
+- [x] Shared result: `ExerciseCatalogParserTest` verified parsing `apps/shared/exerciseData.json` into domain `ExerciseDefinition` and `ExerciseMediaAsset`.
+- [x] Workout feature result: `SearchExercisesViewModelTest` verified real-time query search and muscle group category filtering.
+- [x] Scope: `ExerciseCatalogDto`, `ExerciseCatalogParser`, `LocalExerciseCatalogRepository`, Hilt DI `ExerciseCatalogModule`, `SearchExercisesViewModel`, Coil AsyncImage thumbnail integration in `SearchExercisesScreen.kt`.
+
 Known warning:
 
 - Onboarding uses deprecated `ClickableText`; existing warning, not introduced by this progress tracker.
 
 ---
 
-**Last Updated:** 2026-08-02
-**Current Focus:** Post-merge Android runtime stabilization truth alignment; the
-Workout full validation gate remains not fully green on current main.
+**Last Updated:** 2026-08-07
+**Current Focus:** Workout Exercise Library search & catalog loader integration completed on branch `feat/android-search-exercise-library`.

@@ -11,6 +11,8 @@ data class CreateExerciseUiState(
     val primaryMuscleGroup: String = "Select",
     val otherMuscles: String = "Select (optional)",
     val exerciseType: String = "Select",
+    val showPrimaryMuscleBottomSheet: Boolean = false,
+    val showOtherMusclesBottomSheet: Boolean = false,
     val isSaving: Boolean = false,
 )
 
@@ -22,6 +24,10 @@ sealed interface CreateExerciseAction {
     data object BodyPartClicked : CreateExerciseAction
     data object PrimaryMuscleClicked : CreateExerciseAction
     data object OtherMusclesClicked : CreateExerciseAction
+    data class PrimaryMuscleSelected(val muscle: String) : CreateExerciseAction
+    data class OtherMusclesSelected(val muscle: String) : CreateExerciseAction
+    data object PrimaryMuscleBottomSheetDismissed : CreateExerciseAction
+    data object OtherMusclesBottomSheetDismissed : CreateExerciseAction
     data object ExerciseTypeClicked : CreateExerciseAction
     data object SaveClicked : CreateExerciseAction
     data object BackClicked : CreateExerciseAction

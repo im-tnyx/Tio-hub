@@ -49,8 +49,20 @@ import com.tnyx.core.theme.tokens.foundation.TnyxDimens
 import com.tnyx.core.ui.components.buttons.TnyxPrimaryButton
 import com.tnyx.core.ui.components.cards.TnyxCard
 import com.tnyx.core.ui.components.cards.TnyxCardVariant
+import com.tnyx.features.workout.presentation.library.createexercise.widgets.MuscleSelectionBottomSheet
 
 import androidx.compose.foundation.layout.navigationBarsPadding
+
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.runtime.remember
+import com.tnyx.core.ui.components.sheets.TnyxModalBottomSheet
+import com.tnyx.features.workout.presentation.components.musclemap.MuscleMapRegionKey
+import com.tnyx.features.workout.presentation.components.musclemap.MuscleMapView
+import com.tnyx.features.workout.presentation.components.musclemap.TioMuscleMap
+import com.tnyx.shared.workout.domain.model.ExerciseMediaVariant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -292,6 +304,24 @@ fun CreateExerciseScreen(
             }
         }
     }
+
+    // Primary Muscle Group Selection Bottom Sheet
+    MuscleSelectionBottomSheet(
+        visible = state.showPrimaryMuscleBottomSheet,
+        title = "Select Primary Muscle Group",
+        selectedMuscle = state.primaryMuscleGroup,
+        onMuscleSelected = { onAction(CreateExerciseAction.PrimaryMuscleSelected(it)) },
+        onDismissRequest = { onAction(CreateExerciseAction.PrimaryMuscleBottomSheetDismissed) }
+    )
+
+    // Other Muscles Selection Bottom Sheet
+    MuscleSelectionBottomSheet(
+        visible = state.showOtherMusclesBottomSheet,
+        title = "Select Other Muscles",
+        selectedMuscle = state.otherMuscles,
+        onMuscleSelected = { onAction(CreateExerciseAction.OtherMusclesSelected(it)) },
+        onDismissRequest = { onAction(CreateExerciseAction.OtherMusclesBottomSheetDismissed) }
+    )
 }
 
 @Composable

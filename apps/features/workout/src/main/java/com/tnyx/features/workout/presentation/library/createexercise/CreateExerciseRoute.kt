@@ -39,10 +39,28 @@ fun CreateExerciseRoute(
                     // Select body part
                 }
                 CreateExerciseAction.PrimaryMuscleClicked -> {
-                    // Select primary muscle
+                    uiState = uiState.copy(showPrimaryMuscleBottomSheet = true)
                 }
                 CreateExerciseAction.OtherMusclesClicked -> {
-                    // Select other muscles
+                    uiState = uiState.copy(showOtherMusclesBottomSheet = true)
+                }
+                is CreateExerciseAction.PrimaryMuscleSelected -> {
+                    uiState = uiState.copy(
+                        primaryMuscleGroup = action.muscle,
+                        showPrimaryMuscleBottomSheet = false
+                    )
+                }
+                is CreateExerciseAction.OtherMusclesSelected -> {
+                    uiState = uiState.copy(
+                        otherMuscles = action.muscle,
+                        showOtherMusclesBottomSheet = false
+                    )
+                }
+                CreateExerciseAction.PrimaryMuscleBottomSheetDismissed -> {
+                    uiState = uiState.copy(showPrimaryMuscleBottomSheet = false)
+                }
+                CreateExerciseAction.OtherMusclesBottomSheetDismissed -> {
+                    uiState = uiState.copy(showOtherMusclesBottomSheet = false)
                 }
                 CreateExerciseAction.ExerciseTypeClicked -> {
                     // Select exercise type

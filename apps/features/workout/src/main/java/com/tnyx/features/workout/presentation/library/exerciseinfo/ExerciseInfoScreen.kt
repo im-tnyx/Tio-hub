@@ -237,7 +237,7 @@ private fun ExerciseMediaHero(
         )
     }
     val videoUrl = mediaAsset?.videoRef?.takeIf { it.isNotBlank() }
-    val imageUrl = mediaAsset?.imageRef ?: mediaAsset?.thumbnailRef ?: mediaAsset?.videoRef
+    val imageUrl = mediaAsset?.imageRef ?: mediaAsset?.thumbnailRef
     var hasPlaybackError by remember(videoUrl) { mutableStateOf(false) }
     var player by remember(videoUrl) { mutableStateOf<ExoPlayer?>(null) }
     val httpClient = remember(context) {

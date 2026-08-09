@@ -40,6 +40,7 @@ import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.PlayCircleOutline
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.outlined.BookmarkBorder
@@ -392,7 +393,8 @@ private fun ExerciseGridItem(
         autoVariant = mediaVariant,
     )
     val mediaAsset = resolvedMedia.asset
-    val imageUrl = mediaAsset?.thumbnailRef ?: mediaAsset?.imageRef ?: mediaAsset?.videoRef
+    val imageUrl = mediaAsset?.thumbnailRef ?: mediaAsset?.imageRef
+    val hasVideo = !mediaAsset?.videoRef.isNullOrBlank()
 
     TnyxCard(
         modifier = modifier.fillMaxWidth(),
@@ -433,6 +435,13 @@ private fun ExerciseGridItem(
                                 modifier = Modifier.size(TnyxDimens.IconL),
                             )
                         },
+                    )
+                } else if (hasVideo) {
+                    Icon(
+                        imageVector = Icons.Outlined.PlayCircleOutline,
+                        contentDescription = "Video exercise",
+                        tint = TnyxTheme.colors.accent,
+                        modifier = Modifier.size(TnyxDimens.IconXL),
                     )
                 } else {
                     Icon(
@@ -522,7 +531,8 @@ private fun ExerciseCardItem(
         autoVariant = mediaVariant,
     )
     val mediaAsset = resolvedMedia.asset
-    val thumbnailUrl = mediaAsset?.thumbnailRef ?: mediaAsset?.imageRef ?: mediaAsset?.videoRef
+    val thumbnailUrl = mediaAsset?.thumbnailRef ?: mediaAsset?.imageRef
+    val hasVideo = !mediaAsset?.videoRef.isNullOrBlank()
 
     TnyxCard(
         modifier = modifier.fillMaxWidth(),
@@ -565,6 +575,13 @@ private fun ExerciseCardItem(
                                 modifier = Modifier.size(TnyxDimens.IconM)
                             )
                         }
+                    )
+                } else if (hasVideo) {
+                    Icon(
+                        imageVector = Icons.Outlined.PlayCircleOutline,
+                        contentDescription = "Video exercise",
+                        tint = TnyxTheme.colors.accent,
+                        modifier = Modifier.size(TnyxDimens.IconL),
                     )
                 } else {
                     Icon(

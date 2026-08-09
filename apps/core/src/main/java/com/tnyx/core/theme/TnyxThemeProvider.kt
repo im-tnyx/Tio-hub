@@ -97,7 +97,8 @@ fun TnyxThemeProvider(
             header = DefaultHeaderTokens.copy(
                 containerColor = palette.background,
                 contentColor = palette.textPrimary
-            )
+            ),
+            imageCropper = ImageCropperTokens(),
         )
     ) {
         MaterialTheme(

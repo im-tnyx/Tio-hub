@@ -7,14 +7,18 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.tnyx.core.helpers.readAvatarJpeg
-import com.tnyx.core.helpers.toSquareJpegBytes
+import com.tnyx.core.ui.components.image.ImageCropperDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
 
 @Composable
 fun ProfileHomeRoute(
@@ -28,31 +32,34 @@ fun ProfileHomeRoute(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    var selectedCropUri by remember { mutableStateOf<Uri?>(null) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
     ) { uri: Uri? ->
-        if (uri == null) return@rememberLauncherForActivityResult
-        coroutineScope.launch {
-            val jpegBytes = withContext(Dispatchers.IO) {
-                context.readAvatarJpeg(uri)
-            }
-            if (jpegBytes != null) {
-                viewModel.uploadAvatar(jpegBytes)
-            }
+        if (uri != null) {
+            viewModel.dismissBottomSheet()
+            selectedCropUri = uri
         }
     }
 
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview(),
     ) { bitmap: Bitmap? ->
-        if (bitmap == null) return@rememberLauncherForActivityResult
-        coroutineScope.launch {
-            val jpegBytes = withContext(Dispatchers.IO) {
-                bitmap.toSquareJpegBytes()
-            }
-            if (jpegBytes != null) {
-                viewModel.uploadAvatar(jpegBytes)
+        if (bitmap != null) {
+            viewModel.dismissBottomSheet()
+            coroutineScope.launch(Dispatchers.IO) {
+                runCatching {
+                    val tempFile = File(context.cacheDir, "camera_profile_crop_temp.jpg")
+                    FileOutputStream(tempFile).use { out ->
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 95, out)
+                    }
+                    Uri.fromFile(tempFile)
+                }.getOrNull()?.let { uri ->
+                    withContext(Dispatchers.Main) {
+                        selectedCropUri = uri
+                    }
+                }
             }
         }
     }
@@ -88,6 +95,17 @@ fun ProfileHomeRoute(
                 ProfileHomeAction.HealthConnectionsClicked -> { /* TODO: Navigate to health connections */ }
                 ProfileHomeAction.RefreshProfile -> viewModel.loadUserProfile()
             }
+        }
+    )
+
+    // Image Cropper & Transform Dialog for Profile Photo selection
+    ImageCropperDialog(
+        visible = selectedCropUri != null,
+        imageUri = selectedCropUri,
+        onDismissRequest = { selectedCropUri = null },
+        onCropSuccess = { croppedBytes ->
+            selectedCropUri = null
+            viewModel.uploadAvatar(croppedBytes)
         }
     )
 }

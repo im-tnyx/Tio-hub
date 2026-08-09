@@ -1,6 +1,6 @@
 # Supabase Schema Status
 
-Last verified: 2026-08-08
+Last verified: 2026-08-09
 
 This document records which Supabase objects currently exist for Tio-hub and
 which data areas may need tables later. Update it after every approved schema,
@@ -34,9 +34,11 @@ must not be added to this document.
 |---|---|---|---|
 | `20260729150842` | `bootstrap_user_profiles` | `LIVE` | Creates the initial user profile, nutrition profile, workout profile, auth identity, profile view, RLS, grants, indexes, and profile image storage policy baseline. |
 | `20260729151026` | `deny_direct_auth_identity_access` | `LIVE` | Explicitly denies direct authenticated access to provider identity mapping rows. |
-| `20260730112203` | `add_profiles_mobile_column` | `LIVE` | Adds `profiles.mobile` so active Android profile sync can persist phone-number profile data remotely. |
+| `20260730112203` | `add_profiles_mobile_column` | `LIVE` | Added the mobile column to the app-owned user record; the table is now named `public.users`. |
 | `20260801084033` | `nutrition_meal_logs` | `LIVE` | Creates `meal_logs` and `meal_log_items` with owner-scoped RLS for the Android nutrition diary slice. |
 | `20260808130626` | `workout_custom_exercises` | `LIVE` | Creates `custom_exercises` with owner-scoped RLS for authenticated custom-exercise save and read paths. |
+| `20260809113150` | `rename_profiles_to_users` | `LIVE` | Renames the app-owned `public.profiles` table and its owned schema objects to `public.users`; `auth.users` remains the authentication source. |
+| `20260809113441` | `backfill_missing_public_users` | `LIVE` | Idempotently restores missing app-user rows and Supabase identity mappings from `auth.users`. |
 
 Migration source:
 
@@ -46,12 +48,14 @@ Migration source:
 - `supabase/migrations/20260731000000_nutrition_meal_logs.sql`
 - `supabase/migrations/20260808113000_workout_custom_exercises.sql`
 - `supabase/migrations/20260809120000_workout_custom_exercise_media.sql`
+- `supabase/migrations/20260809112838_rename_profiles_to_users.sql`
+- `supabase/migrations/20260809113358_backfill_missing_public_users.sql`
 
 ## Current Live Objects
 
 | Object | Type | Owner | Status | Current role |
 |---|---|---|---|---|
-| `public.profiles` | Table | Profile | `LIVE` | User identity and public profile fields, including `username`, display name, contact metadata, avatar path, onboarding state, streak counters, and referral linkage. |
+| `public.users` | Table | Profile | `LIVE` | App-owned user/profile fields, including `username`, display name, contact metadata, avatar path, onboarding state, streak counters, and referral linkage. Its primary key maps one-to-one to `auth.users.id`. |
 | `public.user_nutrition_profiles` | Table | Nutrition | `LIVE` | User-owned body, goal, diet, target, and onboarding snapshot data. Sleep fields are currently input snapshots only; future Recovery calculations do not belong here. |
 | `public.user_workout_profiles` | Table | Workout | `LIVE` | User-owned workout preferences such as experience, location, equipment, duration, training days, split, focus areas, and health concerns. |
 | `public.auth_identities` | Table | Backend/Auth | `LIVE` | Server-controlled mapping point for current Supabase identity and a possible future Firebase/provider identity. Direct authenticated access is denied. Firebase runtime is not implemented yet. |
@@ -65,7 +69,7 @@ Migration source:
 ## Current Security And Data State
 
 - RLS is enabled on all seven public tables.
-- `profiles`, `user_nutrition_profiles`, `user_workout_profiles`, `meal_logs`,
+- `users`, `user_nutrition_profiles`, `user_workout_profiles`, `meal_logs`,
   `meal_log_items`, and `custom_exercises` use
   owner-scoped authenticated policies.
 - Direct authenticated access to `auth_identities` is explicitly denied.
@@ -75,7 +79,12 @@ Migration source:
   policy warnings plus leaked-password protection disabled. The pending workout
   media migration hardens `custom_exercises` and its new Storage policies for
   permanent authenticated users; broader advisor remediation remains separate.
-- No demo user or profile row was inserted.
+- No new auth account or fabricated demo data was inserted. The idempotent
+  backfill restored one missing `public.users` row and two missing Supabase
+  identity mappings for existing `auth.users` records.
+- The 2026-08-09 rename verification reports five `auth.users` rows and five
+  matching `public.users` rows, with no missing users, orphan rows, or missing
+  Supabase identity mappings.
 - One manual verification meal log and one meal-log item were inserted on
   2026-08-01 for an existing authenticated profile to prove the live nutrition
   diary schema and write path.
@@ -84,7 +93,7 @@ Migration source:
   shows default `anon` privileges, but no `anon` RLS policy exists for this
   table, so row access remains denied for anonymous callers.
 - The fresh database currently reports two expected unused-index information
-  notices for `profiles_referred_by_id_idx` and
+  notices for `users_referred_by_id_idx` and
   `auth_identities_user_id_idx`. Re-evaluate them after real workload exists.
 
 ## Runtime Integration Status
@@ -92,7 +101,7 @@ Migration source:
 | Area | Status | Boundary |
 |---|---|---|
 | Profile read/write repository | `ACTIVE` | Android binds `ProfileRepository` to `SupabaseProfileRepository`; Personal Information writes profile and supported nutrition fields, and remote write failures reach the UI. |
-| Profile image upload | `ACTIVE` | Android avatar updates now write to the live `tio-profile` bucket and update `profiles.avatar_url`. |
+| Profile image upload | `ACTIVE` | Android avatar updates now write to the live `tio-profile` bucket and update `users.avatar_url`. |
 | Username editing | `ACTIVE` | Personal Information saves an optional, validated username with the other profile identity fields. |
 | Real auth source | `ACTIVE CLIENT SOURCE` | Android now binds `AuthRepository` to a Supabase-backed implementation for email/password, Google OAuth start, email OTP verification, and sign-out. Backend authority is still a future contract question, but fake local auth is no longer the active source. |
 | Firebase identity linking | `NOT IMPLEMENTED` | `auth_identities` reserves a safe server-owned mapping boundary only. |

@@ -7,7 +7,7 @@ Last updated: 2026-07-30
 - Android now binds `ProfileRepository` to `SupabaseProfileRepository`.
 - Selecting an avatar uploads `avatar.jpg` to the live `tio-profile` bucket
   under the authenticated user's object path.
-- The repository updates `public.profiles.avatar_url` after a successful upload.
+- The repository updates `public.users.avatar_url` after a successful upload.
 - Avatar state is no longer local-only profile truth.
 
 ## Live Storage Foundation
@@ -20,7 +20,7 @@ bucket:
 - allowed MIME type: `image/jpeg`
 - owner-scoped authenticated object policies
 
-`public.profiles.avatar_url` stores the image location in the current schema.
+`public.users.avatar_url` stores the image location in the current schema.
 The verified object and security inventory is maintained in
 [SUPABASE_SCHEMA_STATUS.md](SUPABASE_SCHEMA_STATUS.md). Executable storage
 setup belongs only in timestamped files under `supabase/migrations/`; do not
@@ -35,7 +35,7 @@ Production avatar operations will use backend APIs. The backend must:
 3. Accept only supported image types and enforce byte and dimension limits.
 4. Normalize the final image to JPEG and use a deterministic object path.
 5. Upload with server-controlled Supabase credentials.
-6. Update `profiles.avatar_url` in the same owned-user operation.
+6. Update `users.avatar_url` in the same owned-user operation.
 7. Return a stable avatar URL or media DTO to the client.
 8. Remove both the stored object and profile reference when requested.
 

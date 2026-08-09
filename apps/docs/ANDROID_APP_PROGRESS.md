@@ -221,18 +221,20 @@ Boundary note: shared contracts, Phone persistence/recovery, custom exercise per
 - [x] Avatar entry selects You when enabled and launches standalone `ProfileGraph` as fallback.
 - [x] Shared Profile model and Supabase repository DTO expose additive username data.
 - [x] Active Profile Hilt binding now uses `SupabaseProfileRepository`.
-- [x] Authenticated Profile reads come from live `profiles` and
+- [x] Authenticated Profile reads come from live `users` and
   `user_nutrition_profiles`; signed-out state resolves to a clean guest
   profile.
 - [x] Personal Information reads active name, username, email, and avatar;
   Save updates normalized name/username and avatar actions update the active
   remote profile path.
 - [x] Avatar upload/remove persists through the live `tio-profile` storage
-  bucket and `profiles.avatar_url`.
+  bucket and `users.avatar_url`.
 - [x] `bootstrap_user_profiles` और `deny_direct_auth_identity_access` migrations
   connected Tio-hub Supabase project पर applied और verified हैं।
 - [x] `add_profiles_mobile_column` migration is applied and verified on the
   connected Tio-hub Supabase project.
+- [x] `rename_profiles_to_users` and `backfill_missing_public_users` migrations
+  are applied and verified; `public.users` matches `auth.users` one-to-one.
 - [ ] Personal Information email writes remain deferred; current remote sync
   does not make the full Profile surface backend-final.
 - [ ] Remaining Profile launchers are intentionally absent until their owning feature slices exist.
@@ -630,7 +632,7 @@ Rule: Future module folders may exist as checked-in ownership placeholders, but 
 - [x] Profile result: 3 tests, 0 failures, 0 errors, 0 skipped.
 - [x] Scope: reusable Profile header, card-less identity UI, Edit/Settings routing,
   username fallback behavior, additive username model/DTO mapping, and shared compatibility.
-- [x] Live Supabase verification: `profiles`, `user_nutrition_profiles`,
+- [x] Live Supabase verification: `users`, `user_nutrition_profiles`,
   `user_workout_profiles`, locked `auth_identities`, security-invoker
   `profile_overview`, और `tio-profile` bucket मौजूद हैं।
 - [x] RLS/grants verification: Profile/Nutrition/Workout owner policies मौजूद हैं;
@@ -647,7 +649,7 @@ Rule: Future module folders may exist as checked-in ownership placeholders, but 
 - [x] `./gradlew.bat :features:auth:compileDebugKotlin :features:nutrition:compileDebugKotlin :app:compileDebugKotlin --no-configuration-cache`
 - [x] Result: BUILD SUCCESSFUL
 - [x] Live Supabase migration applied: `20260730193000_add_profiles_mobile_column`
-- [x] Live schema verification: `profiles.mobile` exists in project `ublwxylwdqjdykqcncuv`
+- [x] Live schema verification: `users.mobile` exists in project `ublwxylwdqjdykqcncuv`
 - [x] Scope: active `SupabaseAuthRepository` binding, demo-account disablement in Login UI, active `SupabaseProfileRepository` binding, remote avatar/profile persistence, refresh-driven remote profile sync, and nutrition fake fallback removal.
 - [x] Truth boundary: profile/nutrition target data and nutrition diary tables now exist on the connected Supabase project; device-side meal diary/editor route validation still remains separate from schema truth.
 

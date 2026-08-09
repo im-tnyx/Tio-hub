@@ -45,7 +45,7 @@ The root `.env` exists locally, but env values must never be documented or commi
 The connected Tio-hub Supabase project now has an initial Profile vertical-slice
 baseline:
 
-- `profiles`
+- `users`
 - `user_nutrition_profiles`
 - `user_workout_profiles`
 - locked `auth_identities`
@@ -205,7 +205,7 @@ Purpose:
 
 Likely tables:
 
-- `profiles`
+- `users`
 
 Demo data:
 

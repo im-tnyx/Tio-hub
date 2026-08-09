@@ -124,12 +124,11 @@ fun CreateExerciseScreen(
 
             Spacer(modifier = Modifier.height(TnyxDimens.SpaceM))
             Surface(
+                onClick = { onAction(CreateExerciseAction.AddAssetClicked) },
                 shape = CircleShape,
                 color = TnyxTheme.colors.surfaceVariant,
                 border = BorderStroke(TnyxDimens.BorderSubtle, TnyxTheme.colors.textSecondary.copy(alpha = 0.25f)),
-                modifier = Modifier
-                    .size(110.dp)
-                    .clickable { onAction(CreateExerciseAction.AddAssetClicked) }
+                modifier = Modifier.size(110.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     if (hasAsset && isVideoAsset) {

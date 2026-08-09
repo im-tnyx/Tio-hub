@@ -10,14 +10,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tnyx.core.theme.TnyxTheme
 
 /**
  * Variants for Secondary button styles
  */
 enum class TnyxSecondaryVariant {
-    Standard, // Bold primary border
-    Muted     // Subtle grey border (like outlined cards)
+    Standard,    // Bold primary border
+    Muted,       // Subtle grey border (like outlined cards)
+    Destructive, // Red error border & text
+}
+
+/**
+ * Sizes for Tnyx buttons
+ */
+enum class TnyxButtonSize(val height: Dp) {
+    Default(48.dp),
+    Compact(42.dp),
+    Small(36.dp),
 }
 
 /**
@@ -35,15 +46,17 @@ fun TnyxPrimaryButton(
     textAlign: TextAlign = TextAlign.Center,
     maxLines: Int = 1,
     overflow: TextOverflow = TextOverflow.Ellipsis,
+    size: TnyxButtonSize? = null,
     height: Dp? = null
 ) {
     val tokens = TnyxTheme.components.button
+    val resolvedHeight = height ?: size?.height ?: tokens.height
     
     Button(
         onClick = onPressed,
         modifier = modifier
             .then(if (expand) Modifier.fillMaxWidth() else Modifier)
-            .height(height ?: tokens.height),
+            .height(resolvedHeight),
         enabled = enabled,
         shape = TnyxTheme.shapes.Material.medium,
         colors = ButtonDefaults.buttonColors(
@@ -84,26 +97,34 @@ fun TnyxSecondaryButton(
     textAlign: TextAlign = TextAlign.Center,
     maxLines: Int = 1,
     overflow: TextOverflow = TextOverflow.Ellipsis,
+    size: TnyxButtonSize? = null,
     height: Dp? = null
 ) {
     val tokens = TnyxTheme.components.button
+    val resolvedHeight = height ?: size?.height ?: tokens.height
     
     val borderColor = when (variant) {
         TnyxSecondaryVariant.Standard -> if (enabled) tokens.secondaryBorderColor else tokens.disabledBorderColor
         TnyxSecondaryVariant.Muted -> if (enabled) tokens.mutedBorderColor else tokens.disabledBorderColor
+        TnyxSecondaryVariant.Destructive -> if (enabled) TnyxTheme.colors.error else tokens.disabledBorderColor
+    }
+
+    val contentColor = when (variant) {
+        TnyxSecondaryVariant.Destructive -> if (enabled) TnyxTheme.colors.error else tokens.disabledContentColor
+        else -> tokens.secondaryContentColor
     }
 
     OutlinedButton(
         onClick = onPressed,
         modifier = modifier
             .then(if (expand) Modifier.fillMaxWidth() else Modifier)
-            .height(height ?: tokens.height),
+            .height(resolvedHeight),
         enabled = enabled,
         shape = TnyxTheme.shapes.Material.medium,
         border = BorderStroke(TnyxTheme.dimens.BorderThin, borderColor),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = Color.Transparent,
-            contentColor = tokens.secondaryContentColor,
+            contentColor = contentColor,
             disabledContentColor = tokens.disabledContentColor
         ),
         contentPadding = PaddingValues(horizontal = tokens.horizontalPadding)
@@ -136,15 +157,17 @@ fun TnyxGhostButton(
     textAlign: TextAlign = TextAlign.Center,
     maxLines: Int = 1,
     overflow: TextOverflow = TextOverflow.Ellipsis,
+    size: TnyxButtonSize? = null,
     height: Dp? = null
 ) {
     val tokens = TnyxTheme.components.button
+    val resolvedHeight = height ?: size?.height ?: tokens.height
     
     TextButton(
         onClick = onPressed,
         modifier = modifier
             .then(if (expand) Modifier.fillMaxWidth() else Modifier)
-            .height(height ?: tokens.height),
+            .height(resolvedHeight),
         enabled = enabled,
         shape = TnyxTheme.shapes.Material.medium,
         colors = ButtonDefaults.textButtonColors(

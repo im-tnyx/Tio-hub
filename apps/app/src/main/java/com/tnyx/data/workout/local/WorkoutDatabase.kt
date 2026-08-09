@@ -9,6 +9,7 @@ import androidx.room.RoomDatabase
         WorkoutMutationOutboxEntity::class,
         WorkoutSessionHistoryEntity::class,
         WorkoutExerciseDefinitionEntity::class,
+        WorkoutCustomExerciseEntity::class,
         WorkoutRoutineEntity::class
     ],
     version = WorkoutDatabase.VERSION,
@@ -18,7 +19,7 @@ abstract class WorkoutDatabase : RoomDatabase() {
     abstract fun workoutDao(): WorkoutDao
 
     companion object {
-        const val VERSION: Int = 1
+        const val VERSION: Int = 2
         const val NAME: String = "tnyx-workout.db"
     }
 }

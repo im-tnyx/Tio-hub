@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.VolumeMute
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
@@ -32,6 +33,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -170,7 +172,11 @@ fun AppPreferencesScreen(
                         CardDivider()
                         ValueRow(label = "Unit System", value = state.unitSystemSummary)
                         CardDivider()
-                        ValueRow(label = "First Day of Week", value = state.firstDayOfWeek)
+                        ValueRow(
+                            label = "First Day of Week",
+                            value = state.firstDayOfWeek,
+                            onClick = { onAction(AppPreferencesAction.FirstDayOfWeekClicked) }
+                        )
                         CardDivider()
                         ValueRow(
                             label = "Bottom navigation",
@@ -214,31 +220,78 @@ fun AppPreferencesScreen(
 
             item { Spacer(modifier = Modifier.height(24.dp)) }
         }
+
+        // --- First Day of Week Selection BottomSheet ---
+        FirstDayOfWeekBottomSheet(
+            visible = state.showFirstDayOfWeekBottomSheet,
+            selectedDay = state.firstDayOfWeek,
+            onDaySelected = { onAction(AppPreferencesAction.FirstDayOfWeekSelected(it)) },
+            onDismissRequest = { onAction(AppPreferencesAction.FirstDayOfWeekBottomSheetDismissed) }
+        )
+    }
+}
+
+@Composable
+private fun FirstDayOfWeekBottomSheet(
+    visible: Boolean,
+    selectedDay: String,
+    onDaySelected: (String) -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    val options = remember { listOf("Sunday", "Monday", "Saturday") }
+
+    com.tnyx.core.ui.components.sheets.TnyxModalBottomSheet(
+        visible = visible,
+        onDismissRequest = onDismissRequest,
+        title = "First Day of Week",
+    ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+            options.forEach { day ->
+                val isSelected = selectedDay.equals(day, ignoreCase = true)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .clickable { onDaySelected(day) }
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(
+                        text = if (day == "Sunday") "Sunday (Default)" else day,
+                        style = TnyxTheme.typography.bodyLarge,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) TnyxTheme.colors.primary else TnyxTheme.colors.textPrimary,
+                    )
+
+                    if (isSelected) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Selected",
+                            tint = TnyxTheme.colors.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
 @Composable
 private fun AppPreferencesTopBar(onBack: () -> Unit) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(TnyxTheme.colors.background)
             .statusBarsPadding()
-            .padding(horizontal = 8.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = onBack) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                contentDescription = "Back",
-                tint = TnyxTheme.colors.textPrimary,
-            )
-        }
-        Text(
-            text = "App Settings",
-            style = TnyxTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = TnyxTheme.colors.textPrimary,
+        com.tnyx.core.ui.components.layouts.TnyxScreenHeader(
+            title = "App Settings",
+            size = com.tnyx.core.theme.tokens.components.TnyxHeaderSize.Standard,
+            uppercaseTitle = false,
+            navigationIcon = Icons.AutoMirrored.Rounded.ArrowBack,
+            onNavigationClick = onBack
         )
     }
 }
@@ -359,8 +412,8 @@ private fun PreferenceSwitch(
         checked = checked,
         onCheckedChange = onCheckedChange,
         colors = SwitchDefaults.colors(
-            checkedThumbColor = TnyxTheme.colors.warning,
-            checkedTrackColor = TnyxTheme.colors.warning.copy(alpha = 0.3f),
+            checkedThumbColor = TnyxTheme.colors.primary,
+            checkedTrackColor = TnyxTheme.colors.primary.copy(alpha = 0.3f),
             uncheckedThumbColor = TnyxTheme.colors.textMuted,
             uncheckedTrackColor = TnyxTheme.colors.textMuted.copy(alpha = 0.2f),
         ),
@@ -457,8 +510,8 @@ private fun VolumeRow(
                 onValueChange = onChanged,
                 valueRange = 0f..1f,
                 colors = SliderDefaults.colors(
-                    thumbColor = TnyxTheme.colors.warning,
-                    activeTrackColor = TnyxTheme.colors.warning,
+                    thumbColor = TnyxTheme.colors.primary,
+                    activeTrackColor = TnyxTheme.colors.primary,
                     inactiveTrackColor = TnyxTheme.colors.textMuted.copy(alpha = 0.2f),
                 ),
                 modifier = Modifier.weight(1f),

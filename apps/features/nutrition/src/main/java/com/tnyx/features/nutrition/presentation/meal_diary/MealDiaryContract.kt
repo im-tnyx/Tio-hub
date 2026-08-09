@@ -36,6 +36,9 @@ data class MealDiaryUiState(
 
     // Expandable FAB state
     val isFabExpanded: Boolean = false,
+
+    // Overflow Menu state
+    val isOptionsMenuExpanded: Boolean = false,
 ) {
     val isHistoryEmpty: Boolean get() = meals.isEmpty()
 }
@@ -51,6 +54,12 @@ sealed class MealDiaryAction {
     data object AddMealClicked : MealDiaryAction()        // Search / keyboard
     data object AddMealVoiceClicked : MealDiaryAction()   // Mic (future)
     data object AddMealCameraClicked : MealDiaryAction()  // Camera (future)
+
+    // Overflow Menu actions
+    data object OptionsMenuToggled : MealDiaryAction()
+    data object OptionsMenuDismissed : MealDiaryAction()
+    data object NutritionSettingsClicked : MealDiaryAction()
+    data object AppSettingsClicked : MealDiaryAction()
 }
 
 sealed class MealDiaryEffect {
@@ -58,5 +67,7 @@ sealed class MealDiaryEffect {
     data class NavigateToSearch(val date: LocalDate) : MealDiaryEffect()
     data class NavigateToAddMeal(val date: LocalDate) : MealDiaryEffect()
     data class ShowOverview(val target: String) : MealDiaryEffect()
+    data object NavigateToNutritionSettings : MealDiaryEffect()
+    data object NavigateToAppSettings : MealDiaryEffect()
 }
 

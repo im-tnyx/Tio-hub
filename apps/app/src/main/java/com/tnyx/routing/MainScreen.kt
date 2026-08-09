@@ -1,5 +1,8 @@
 package com.tnyx.routing
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -45,6 +48,7 @@ fun MainScreen(
         currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.WorkoutLibrary::class) } == true -> ShellTab.WorkoutLibrary
         currentDestination?.hierarchy?.any { it.hasRoute(WorkoutDestination.Library::class) } == true -> ShellTab.WorkoutLibrary
         currentDestination?.hierarchy?.any { it.hasRoute(WorkoutDestination.SearchExercises::class) } == true -> ShellTab.WorkoutLibrary
+        currentDestination?.hierarchy?.any { it.hasRoute(WorkoutDestination.ExerciseInfo::class) } == true -> ShellTab.WorkoutLibrary
         currentDestination?.hierarchy?.any { it.hasRoute(WorkoutDestination.CreateExercise::class) } == true -> ShellTab.WorkoutLibrary
         currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.WorkoutGraph::class) } == true -> ShellTab.Workout
         currentDestination?.hierarchy?.any { it.hasRoute(MainRoute.Home::class) } == true -> ShellTab.Home
@@ -62,6 +66,7 @@ fun MainScreen(
         currentDestination?.hasRoute<NutritionScreen.Targets>() == true -> false
         currentDestination?.hasRoute<SettingsRoute.PersonalInfo>() == true -> false
         currentDestination?.hasRoute<WorkoutDestination.SearchExercises>() == true -> false
+        currentDestination?.hasRoute<WorkoutDestination.ExerciseInfo>() == true -> false
         currentDestination?.hasRoute<WorkoutDestination.CreateExercise>() == true -> false
         currentDestination?.hasRoute<ProfileRoute.AvatarViewer>() == true -> false
         else -> true
@@ -119,6 +124,10 @@ fun MainScreen(
         NavHost(
             navController = mainNavController,
             startDestination = MainRoute.Home,
+            enterTransition = { fadeIn(tween(150)) },
+            exitTransition = { fadeOut(tween(150)) },
+            popEnterTransition = { fadeIn(tween(150)) },
+            popExitTransition = { fadeOut(tween(150)) },
         ) {
             mainGraph(
                 navController = mainNavController,

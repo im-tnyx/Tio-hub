@@ -57,10 +57,11 @@ fun WorkoutScreen(
             }
         )
 
-        // Static Weekly Calendar — does not scroll
+        // Static Weekly Calendar (Allows future week scrolling)
         TnyxWeeklyCalendar(
             selectedDate = selectedDate,
-            onDateSelected = { selectedDate = it }
+            onDateSelected = { selectedDate = it },
+            allowFutureDates = true
         )
 
         // Workout content container

@@ -34,10 +34,13 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.PlayCircleOutline
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.outlined.BookmarkBorder
@@ -82,6 +85,7 @@ import com.tnyx.shared.workout.domain.catalog.ExerciseCatalogDto
 import com.tnyx.shared.workout.domain.logic.ExerciseMediaResolver
 import com.tnyx.shared.workout.domain.model.ExerciseDefinition
 import com.tnyx.shared.workout.domain.model.ExerciseMediaPreference
+import com.tnyx.shared.workout.domain.model.ExerciseMediaVariant
 
 @Composable
 fun SearchExercisesScreen(
@@ -90,6 +94,41 @@ fun SearchExercisesScreen(
     modifier: Modifier = Modifier,
 ) {
     // ── Scroll-aware filter bar state ─────────────────────────────────────
+    val shouldShowCustomSection = state.searchQuery.isBlank() &&
+        state.selectedFilter.equals("ALL", ignoreCase = true) &&
+        state.exercises.any { exercise -> exercise.isCustom }
+    val customExercises = remember(state.exercises, shouldShowCustomSection) {
+        if (!shouldShowCustomSection) {
+            emptyList()
+        } else {
+            state.exercises.filter { exercise -> exercise.isCustom }
+        }
+    }
+    val allExercisesSection = remember(state.exercises, customExercises, shouldShowCustomSection) {
+        if (!shouldShowCustomSection) {
+            state.exercises
+        } else {
+            val customExerciseIds = customExercises.map { exercise -> exercise.id }.toSet()
+            state.exercises.filterNot { exercise -> exercise.id in customExerciseIds }
+        }
+    }
+    val headerTitle = remember(
+        state.searchQuery,
+        state.selectedFilter,
+        shouldShowCustomSection,
+    ) {
+        when {
+            state.searchQuery.isNotBlank() -> "Search Results"
+            shouldShowCustomSection -> "Custom Exercises"
+            state.selectedFilter.equals("FAVORITES", ignoreCase = true) -> "Favorite Exercises"
+            state.selectedFilter.equals("ALL", ignoreCase = true) -> "All Exercises"
+            else -> state.selectedFilter.replace("_", " ").lowercase().split(" ")
+                .joinToString(" ") { word ->
+                    word.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                }
+        }
+    }
+
     var filterBarVisible by remember { mutableStateOf(true) }
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
@@ -151,13 +190,6 @@ fun SearchExercisesScreen(
                     verticalArrangement = Arrangement.spacedBy(TnyxDimens.SpaceS),
                 ) {
                     item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }, key = "header_row") {
-                        val headerTitle = when {
-                            state.searchQuery.isNotBlank() -> "Search Results"
-                            state.selectedFilter.equals("FAVORITES", ignoreCase = true) -> "Favorite Exercises"
-                            state.selectedFilter.equals("ALL", ignoreCase = true) -> "All Exercises"
-                            else -> state.selectedFilter.replace("_", " ").lowercase().split(" ")
-                                .joinToString(" ") { word -> word.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() } }
-                        }
                         ExercisesHeaderRow(
                             title = headerTitle,
                             viewType = state.viewType,
@@ -178,10 +210,25 @@ fun SearchExercisesScreen(
                                     .padding(top = TnyxDimens.SpaceXL)
                             )
                         }
+                    } else if (shouldShowCustomSection) {
+                        gridSection(
+                            title = "Custom Exercises",
+                            exercises = customExercises,
+                            mediaVariant = state.mediaVariant,
+                            onAction = onAction,
+                            showHeader = false,
+                        )
+                        gridSection(
+                            title = "All Exercises",
+                            exercises = allExercisesSection,
+                            mediaVariant = state.mediaVariant,
+                            onAction = onAction,
+                        )
                     } else {
                         items(items = state.exercises, key = { it.id }) { exercise ->
                             ExerciseGridItem(
                                 exercise = exercise,
+                                mediaVariant = state.mediaVariant,
                                 onInfoClick = { onAction(SearchExercisesAction.ExerciseInfoClicked(exercise.id)) },
                                 onCardClick = { onAction(SearchExercisesAction.ExerciseSelected(exercise.id)) },
                                 onLongCardClick = { onAction(SearchExercisesAction.ExerciseLongClicked(exercise.id)) },
@@ -201,13 +248,6 @@ fun SearchExercisesScreen(
                     verticalArrangement = Arrangement.spacedBy(TnyxDimens.SpaceS),
                 ) {
                     item(key = "header_row") {
-                        val headerTitle = when {
-                            state.searchQuery.isNotBlank() -> "Search Results"
-                            state.selectedFilter.equals("FAVORITES", ignoreCase = true) -> "Favorite Exercises"
-                            state.selectedFilter.equals("ALL", ignoreCase = true) -> "All Exercises"
-                            else -> state.selectedFilter.replace("_", " ").lowercase().split(" ")
-                                .joinToString(" ") { word -> word.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() } }
-                        }
                         ExercisesHeaderRow(
                             title = headerTitle,
                             viewType = state.viewType,
@@ -228,10 +268,25 @@ fun SearchExercisesScreen(
                                     .padding(top = TnyxDimens.SpaceXL)
                             )
                         }
+                    } else if (shouldShowCustomSection) {
+                        listSection(
+                            title = "Custom Exercises",
+                            exercises = customExercises,
+                            mediaVariant = state.mediaVariant,
+                            onAction = onAction,
+                            showHeader = false,
+                        )
+                        listSection(
+                            title = "All Exercises",
+                            exercises = allExercisesSection,
+                            mediaVariant = state.mediaVariant,
+                            onAction = onAction,
+                        )
                     } else {
                         items(items = state.exercises, key = { it.id }) { exercise ->
                             ExerciseCardItem(
                                 exercise = exercise,
+                                mediaVariant = state.mediaVariant,
                                 onInfoClick = { onAction(SearchExercisesAction.ExerciseInfoClicked(exercise.id)) },
                                 onCardClick = { onAction(SearchExercisesAction.ExerciseSelected(exercise.id)) },
                                 onLongCardClick = { onAction(SearchExercisesAction.ExerciseLongClicked(exercise.id)) },
@@ -245,6 +300,8 @@ fun SearchExercisesScreen(
         ExerciseActionsBottomSheet(
             exercise = state.selectedExerciseForActions,
             onDismiss = { onAction(SearchExercisesAction.ExerciseActionsDismissed) },
+            onEditCustomExercise = { onAction(SearchExercisesAction.EditCustomExerciseClicked(it)) },
+            onDeleteCustomExercise = { onAction(SearchExercisesAction.DeleteCustomExerciseClicked(it)) },
         )
     }
 }
@@ -253,9 +310,78 @@ fun SearchExercisesScreen(
 // Grid Card Item  (image fills card top, title + muscle group below)
 // ─────────────────────────────────────────────────────────────────────────────
 
+private fun androidx.compose.foundation.lazy.LazyListScope.listSection(
+    title: String,
+    exercises: List<ExerciseDefinition>,
+    mediaVariant: ExerciseMediaVariant?,
+    onAction: (SearchExercisesAction) -> Unit,
+    showHeader: Boolean = true,
+) {
+    if (exercises.isEmpty()) return
+
+    if (showHeader) {
+        item(key = "section_$title") {
+            ExerciseSectionHeader(title = title)
+        }
+    }
+    items(items = exercises, key = { exercise -> "${title}_${exercise.id}" }) { exercise ->
+        ExerciseCardItem(
+            exercise = exercise,
+            mediaVariant = mediaVariant,
+            onInfoClick = { onAction(SearchExercisesAction.ExerciseInfoClicked(exercise.id)) },
+            onCardClick = { onAction(SearchExercisesAction.ExerciseSelected(exercise.id)) },
+            onLongCardClick = { onAction(SearchExercisesAction.ExerciseLongClicked(exercise.id)) },
+        )
+    }
+}
+
+private fun androidx.compose.foundation.lazy.grid.LazyGridScope.gridSection(
+    title: String,
+    exercises: List<ExerciseDefinition>,
+    mediaVariant: ExerciseMediaVariant?,
+    onAction: (SearchExercisesAction) -> Unit,
+    showHeader: Boolean = true,
+) {
+    if (exercises.isEmpty()) return
+
+    if (showHeader) {
+        item(
+            span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) },
+            key = "section_$title"
+        ) {
+            ExerciseSectionHeader(title = title)
+        }
+    }
+    items(items = exercises, key = { exercise -> "${title}_${exercise.id}" }) { exercise ->
+        ExerciseGridItem(
+            exercise = exercise,
+            mediaVariant = mediaVariant,
+            onInfoClick = { onAction(SearchExercisesAction.ExerciseInfoClicked(exercise.id)) },
+            onCardClick = { onAction(SearchExercisesAction.ExerciseSelected(exercise.id)) },
+            onLongCardClick = { onAction(SearchExercisesAction.ExerciseLongClicked(exercise.id)) },
+        )
+    }
+}
+
+@Composable
+private fun ExerciseSectionHeader(
+    title: String,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = title,
+        style = TnyxTheme.typography.titleMedium.copy(
+            color = TnyxTheme.colors.textPrimary,
+            fontWeight = FontWeight.SemiBold,
+        ),
+        modifier = modifier.padding(top = TnyxDimens.SpaceS, bottom = TnyxDimens.SpaceXXS),
+    )
+}
+
 @Composable
 private fun ExerciseGridItem(
     exercise: ExerciseDefinition,
+    mediaVariant: ExerciseMediaVariant?,
     onInfoClick: () -> Unit,
     onCardClick: () -> Unit,
     onLongCardClick: () -> Unit,
@@ -264,9 +390,11 @@ private fun ExerciseGridItem(
     val resolvedMedia = ExerciseMediaResolver.resolve(
         exercise = exercise,
         preference = ExerciseMediaPreference.AUTO,
+        autoVariant = mediaVariant,
     )
-    val mediaAsset = resolvedMedia.asset ?: exercise.mediaAssets.firstOrNull()
-    val imageUrl = mediaAsset?.thumbnailRef ?: mediaAsset?.imageRef ?: mediaAsset?.videoRef
+    val mediaAsset = resolvedMedia.asset
+    val imageUrl = mediaAsset?.thumbnailRef ?: mediaAsset?.imageRef
+    val hasVideo = !mediaAsset?.videoRef.isNullOrBlank()
 
     TnyxCard(
         modifier = modifier.fillMaxWidth(),
@@ -307,6 +435,13 @@ private fun ExerciseGridItem(
                                 modifier = Modifier.size(TnyxDimens.IconL),
                             )
                         },
+                    )
+                } else if (hasVideo) {
+                    Icon(
+                        imageVector = Icons.Outlined.PlayCircleOutline,
+                        contentDescription = "Video exercise",
+                        tint = TnyxTheme.colors.accent,
+                        modifier = Modifier.size(TnyxDimens.IconXL),
                     )
                 } else {
                     Icon(
@@ -384,6 +519,7 @@ private fun ExerciseGridItem(
 @Composable
 private fun ExerciseCardItem(
     exercise: ExerciseDefinition,
+    mediaVariant: ExerciseMediaVariant?,
     onInfoClick: () -> Unit,
     onCardClick: () -> Unit,
     onLongCardClick: () -> Unit,
@@ -392,9 +528,11 @@ private fun ExerciseCardItem(
     val resolvedMedia = ExerciseMediaResolver.resolve(
         exercise = exercise,
         preference = ExerciseMediaPreference.AUTO,
+        autoVariant = mediaVariant,
     )
-    val mediaAsset = resolvedMedia.asset ?: exercise.mediaAssets.firstOrNull()
-    val thumbnailUrl = mediaAsset?.thumbnailRef ?: mediaAsset?.imageRef ?: mediaAsset?.videoRef
+    val mediaAsset = resolvedMedia.asset
+    val thumbnailUrl = mediaAsset?.thumbnailRef ?: mediaAsset?.imageRef
+    val hasVideo = !mediaAsset?.videoRef.isNullOrBlank()
 
     TnyxCard(
         modifier = modifier.fillMaxWidth(),
@@ -437,6 +575,13 @@ private fun ExerciseCardItem(
                                 modifier = Modifier.size(TnyxDimens.IconM)
                             )
                         }
+                    )
+                } else if (hasVideo) {
+                    Icon(
+                        imageVector = Icons.Outlined.PlayCircleOutline,
+                        contentDescription = "Video exercise",
+                        tint = TnyxTheme.colors.accent,
+                        modifier = Modifier.size(TnyxDimens.IconL),
                     )
                 } else {
                     Icon(
@@ -796,6 +941,8 @@ private fun SearchExercisesTopBar(
 private fun ExerciseActionsBottomSheet(
     exercise: ExerciseDefinition?,
     onDismiss: () -> Unit,
+    onEditCustomExercise: (String) -> Unit,
+    onDeleteCustomExercise: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     TnyxModalBottomSheet(
@@ -809,6 +956,18 @@ private fun ExerciseActionsBottomSheet(
                 .fillMaxWidth()
                 .padding(vertical = TnyxDimens.SpaceXS)
         ) {
+            if (exercise?.isCustom == true) {
+                ExerciseActionItem(
+                    icon = Icons.Outlined.Edit,
+                    title = "Edit Exercise",
+                    onClick = { onEditCustomExercise(exercise.id) }
+                )
+                ExerciseActionItem(
+                    icon = Icons.Outlined.Delete,
+                    title = "Delete Exercise",
+                    onClick = { onDeleteCustomExercise(exercise.id) }
+                )
+            }
             ExerciseActionItem(
                 icon = Icons.Outlined.Share,
                 title = "Share Exercise",

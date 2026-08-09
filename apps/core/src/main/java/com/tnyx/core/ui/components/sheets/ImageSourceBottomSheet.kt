@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.rounded.PhotoCamera
 import androidx.compose.material.icons.rounded.PhotoLibrary
 import androidx.compose.material3.Icon
@@ -19,8 +20,10 @@ fun ImageSourceBottomSheet(
     onDismissRequest: () -> Unit,
     onCameraClick: () -> Unit,
     onGalleryClick: () -> Unit,
+    onRemoveClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     title: String = "Select Photo",
+    removeText: String = "Remove Photo",
 ) {
     TnyxModalBottomSheet(
         visible = visible,
@@ -32,6 +35,7 @@ fun ImageSourceBottomSheet(
             text = "Camera",
             onPressed = onCameraClick,
             expand = true,
+            size = com.tnyx.core.ui.components.buttons.TnyxButtonSize.Compact,
             leading = {
                 Icon(
                     imageVector = Icons.Rounded.PhotoCamera,
@@ -47,6 +51,7 @@ fun ImageSourceBottomSheet(
             text = "Gallery",
             onPressed = onGalleryClick,
             expand = true,
+            size = com.tnyx.core.ui.components.buttons.TnyxButtonSize.Compact,
             leading = {
                 Icon(
                     imageVector = Icons.Rounded.PhotoLibrary,
@@ -56,6 +61,24 @@ fun ImageSourceBottomSheet(
             },
         )
 
-        Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
+        if (onRemoveClick != null) {
+            Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceM))
+
+            TnyxSecondaryButton(
+                text = removeText,
+                onPressed = onRemoveClick,
+                expand = true,
+                size = com.tnyx.core.ui.components.buttons.TnyxButtonSize.Compact,
+                variant = com.tnyx.core.ui.components.buttons.TnyxSecondaryVariant.Destructive,
+                leading = {
+                    Icon(
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = null,
+                        tint = TnyxTheme.colors.error,
+                        modifier = Modifier.size(TnyxTheme.dimens.IconM),
+                    )
+                },
+            )
+        }
     }
 }

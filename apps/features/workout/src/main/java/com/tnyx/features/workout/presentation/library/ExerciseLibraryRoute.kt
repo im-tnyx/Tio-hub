@@ -10,6 +10,8 @@ fun ExerciseLibraryRoute(
     onCreateProgramClick: () -> Unit,
     onCreateRoutineClick: () -> Unit,
     onCreateExerciseClick: () -> Unit,
+    onWorkoutSettingsClick: () -> Unit = {},
+    onAppSettingsClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     ExerciseLibraryScreen(
@@ -17,6 +19,8 @@ fun ExerciseLibraryRoute(
         onCreateProgramClick = onCreateProgramClick,
         onCreateRoutineClick = onCreateRoutineClick,
         onCreateExerciseClick = onCreateExerciseClick,
+        onWorkoutSettingsClick = onWorkoutSettingsClick,
+        onAppSettingsClick = onAppSettingsClick,
         modifier = modifier
     )
 }

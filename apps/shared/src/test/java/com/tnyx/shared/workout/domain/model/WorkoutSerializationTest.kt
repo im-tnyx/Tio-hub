@@ -50,6 +50,7 @@ class WorkoutSerializationTest {
         val exercise = ExerciseDefinition(
             id = "exercise-1",
             name = "Bench Press",
+            bodyPart = "chest",
             trackingType = ExerciseTrackingType.WEIGHT_REPS,
             mediaAssets = listOf(
                 ExerciseMediaAsset(
@@ -71,6 +72,7 @@ class WorkoutSerializationTest {
         assertEquals(ExerciseMediaVariant.FEMALE, decoded.mediaAssets.single().variant)
         assertEquals(ExerciseTrackingType.WEIGHT_REPS, decoded.trackingType)
         assertEquals("exercise-1", decoded.id)
+        assertEquals("chest", decoded.bodyPart)
     }
 
     @Test

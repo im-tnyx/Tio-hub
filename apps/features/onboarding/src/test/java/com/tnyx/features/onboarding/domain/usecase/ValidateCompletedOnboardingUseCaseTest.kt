@@ -15,6 +15,7 @@ class ValidateCompletedOnboardingUseCaseTest {
     fun acceptsCompleteDraftWhenWorkoutWasSkipped() {
         val draft = OnboardingDraft()
             .withAnswer(OnboardingStepIds.IntroWelcome, OnboardingAnswer.Toggle(true))
+            .withAnswer(OnboardingStepIds.IntroExperienceMode, OnboardingAnswer.Text("balanced"))
             .withAnswer(OnboardingStepIds.ProfileName, OnboardingAnswer.Text("Santosh"))
             .withAnswer(OnboardingStepIds.ProfileGender, OnboardingAnswer.Text("male"))
             .withAnswer(OnboardingStepIds.ProfileDateOfBirth, OnboardingAnswer.Text("1990-01-01"))

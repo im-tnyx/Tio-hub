@@ -20,6 +20,7 @@ import com.tnyx.features.profile.navigation.profileGraph
 import com.tnyx.features.settings.navigation.settingsGraph
 import com.tnyx.features.welcome.navigation.welcomeScreen
 import com.tnyx.routing.routes.NutritionRoute
+import com.tnyx.routing.routes.ProfileRoute
 import com.tnyx.routing.routes.RootRoute
 import com.tnyx.routing.routes.SettingsRoute
 
@@ -156,7 +157,8 @@ fun AppNavHost(
 
         composable<SettingsRoute.PersonalInfo> {
             com.tnyx.features.settings.presentation.personal_info.PersonalInfoRoute(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onOpenAvatarViewer = { navController.navigate(ProfileRoute.AvatarViewer) },
             )
         }
 

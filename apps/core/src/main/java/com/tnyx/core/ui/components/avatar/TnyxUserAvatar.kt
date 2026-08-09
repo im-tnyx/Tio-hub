@@ -3,6 +3,7 @@ package com.tnyx.core.ui.components.avatar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -12,12 +13,15 @@ import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.WorkspacePremium
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.contentDescription
@@ -29,8 +33,6 @@ import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import com.tnyx.core.theme.TnyxTheme
 import com.tnyx.shared.profile.domain.model.MembershipTier
-
-import androidx.compose.ui.graphics.RectangleShape
 
 private val PremiumHexagonShape = GenericShape { size, _ ->
     moveTo(size.width * 0.25f, 0f)
@@ -116,11 +118,6 @@ fun TnyxUserAvatar(
             ),
         )
     }
-    val clickModifier = if (onClick != null) {
-        Modifier.clickable(onClick = onClick)
-    } else {
-        Modifier
-    }
     val accessibleName = displayName.ifBlank { "User" }
 
     Box(
@@ -128,51 +125,57 @@ fun TnyxUserAvatar(
             .size(size.containerSize)
             .semantics {
                 contentDescription = "$accessibleName profile photo, ${membershipTier.name.lowercase()} plan"
-            }
-            .then(clickModifier),
+            },
         contentAlignment = Alignment.Center,
     ) {
-        Box(
-            modifier = Modifier
-                .size(size.containerSize)
-                .clip(frameShape)
-                .background(frameBrush)
-                .padding(if (membershipTier == MembershipTier.Free) 1.dp else 3.dp),
-            contentAlignment = Alignment.Center,
+        Surface(
+            onClick = onClick ?: {},
+            enabled = onClick != null,
+            shape = frameShape,
+            color = Color.Transparent,
+            modifier = Modifier.size(size.containerSize),
         ) {
             Box(
                 modifier = Modifier
-                    .size(size.imageSize)
-                    .clip(innerImageShape)
-                    .background(TnyxTheme.colors.surface),
+                    .fillMaxSize()
+                    .background(frameBrush)
+                    .padding(if (membershipTier == MembershipTier.Free) 1.dp else 3.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                val resolvedUrl = imageUrl?.takeIf(String::isNotBlank)
-                if (resolvedUrl == null) {
-                    AvatarFallback(
-                        displayName = displayName,
-                        iconSize = size.fallbackIconSize,
-                    )
-                } else {
-                    SubcomposeAsyncImage(
-                        model = resolvedUrl,
-                        contentDescription = null,
-                        modifier = Modifier.matchParentSize(),
-                        contentScale = ContentScale.Crop,
-                        loading = {
-                            AvatarFallback(
-                                displayName = displayName,
-                                iconSize = size.fallbackIconSize,
-                            )
-                        },
-                        error = {
-                            AvatarFallback(
-                                displayName = displayName,
-                                iconSize = size.fallbackIconSize,
-                            )
-                        },
-                        success = { SubcomposeAsyncImageContent() },
-                    )
+                Box(
+                    modifier = Modifier
+                        .size(size.imageSize)
+                        .clip(innerImageShape)
+                        .background(TnyxTheme.colors.surface),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    val resolvedUrl = imageUrl?.takeIf(String::isNotBlank)
+                    if (resolvedUrl == null) {
+                        AvatarFallback(
+                            displayName = displayName,
+                            iconSize = size.fallbackIconSize,
+                        )
+                    } else {
+                        SubcomposeAsyncImage(
+                            model = resolvedUrl,
+                            contentDescription = null,
+                            modifier = Modifier.matchParentSize(),
+                            contentScale = ContentScale.Crop,
+                            loading = {
+                                AvatarFallback(
+                                    displayName = displayName,
+                                    iconSize = size.fallbackIconSize,
+                                )
+                            },
+                            error = {
+                                AvatarFallback(
+                                    displayName = displayName,
+                                    iconSize = size.fallbackIconSize,
+                                )
+                            },
+                            success = { SubcomposeAsyncImageContent() },
+                        )
+                    }
                 }
             }
         }

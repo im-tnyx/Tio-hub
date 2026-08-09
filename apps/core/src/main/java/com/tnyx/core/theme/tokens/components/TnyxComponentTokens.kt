@@ -10,6 +10,7 @@ data class TnyxComponentTokens(
     val sheet: SheetTokens,
     val navigation: NavigationTokens,
     val calendar: CalendarTokens,
-    val header: HeaderTokens
+    val header: HeaderTokens,
+    val imageCropper: ImageCropperTokens,
     // To be expanded as system grows
 )

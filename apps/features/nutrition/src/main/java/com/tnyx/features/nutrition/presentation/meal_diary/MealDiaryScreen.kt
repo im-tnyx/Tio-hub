@@ -1,12 +1,17 @@
 package com.tnyx.features.nutrition.presentation.meal_diary
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.NotificationsNone
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.PieChartOutline
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -135,12 +140,90 @@ fun MealDiaryScreen(
                 size = TnyxHeaderSize.Compact,
                 uppercaseTitle = false,
                 actions = {
-                    IconButton(onClick = { /* Handle notification click */ }) {
+                    IconButton(onClick = { onAction(MealDiaryAction.OverviewRequested("all")) }) {
                         Icon(
-                            imageVector = Icons.Rounded.NotificationsNone,
-                            contentDescription = "Notifications",
+                            imageVector = Icons.Rounded.PieChartOutline,
+                            contentDescription = "Nutrition Analytics",
                             tint = TnyxTheme.colors.textPrimary
                         )
+                    }
+                    Box {
+                        IconButton(onClick = { onAction(MealDiaryAction.OptionsMenuToggled) }) {
+                            Icon(
+                                imageVector = Icons.Rounded.MoreVert,
+                                contentDescription = "More options",
+                                tint = TnyxTheme.colors.textPrimary
+                            )
+                        }
+
+                        if (state.isOptionsMenuExpanded) {
+                            androidx.compose.ui.window.Popup(
+                                alignment = Alignment.TopEnd,
+                                offset = IntOffset(x = -12, y = 44),
+                                onDismissRequest = { onAction(MealDiaryAction.OptionsMenuDismissed) }
+                            ) {
+                                com.tnyx.core.ui.components.cards.TnyxCard(
+                                    variant = com.tnyx.core.ui.components.cards.TnyxCardVariant.Surface,
+                                    padding = 0.dp,
+                                    shape = RoundedCornerShape(16.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .width(220.dp)
+                                            .padding(vertical = 4.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(48.dp)
+                                                .clickable { onAction(MealDiaryAction.NutritionSettingsClicked) }
+                                                .padding(horizontal = 16.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.Tune,
+                                                contentDescription = null,
+                                                tint = TnyxTheme.colors.textPrimary,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(12.dp))
+                                            Text(
+                                                text = "Nutrition Target",
+                                                style = TnyxTheme.typography.bodyMedium,
+                                                color = TnyxTheme.colors.textPrimary
+                                            )
+                                        }
+
+                                        HorizontalDivider(
+                                            color = TnyxTheme.colors.textSecondary.copy(alpha = 0.15f),
+                                            thickness = 0.5.dp
+                                        )
+
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(48.dp)
+                                                .clickable { onAction(MealDiaryAction.AppSettingsClicked) }
+                                                .padding(horizontal = 16.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.Settings,
+                                                contentDescription = null,
+                                                tint = TnyxTheme.colors.textPrimary,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(12.dp))
+                                            Text(
+                                                text = "App Settings",
+                                                style = TnyxTheme.typography.bodyMedium,
+                                                color = TnyxTheme.colors.textPrimary
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             )

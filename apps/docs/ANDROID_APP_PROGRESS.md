@@ -199,13 +199,15 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
 - [x] Workout and its reused core Button, Input, Card, and Header consumers resolve visual state through `TnyxTheme` component/semantic tokens without feature-local hardcoded colors, dimensions, alpha values, or typography overrides.
 - [x] Workout source now has additive exercise tracking types/snapshots and a feature-owned reusable exercise editor with keyed multiple-exercise, set, and metric UI state; Active mode is wired while Routine-edit and Read-only consumers remain future work.
 - [x] Active Workout now uses a dense full-width set table with tracking-type columns, add-set, latest completed-session `Previous` mapping/copy, and an RPE 5-10 selector for strength/reps exercises.
-- [ ] The 2026-08-02 validation rerun no longer has the earlier Workout
-  `kotlin.test.*` compilation gap: `:features:workout:test` is restored to
-  local green, while `:app:testDebugUnitTest` remains environment-blocked in
-  Robolectric artifact setup on the current Codex Windows machine.
-- [ ] Exercise catalog/media, routine builder, notes, live rest timer, advanced set types, reordering, and device UX smoke are not implemented yet.
+- [x] **Live `custom_exercises` Supabase Persistence:** Supabase project `ublwxylwdqjdykqcncuv` now has `custom_exercises` with owner-scoped authenticated RLS for the custom exercise create/search slice.
+- [x] **App-Owned Workout Catalog Merge:** `SupabaseExerciseCatalogRepository` now merges bundled exercise definitions with owner-scoped remote custom exercises and caches the remote slice in Phone Room.
+- [x] **Create Exercise Media Client Path:** JPEG/PNG crop output, animated GIF, and common video files now upload through the app-owned Supabase repository, persist as approved neutral `imageRef`/`videoRef` media, clean up replaced/deleted objects, and surface failures through the screen Snackbar. Exercise videos use a dedicated Media3 editor with a filmstrip-based 30-second trim cap plus manual crop handles, one-finger pan, two-finger zoom, and aspect presets before MP4 export; exported media remains subject to the 50 MB limit, and files above 6 MB use resumable upload.
+- [x] **Private Exercise Media Storage:** The live `tio-exercise-media` bucket now enforces permanent-user, owner-folder RLS, eight allowed image/video MIME types, and a 50 MB ceiling. Android persists durable Storage object references and resolves temporary signed URLs only when rendering private media.
+- [x] The 2026-08-08 validation rerun restored the full local gate for
+  `:shared:test :features:workout:test :app:testDebugUnitTest`.
+- [ ] Full first-party exercise catalog/media coverage, routine builder, notes, live rest timer, advanced set types, reordering, and device UX smoke are not implemented yet.
 
-Boundary note: shared contracts, Phone persistence/recovery, and the first repository-backed Phone UI slice are implemented. Approved media catalog integration, routine building, advanced session UX, Settings UI, remote outbox delivery, and real Wear sync remain unimplemented. The blueprint allows a Tio-owned visual UI while preserving the approved Lyfta-derived core UX behavior.
+Boundary note: shared contracts, Phone persistence/recovery, custom exercise persistence, and the first Exercise Info media UI are implemented. Complete provenance-approved media coverage, routine building, advanced session UX, remote outbox delivery, and real Wear sync remain unimplemented. The blueprint allows a Tio-owned visual UI while preserving the approved Lyfta-derived core UX behavior.
 
 ### Profile
 
@@ -219,18 +221,20 @@ Boundary note: shared contracts, Phone persistence/recovery, and the first repos
 - [x] Avatar entry selects You when enabled and launches standalone `ProfileGraph` as fallback.
 - [x] Shared Profile model and Supabase repository DTO expose additive username data.
 - [x] Active Profile Hilt binding now uses `SupabaseProfileRepository`.
-- [x] Authenticated Profile reads come from live `profiles` and
+- [x] Authenticated Profile reads come from live `users` and
   `user_nutrition_profiles`; signed-out state resolves to a clean guest
   profile.
 - [x] Personal Information reads active name, username, email, and avatar;
   Save updates normalized name/username and avatar actions update the active
   remote profile path.
 - [x] Avatar upload/remove persists through the live `tio-profile` storage
-  bucket and `profiles.avatar_url`.
+  bucket and `users.avatar_url`.
 - [x] `bootstrap_user_profiles` और `deny_direct_auth_identity_access` migrations
   connected Tio-hub Supabase project पर applied और verified हैं।
 - [x] `add_profiles_mobile_column` migration is applied and verified on the
   connected Tio-hub Supabase project.
+- [x] `rename_profiles_to_users` and `backfill_missing_public_users` migrations
+  are applied and verified; `public.users` matches `auth.users` one-to-one.
 - [ ] Personal Information email writes remain deferred; current remote sync
   does not make the full Profile surface backend-final.
 - [ ] Remaining Profile launchers are intentionally absent until their owning feature slices exist.
@@ -628,7 +632,7 @@ Rule: Future module folders may exist as checked-in ownership placeholders, but 
 - [x] Profile result: 3 tests, 0 failures, 0 errors, 0 skipped.
 - [x] Scope: reusable Profile header, card-less identity UI, Edit/Settings routing,
   username fallback behavior, additive username model/DTO mapping, and shared compatibility.
-- [x] Live Supabase verification: `profiles`, `user_nutrition_profiles`,
+- [x] Live Supabase verification: `users`, `user_nutrition_profiles`,
   `user_workout_profiles`, locked `auth_identities`, security-invoker
   `profile_overview`, और `tio-profile` bucket मौजूद हैं।
 - [x] RLS/grants verification: Profile/Nutrition/Workout owner policies मौजूद हैं;
@@ -645,7 +649,7 @@ Rule: Future module folders may exist as checked-in ownership placeholders, but 
 - [x] `./gradlew.bat :features:auth:compileDebugKotlin :features:nutrition:compileDebugKotlin :app:compileDebugKotlin --no-configuration-cache`
 - [x] Result: BUILD SUCCESSFUL
 - [x] Live Supabase migration applied: `20260730193000_add_profiles_mobile_column`
-- [x] Live schema verification: `profiles.mobile` exists in project `ublwxylwdqjdykqcncuv`
+- [x] Live schema verification: `users.mobile` exists in project `ublwxylwdqjdykqcncuv`
 - [x] Scope: active `SupabaseAuthRepository` binding, demo-account disablement in Login UI, active `SupabaseProfileRepository` binding, remote avatar/profile persistence, refresh-driven remote profile sync, and nutrition fake fallback removal.
 - [x] Truth boundary: profile/nutrition target data and nutrition diary tables now exist on the connected Supabase project; device-side meal diary/editor route validation still remains separate from schema truth.
 

@@ -1,6 +1,7 @@
 package com.tnyx.data.workout
 
 import com.tnyx.data.workout.local.WorkoutEngineStateEntity
+import com.tnyx.data.workout.local.WorkoutCustomExerciseEntity
 import com.tnyx.data.workout.local.WorkoutExerciseDefinitionEntity
 import com.tnyx.data.workout.local.WorkoutMutationOutboxEntity
 import com.tnyx.data.workout.local.WorkoutOutboxDeliveryStatus
@@ -71,6 +72,19 @@ internal fun ExerciseDefinition.toEntity(
     name = name,
     contractVersion = schemaVersion,
     definitionJson = codec.encodeExerciseDefinition(this)
+)
+
+internal fun ExerciseDefinition.toCustomCacheEntity(
+    ownerUserId: String,
+    codec: WorkoutPersistenceCodec,
+    syncedAtMs: Long
+): WorkoutCustomExerciseEntity = WorkoutCustomExerciseEntity(
+    ownerUserId = ownerUserId,
+    exerciseId = id,
+    name = name,
+    contractVersion = schemaVersion,
+    definitionJson = codec.encodeExerciseDefinition(this),
+    syncedAtMs = syncedAtMs
 )
 
 internal fun WorkoutRoutine.toEntity(

@@ -3,8 +3,10 @@ package com.tnyx.features.workout.presentation.library.createexercise
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,10 +21,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Accessibility
 import androidx.compose.material.icons.outlined.AccessibilityNew
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.Repeat
+import androidx.compose.material.icons.rounded.PlayCircle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -30,6 +34,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -60,6 +66,7 @@ import com.tnyx.features.workout.presentation.library.createexercise.widgets.Mus
 @Composable
 fun CreateExerciseScreen(
     state: CreateExerciseUiState,
+    snackbarHostState: SnackbarHostState,
     onAction: (CreateExerciseAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -89,7 +96,7 @@ fun CreateExerciseScreen(
                         text = "Save",
                         onPressed = { onAction(CreateExerciseAction.SaveClicked) },
                         enabled = !state.isSaving,
-                        height = 36.dp,
+                        size = com.tnyx.core.ui.components.buttons.TnyxButtonSize.Compact,
                         modifier = Modifier.padding(end = TnyxDimens.SpaceS)
                     )
                 },
@@ -98,6 +105,7 @@ fun CreateExerciseScreen(
                 )
             )
         },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         containerColor = TnyxTheme.colors.background,
         modifier = modifier
     ) { innerPadding ->
@@ -111,19 +119,26 @@ fun CreateExerciseScreen(
         ) {
             // Hero Camera / Add Asset Section
             val hasAsset = !state.assetUri.isNullOrBlank()
-            val assetLabel = if (hasAsset) "Replace Asset" else "Add Asset"
+            val isVideoAsset = state.assetMimeType?.startsWith("video/") == true
+            val assetLabel = if (hasAsset) "Replace Media" else "Add Media"
 
             Spacer(modifier = Modifier.height(TnyxDimens.SpaceM))
             Surface(
+                onClick = { onAction(CreateExerciseAction.AddAssetClicked) },
                 shape = CircleShape,
                 color = TnyxTheme.colors.surfaceVariant,
                 border = BorderStroke(TnyxDimens.BorderSubtle, TnyxTheme.colors.textSecondary.copy(alpha = 0.25f)),
-                modifier = Modifier
-                    .size(110.dp)
-                    .clickable { onAction(CreateExerciseAction.AddAssetClicked) }
+                modifier = Modifier.size(110.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    if (hasAsset) {
+                    if (hasAsset && isVideoAsset) {
+                        Icon(
+                            imageVector = Icons.Rounded.PlayCircle,
+                            contentDescription = "Selected video",
+                            tint = TnyxTheme.colors.accent,
+                            modifier = Modifier.size(TnyxDimens.IconL),
+                        )
+                    } else if (hasAsset) {
                         AsyncImage(
                             model = state.assetUri,
                             contentDescription = "Asset Preview",
@@ -303,6 +318,19 @@ fun CreateExerciseScreen(
                 .ifBlank { null }
         }
     }
+
+    // Image Source Selection Bottom Sheet (Camera / Gallery / Remove Photo)
+    com.tnyx.core.ui.components.sheets.ImageSourceBottomSheet(
+        visible = state.showImageSourceBottomSheet,
+        onDismissRequest = { onAction(CreateExerciseAction.ImageSourceBottomSheetDismissed) },
+        onCameraClick = { onAction(CreateExerciseAction.CameraClicked) },
+        onGalleryClick = { onAction(CreateExerciseAction.GalleryClicked) },
+        onRemoveClick = if (!state.assetUri.isNullOrBlank()) {
+            { onAction(CreateExerciseAction.RemoveAssetClicked) }
+        } else null,
+        title = "Select Exercise Media",
+        removeText = "Remove Media",
+    )
 
     // Equipment Selection Bottom Sheet
     EquipmentSelectionBottomSheet(

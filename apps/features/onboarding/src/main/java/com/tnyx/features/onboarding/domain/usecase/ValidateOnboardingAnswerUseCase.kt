@@ -14,6 +14,10 @@ class ValidateOnboardingAnswerUseCase @Inject constructor() {
         return when (stepId) {
             OnboardingStepIds.IntroWelcome -> true
 
+            OnboardingStepIds.IntroExperienceMode -> {
+                answer is OnboardingAnswer.Text && answer.value in EXPERIENCE_MODE_IDS
+            }
+
             OnboardingStepIds.ProfileName -> {
                 answer is OnboardingAnswer.Text && answer.value.trim().length in PROFILE_NAME_LENGTH
             }
@@ -159,6 +163,7 @@ class ValidateOnboardingAnswerUseCase @Inject constructor() {
 
     private companion object {
         val PROFILE_NAME_LENGTH = 2..30
+        val EXPERIENCE_MODE_IDS = setOf("balanced", "workout", "nutrition")
         val PROFILE_GENDER_IDS = setOf("male", "female", "prefer_not_to_say")
         val PRIMARY_GOAL_IDS = setOf(
             "build_muscle",

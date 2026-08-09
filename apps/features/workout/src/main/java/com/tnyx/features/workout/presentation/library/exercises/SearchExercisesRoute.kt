@@ -11,6 +11,7 @@ fun SearchExercisesRoute(
     onNavigateBack: () -> Unit,
     onExerciseInfoClick: (String) -> Unit = {},
     onExerciseSelect: (String) -> Unit = {},
+    onEditCustomExercise: (String) -> Unit = {},
     onFilterClick: () -> Unit = {},
     onCreateClick: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -28,6 +29,7 @@ fun SearchExercisesRoute(
                 SearchExercisesAction.CreateIconClicked -> onCreateClick()
                 is SearchExercisesAction.ExerciseInfoClicked -> onExerciseInfoClick(action.exerciseId)
                 is SearchExercisesAction.ExerciseSelected -> onExerciseSelect(action.exerciseId)
+                is SearchExercisesAction.EditCustomExerciseClicked -> onEditCustomExercise(action.exerciseId)
                 else -> {}
             }
         },

@@ -14,6 +14,8 @@ fun MealDiaryRoute(
     onNavigateToSearch: (LocalDate) -> Unit,
     onNavigateToAddMeal: (LocalDate) -> Unit,
     onShowOverview: (String) -> Unit,
+    onNavigateToNutritionSettings: (() -> Unit)? = null,
+    onNavigateToAppSettings: (() -> Unit)? = null,
     viewModel: MealDiaryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -25,6 +27,8 @@ fun MealDiaryRoute(
                 is MealDiaryEffect.NavigateToSearch -> onNavigateToSearch(effect.date)
                 is MealDiaryEffect.NavigateToAddMeal -> onNavigateToAddMeal(effect.date)
                 is MealDiaryEffect.ShowOverview -> onShowOverview(effect.target)
+                MealDiaryEffect.NavigateToNutritionSettings -> onNavigateToNutritionSettings?.invoke()
+                MealDiaryEffect.NavigateToAppSettings -> onNavigateToAppSettings?.invoke()
             }
         }
     }

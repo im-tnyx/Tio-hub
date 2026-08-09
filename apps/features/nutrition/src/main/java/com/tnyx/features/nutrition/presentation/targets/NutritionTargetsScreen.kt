@@ -524,7 +524,6 @@ private fun RecoveryCard(
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    // यह कैलकुलेटेड वैल्यू आपके UiState से आएगी (जैसे 8.0 hrs)
                     text = "${state.sleepTargetHours} hrs",
                     style = TnyxTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
@@ -534,26 +533,15 @@ private fun RecoveryCard(
 
             Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceM))
 
-            // Footer: Time Range + Edit Button
-            Column(
+            // Footer: Time Range ("11:00 pm - 7:00 am") + EditIconButton
+            Row(
                 modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                SleepTimeTargetItem(
-                    title = "Bed time",
-                    value = state.formattedSleepTime,
-                    onEdit = { onEdit(NutritionTargetField.SleepSchedule) },
-                )
-                IndentDivider()
-                SleepTimeTargetItem(
-                    title = "Wake up time",
-                    value = state.formattedWakeTime,
-                    onEdit = { onEdit(NutritionTargetField.SleepSchedule) },
-                )
-                Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
                 Text(
-                    // यहाँ Sleep Time और Wake Time आएगा (जैसे "10:30 PM - 06:30 AM")
                     text = "${state.formattedSleepTime} - ${state.formattedWakeTime}",
-                    style = TnyxTheme.typography.titleLarge,
+                    style = TnyxTheme.typography.titleMedium,
                     color = TnyxTheme.colors.textPrimary
                 )
                 Spacer(modifier = Modifier.width(TnyxTheme.dimens.SpaceM))
@@ -720,7 +708,7 @@ private fun EditIconButton(onClick: () -> Unit) {
         modifier = Modifier
             .size(36.dp)
             .clip(CircleShape)
-            .background(TnyxTheme.colors.onPrimary)
+            .background(TnyxTheme.colors.surfaceVariant)
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
@@ -879,34 +867,7 @@ private fun TargetEditDialog(
 // Utilities
 // ─────────────────────────────────────────────────────────────────────────────
 
-@Composable
-private fun SleepTimeTargetItem(
-    title: String,
-    value: String,
-    onEdit: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = TnyxTheme.dimens.SpaceS),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = title,
-            style = TnyxTheme.typography.bodyLarge,
-            color = TnyxTheme.colors.textPrimary,
-            modifier = Modifier.weight(1f),
-        )
-        Text(
-            text = value,
-            style = TnyxTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = TnyxTheme.colors.textPrimary,
-        )
-        Spacer(modifier = Modifier.width(TnyxTheme.dimens.SpaceM))
-        EditIconButton(onClick = onEdit)
-    }
-}
+
 
 private fun Double.toCleanString(): String =
     if (this % 1.0 == 0.0) toInt().toString() else String.format("%.1f", this)

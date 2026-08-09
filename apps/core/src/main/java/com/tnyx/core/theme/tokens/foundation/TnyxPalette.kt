@@ -29,6 +29,7 @@ object TnyxPalette {
     val Blue = Color(0xFF0C6FFF)
     val ElectricBlue = Color(0xFF0C6FFF)
     val SkyBlue = Color(0xFF38BDF8)
+    val Pumpkin = Color(0xFFEB7B36)
     val Amber = Color(0xFFF59E0B)
     val Emerald = Color(0xFF10B981)
     val Indigo = Color(0xFF6366F1)

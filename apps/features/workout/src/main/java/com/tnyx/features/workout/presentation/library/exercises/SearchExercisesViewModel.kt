@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tnyx.features.workout.domain.repository.ExerciseCatalogRepository
 import com.tnyx.features.workout.domain.repository.ExerciseViewPreferencesRepository
+import com.tnyx.features.workout.presentation.library.toExerciseMediaVariant
+import com.tnyx.shared.profile.domain.repository.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -24,6 +26,7 @@ import javax.inject.Inject
 class SearchExercisesViewModel @Inject constructor(
     private val catalogRepository: ExerciseCatalogRepository,
     private val viewPreferencesRepository: ExerciseViewPreferencesRepository,
+    private val profileRepository: ProfileRepository,
 ) : ViewModel() {
 
     private val searchQuery = MutableStateFlow("")
@@ -39,6 +42,10 @@ class SearchExercisesViewModel @Inject constructor(
     init {
         viewPreferencesRepository.viewType.onEach { savedViewType ->
             _uiState.update { it.copy(viewType = savedViewType) }
+        }.launchIn(viewModelScope)
+
+        profileRepository.getCurrentProfile().onEach { profile ->
+            _uiState.update { it.copy(mediaVariant = profile.gender.toExerciseMediaVariant()) }
         }.launchIn(viewModelScope)
 
         combine(debouncedSearchQuery, selectedFilter) { query, filter ->
@@ -87,6 +94,15 @@ class SearchExercisesViewModel @Inject constructor(
             is SearchExercisesAction.ExerciseLongClicked -> {
                 val targetExercise = _uiState.value.exercises.find { it.id == action.exerciseId }
                 _uiState.update { it.copy(selectedExerciseForActions = targetExercise) }
+            }
+            is SearchExercisesAction.EditCustomExerciseClicked -> {
+                _uiState.update { it.copy(selectedExerciseForActions = null) }
+            }
+            is SearchExercisesAction.DeleteCustomExerciseClicked -> {
+                _uiState.update { it.copy(selectedExerciseForActions = null) }
+                viewModelScope.launch {
+                    catalogRepository.deleteCustomExercise(action.exerciseId)
+                }
             }
             SearchExercisesAction.ExerciseActionsDismissed -> {
                 _uiState.update { it.copy(selectedExerciseForActions = null) }

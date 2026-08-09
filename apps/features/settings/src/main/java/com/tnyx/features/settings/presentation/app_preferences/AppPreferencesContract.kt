@@ -22,7 +22,8 @@ data class AppPreferencesUiState(
     val bodyUnit: String = "cm",
     val soundEffects: Boolean = true,
     val soundVolume: Float = 0.8f,
-    val firstDayOfWeek: String = "Sunday"
+    val firstDayOfWeek: String = "Sunday",
+    val showFirstDayOfWeekBottomSheet: Boolean = false,
 ) {
     val unitSystemSummary: String
         get() = when {
@@ -45,4 +46,7 @@ sealed interface AppPreferencesAction {
     data object RoutinesRemindersToggled : AppPreferencesAction
     data object SoundEffectsToggled : AppPreferencesAction
     data class SoundVolumeChanged(val value: Float) : AppPreferencesAction
+    data object FirstDayOfWeekClicked : AppPreferencesAction
+    data class FirstDayOfWeekSelected(val day: String) : AppPreferencesAction
+    data object FirstDayOfWeekBottomSheetDismissed : AppPreferencesAction
 }

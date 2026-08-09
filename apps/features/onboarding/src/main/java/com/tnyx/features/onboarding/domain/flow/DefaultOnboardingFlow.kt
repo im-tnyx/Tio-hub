@@ -20,6 +20,7 @@ object OnboardingSectionIds {
 
 object OnboardingStepIds {
     val IntroWelcome = OnboardingStepId("intro.welcome")
+    val IntroExperienceMode = OnboardingStepId("intro.experience_mode")
 
     val ProfileName = OnboardingStepId("profile.name")
     val ProfileGender = OnboardingStepId("profile.gender")
@@ -69,6 +70,7 @@ object DefaultOnboardingFlow {
                 id = OnboardingSectionIds.Intro,
                 steps = listOf(
                     required(OnboardingStepIds.IntroWelcome),
+                    required(OnboardingStepIds.IntroExperienceMode),
                 ),
             ),
             OnboardingSectionDefinition(

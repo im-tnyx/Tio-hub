@@ -1,6 +1,7 @@
 package com.tnyx.features.workout.data.repository
 
 import com.tnyx.features.workout.domain.repository.ExerciseCatalogRepository
+import com.tnyx.features.workout.domain.repository.CustomExerciseMediaUpdate
 import com.tnyx.shared.workout.domain.catalog.ExerciseCatalogParser
 import com.tnyx.shared.workout.domain.model.ExerciseDefinition
 import kotlinx.coroutines.flow.Flow
@@ -39,9 +40,23 @@ class LocalExerciseCatalogRepository @Inject constructor() : ExerciseCatalogRepo
         }
     }
 
-    override suspend fun saveCustomExercise(exercise: ExerciseDefinition) {
+    override suspend fun getExerciseById(exerciseId: String): ExerciseDefinition? {
+        return exercisesState.value.find { exercise -> exercise.id == exerciseId }
+    }
+
+    override suspend fun saveCustomExercise(
+        exercise: ExerciseDefinition,
+        mediaUpdate: CustomExerciseMediaUpdate,
+    ) {
         exercisesState.update { current ->
-            listOf(exercise) + current
+            val customExercise = exercise.copy(isCustom = true)
+            listOf(customExercise) + current.filterNot { existing -> existing.id == customExercise.id }
+        }
+    }
+
+    override suspend fun deleteCustomExercise(exerciseId: String) {
+        exercisesState.update { current ->
+            current.filterNot { exercise -> exercise.id == exerciseId && exercise.isCustom }
         }
     }
 }

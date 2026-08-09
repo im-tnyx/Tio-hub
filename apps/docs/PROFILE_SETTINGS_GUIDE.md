@@ -242,24 +242,24 @@ Single Source of Truth:
 - Onboarding, Profile, और Settings तीनों same repository use करेंगे।
 - Onboarding initial data collect कर सकता है, लेकिन final persisted identity data Profile repository से आएगा।
 - Settings personal info edit screen खोल सकता है, लेकिन ownership Profile की रहेगी।
-- Public `username` `profiles.username` से आएगा, database में `@` के बिना
+- Public `username` `users.username` से आएगा, database में `@` के बिना
   lowercase handle के रूप में store होगा, और Profile repository इसे UI तक
   expose करेगा।
 - Username format `3-30` lowercase letters, numbers, और underscore है।
   Case-insensitive uniqueness database index enforce करेगा।
-- Supabase identity baseline `profiles.id = auth.users.id` रखता है।
+- Supabase identity baseline `public.users.id = auth.users.id` रखता है।
 - `user_nutrition_profiles` current one-to-one body, nutrition-target, diet,
   activity, और onboarding sleep-time snapshot store करता है। `bed_time` और
   `wake_up_time` यहां collect होना Recovery business ownership को Nutrition में
   transfer नहीं करता।
 - `user_workout_profiles` one-to-one workout setup/preferences store करता है।
 - `profile_overview` security-invoker view Profile summary के लिए Weight, Height,
-  BMI, और BMR derive करता है; duplicate body values `profiles` में store नहीं होते।
+  BMI, और BMR derive करता है; duplicate body values `public.users` में store नहीं होते।
 - `auth_identities` direct client access deny करता है और future Firebase/provider
   linking के लिए backend-only boundary है।
 - Current Android runtime `ProfileRepository` को `SupabaseProfileRepository`
   से bind करता है। Active auth path Supabase-backed है, profile summary remote
-  rows से read होती है, और avatar live `tio-profile` bucket + `profiles.avatar_url`
+  rows से read होती है, और avatar live `tio-profile` bucket + `users.avatar_url`
   के through persist होता है। This is still not a full backend-mediated final
   architecture, but Profile truth is no longer local-only.
 

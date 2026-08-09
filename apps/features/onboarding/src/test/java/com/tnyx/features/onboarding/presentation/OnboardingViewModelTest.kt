@@ -161,15 +161,26 @@ class OnboardingViewModelTest {
     }
 
     @Test
-    fun continueWithoutRequiredAnswerStaysOnStepAndShowsValidation() = runTest {
+    fun continueFromWelcomeMovesToRequiredExperienceMode() = runTest {
         val repository = TestOnboardingRepository()
         val viewModel = initializedViewModel(repository)
 
         viewModel.handleAction(OnboardingAction.ContinueClicked)
         advanceUntilIdle()
 
-        assertEquals(OnboardingStepIds.ProfileName, viewModel.uiState.value.position?.stepId)
+        assertEquals(OnboardingStepIds.IntroExperienceMode, viewModel.uiState.value.position?.stepId)
+        assertFalse(viewModel.uiState.value.canContinue)
         assertNull(viewModel.uiState.value.validationError)
+        assertEquals(1, repository.savedCheckpoints.size)
+
+        viewModel.handleAction(OnboardingAction.ContinueClicked)
+        advanceUntilIdle()
+
+        assertEquals(OnboardingStepIds.IntroExperienceMode, viewModel.uiState.value.position?.stepId)
+        assertEquals(
+            OnboardingValidationError.RequiredAnswerInvalid,
+            viewModel.uiState.value.validationError,
+        )
         assertEquals(1, repository.savedCheckpoints.size)
     }
 

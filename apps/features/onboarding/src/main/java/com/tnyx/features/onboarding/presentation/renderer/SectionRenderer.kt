@@ -31,7 +31,11 @@ internal fun SectionRenderer(
     key(position.stepId.value) {
         when (position.sectionId) {
             OnboardingSectionIds.Intro -> {
-                IntroSectionContent(stepId = position.stepId)
+                IntroSectionContent(
+                    stepId = position.stepId,
+                    answer = currentAnswer,
+                    onAnswerChanged = { answer -> onAction(OnboardingAction.AnswerChanged(answer)) },
+                )
             }
 
             OnboardingSectionIds.Profile -> {

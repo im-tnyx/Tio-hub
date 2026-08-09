@@ -35,6 +35,7 @@ fun TnyxModalBottomSheet(
     title: String? = null,
     showDivider: Boolean = true,
     skipPartiallyExpanded: Boolean = true,
+    closeOnBackdropClick: Boolean = true,
     contentBottomPadding: Dp? = null,
     /** Override horizontal padding for edge-to-edge content (e.g. full-width lists). Defaults to tokens value. */
     contentHorizontalPadding: Dp? = null,
@@ -44,12 +45,23 @@ fun TnyxModalBottomSheet(
     if (!visible) return
 
     val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = skipPartiallyExpanded
+        skipPartiallyExpanded = skipPartiallyExpanded,
+        confirmValueChange = { newValue ->
+            if (!closeOnBackdropClick && newValue == androidx.compose.material3.SheetValue.Hidden) {
+                false
+            } else {
+                true
+            }
+        }
     )
     val tokens = TnyxTheme.components.sheet
 
     ModalBottomSheet(
-        onDismissRequest = onDismissRequest,
+        onDismissRequest = {
+            if (closeOnBackdropClick) {
+                onDismissRequest()
+            }
+        },
         modifier = modifier.statusBarsPadding(),
         sheetState = sheetState,
         shape = tokens.shape,

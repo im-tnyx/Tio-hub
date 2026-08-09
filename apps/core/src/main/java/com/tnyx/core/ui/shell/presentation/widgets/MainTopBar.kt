@@ -46,7 +46,7 @@ fun MainTopBar(
     onAction: (ShellAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val backgroundColor = TnyxTheme.colors.surface.copy(alpha = scrollOpacity * 0.95f)
+    val backgroundColor = TnyxTheme.colors.background
 
     Column(
         modifier = modifier

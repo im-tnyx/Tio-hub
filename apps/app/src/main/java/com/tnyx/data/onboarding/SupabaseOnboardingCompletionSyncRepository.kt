@@ -1,5 +1,7 @@
 package com.tnyx.data.onboarding
 
+import com.tnyx.core.ui.shell.domain.model.ShellTab
+import com.tnyx.core.ui.shell.domain.repository.BottomNavPreferencesRepository
 import com.tnyx.features.onboarding.domain.flow.OnboardingStepIds
 import com.tnyx.features.onboarding.domain.model.OnboardingAnswer
 import com.tnyx.features.onboarding.domain.model.OnboardingDraft
@@ -8,8 +10,8 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import javax.inject.Inject
-import kotlinx.serialization.json.JsonPrimitive
 import javax.inject.Singleton
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
@@ -17,6 +19,7 @@ import kotlinx.serialization.json.putJsonArray
 @Singleton
 class SupabaseOnboardingCompletionSyncRepository @Inject constructor(
     private val supabaseClient: SupabaseClient,
+    private val bottomNavPreferencesRepository: BottomNavPreferencesRepository,
 ) : OnboardingCompletionSyncRepository {
 
     override suspend fun syncCompletedOnboarding(draft: OnboardingDraft) {
@@ -24,6 +27,17 @@ class SupabaseOnboardingCompletionSyncRepository @Inject constructor(
             supabaseClient.auth.currentUserOrNull()?.id,
         ) {
             "A signed-in Supabase user is required to sync onboarding"
+        }
+
+        // Configure App Shell Bottom Navigation tabs based on user's selected experience mode
+        val selectedOption = draft.textValue(OnboardingStepIds.IntroExperienceMode) ?: "balanced"
+        val targetTabs = when (selectedOption) {
+            "workout" -> listOf(ShellTab.Home, ShellTab.Workout, ShellTab.WorkoutLibrary, ShellTab.Progress)
+            "nutrition" -> listOf(ShellTab.Home, ShellTab.Nutrition, ShellTab.MealPlan, ShellTab.Progress)
+            else -> listOf(ShellTab.Home, ShellTab.Nutrition, ShellTab.Ai, ShellTab.Workout, ShellTab.Progress)
+        }
+        runCatching {
+            bottomNavPreferencesRepository.saveTabs(targetTabs)
         }
 
         val nutritionPayload = buildJsonObject {

@@ -60,6 +60,21 @@ class ExerciseMediaResolverTest {
     }
 
     @Test
+    fun autoWithoutProfileDefaultUsesAvailableApprovedVariant() {
+        val exercise = exercise(asset("male", ExerciseMediaVariant.MALE))
+
+        val resolved = ExerciseMediaResolver.resolve(
+            exercise = exercise,
+            preference = ExerciseMediaPreference.AUTO
+        )
+
+        assertEquals(ExerciseMediaVariant.NEUTRAL, resolved.requestedVariant)
+        assertEquals(ExerciseMediaVariant.MALE, resolved.resolvedVariant)
+        assertEquals("male", resolved.asset?.id)
+        assertEquals(ExerciseMediaResolutionReason.NEUTRAL_FALLBACK, resolved.reason)
+    }
+
+    @Test
     fun missingRequestedVariantUsesNeutralButNeverOppositeVariant() {
         val exercise = exercise(
             asset("male", ExerciseMediaVariant.MALE),
@@ -106,6 +121,7 @@ class ExerciseMediaResolverTest {
     private fun exercise(vararg media: ExerciseMediaAsset): ExerciseDefinition = ExerciseDefinition(
         id = "exercise-1",
         name = "Test Exercise",
+        bodyPart = null,
         mediaAssets = media.toList()
     )
 

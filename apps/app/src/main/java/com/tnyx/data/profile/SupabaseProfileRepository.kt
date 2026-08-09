@@ -114,7 +114,7 @@ class SupabaseProfileRepository(
             profile.planLabel.trim().takeIf(String::isNotBlank)?.let { put("plan_label", it) }
             put("is_onboarded", profile.hasCompletedOnboarding)
         }
-        supabaseClient.from("profiles").upsert(profilePayload) {
+        supabaseClient.from("users").upsert(profilePayload) {
             onConflict = "id"
         }
 
@@ -151,7 +151,7 @@ class SupabaseProfileRepository(
         val publicUrl = bucket.publicUrl(objectPath)
         val cacheBustedUrl = "$publicUrl?v=${System.currentTimeMillis()}"
 
-        supabaseClient.from("profiles").upsert(
+        supabaseClient.from("users").upsert(
             buildJsonObject {
                 put("id", currentUserId)
                 put("avatar_url", cacheBustedUrl)
@@ -169,7 +169,7 @@ class SupabaseProfileRepository(
 
         runCatching { bucket.delete(objectPath) }
 
-        supabaseClient.from("profiles").upsert(
+        supabaseClient.from("users").upsert(
             buildJsonObject {
                 put("id", currentUserId)
                 put("avatar_url", JsonNull)
@@ -220,7 +220,7 @@ class SupabaseProfileRepository(
 
     private suspend fun fetchProfile(userId: String): UserProfile {
         val profile = runCatching {
-            supabaseClient.from("profiles").select {
+            supabaseClient.from("users").select {
                 filter {
                     eq("id", userId)
                 }

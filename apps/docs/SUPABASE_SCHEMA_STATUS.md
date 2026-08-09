@@ -45,6 +45,7 @@ Migration source:
 - `supabase/migrations/20260730193000_add_profiles_mobile_column.sql`
 - `supabase/migrations/20260731000000_nutrition_meal_logs.sql`
 - `supabase/migrations/20260808113000_workout_custom_exercises.sql`
+- `supabase/migrations/20260809120000_workout_custom_exercise_media.sql`
 
 ## Current Live Objects
 
@@ -59,6 +60,7 @@ Migration source:
 | `public.custom_exercises` | Table | Workout | `LIVE` | User-owned custom exercise definitions for the Android Workout library create/search flow. |
 | `public.profile_overview` | View | Profile | `LIVE` | Security-invoker read model that combines the current profile, nutrition snapshot, and workout preference data. |
 | `storage.buckets:tio-profile` | Storage bucket | Profile | `LIVE` | Public profile images only; current limit is 5 MB and allowed MIME type is `image/jpeg`. |
+| `storage.buckets:tio-exercise-media` | Storage bucket | Workout | `DRIFT / PENDING APPLY` | A manually created private 10 MB bucket exists live without matching policies. The checked-in migration reconciles it to owner-scoped public exercise image/GIF/video media with explicit MIME controls and a 50 MB ceiling. |
 
 ## Current Security And Data State
 
@@ -69,8 +71,10 @@ Migration source:
 - Direct authenticated access to `auth_identities` is explicitly denied.
 - `profile_overview` uses the caller's permissions through
   `security_invoker`.
-- The Supabase Security Advisor returned zero findings after the current
-  migrations were applied.
+- The 2026-08-09 Supabase advisor audit reports existing anonymous-sign-in
+  policy warnings plus leaked-password protection disabled. The pending workout
+  media migration hardens `custom_exercises` and its new Storage policies for
+  permanent authenticated users; broader advisor remediation remains separate.
 - No demo user or profile row was inserted.
 - One manual verification meal log and one meal-log item were inserted on
   2026-08-01 for an existing authenticated profile to prove the live nutrition
@@ -94,7 +98,7 @@ Migration source:
 | Firebase identity linking | `NOT IMPLEMENTED` | `auth_identities` reserves a safe server-owned mapping boundary only. |
 | Nutrition diary persistence | `SCHEMA LIVE / CLIENT PATH PARTIAL` | Android source targets live `meal_logs` and `meal_log_items`, and the connected project now contains both tables plus one verified write. Device-side Meal Diary and Meal Editor route validation still remains a separate runtime check. |
 | Onboarding owner-row sync | `ACTIVE` | Onboarding completion writes schema-supported profile, nutrition, and workout preference answers to the authenticated user's owner-scoped rows. Source attribution and answers without owner columns remain local only. |
-| Workout custom exercise persistence | `SCHEMA LIVE / CLIENT PATH ACTIVE` | Android now targets live `custom_exercises` rows through an app-owned repository that merges bundled catalog data with owner-scoped Supabase rows and Room cache. Media upload and broader workout sync remain separate work. |
+| Workout custom exercise persistence | `ROW SCHEMA LIVE / MEDIA MIGRATION PENDING` | Android targets `custom_exercises` through an app-owned repository and supports JPEG/PNG/GIF plus common video media. Large files use resumable upload before `media_assets` persistence; the Storage reconciliation and permanent-user RLS hardening still require an explicit Supabase apply. |
 | Workout cloud sync | `PARTIAL` | Onboarding preferences sync to `user_workout_profiles`, and custom exercise library rows now persist remotely; workout plans, sessions, and set history remain local-only/not implemented. |
 
 ## Future Table Backlog

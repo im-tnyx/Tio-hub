@@ -280,7 +280,9 @@ See [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
 
 ## 📜 License
 
-Tio-hub is licensed under the MIT License. See [`LICENSE`](LICENSE).
+Tio-hub is proprietary software owned by TNYX. All rights are reserved; no
+permission is granted to use, copy, modify, or distribute the project without
+prior written authorization from TNYX. See [`LICENSE`](LICENSE).
 
 ---
-*Last Updated: 2026-06-29 — Maintained by TNYX Engineering.*
+*Last Updated: 2026-08-09 — Maintained by TNYX Engineering.*

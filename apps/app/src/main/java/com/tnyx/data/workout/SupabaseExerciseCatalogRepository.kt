@@ -3,16 +3,28 @@ package com.tnyx.data.workout
 import androidx.room.withTransaction
 import com.tnyx.data.workout.local.WorkoutDao
 import com.tnyx.data.workout.local.WorkoutDatabase
+import com.tnyx.features.workout.domain.repository.CustomExerciseMediaUpdate
 import com.tnyx.features.workout.domain.repository.ExerciseCatalogRepository
 import com.tnyx.shared.auth.domain.repository.AuthSessionProvider
 import com.tnyx.shared.workout.domain.catalog.ExerciseCatalogParser
 import com.tnyx.shared.workout.domain.model.ExerciseDefinition
 import com.tnyx.shared.workout.domain.model.ExerciseMediaAsset
+import com.tnyx.shared.workout.domain.model.ExerciseMediaReleaseStatus
+import com.tnyx.shared.workout.domain.model.ExerciseMediaVariant
 import com.tnyx.shared.workout.domain.model.ExerciseTrackingType
 import com.tnyx.shared.workout.domain.model.WORKOUT_CONTRACT_VERSION
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.storage.BucketApi
+import io.github.jan.supabase.storage.createOrContinueUpload
+import io.github.jan.supabase.storage.storage
+import io.github.jan.supabase.storage.upload
+import io.ktor.http.ContentType
+import java.io.File
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
@@ -24,9 +36,17 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.Serializable
+import kotlin.time.Duration.Companion.minutes
+
+private const val EXERCISE_MEDIA_BUCKET = "tio-exercise-media"
+private const val MAX_EXERCISE_IMAGE_BYTES = 10L * 1024 * 1024
+private const val MAX_EXERCISE_VIDEO_BYTES = 50L * 1024 * 1024
+private const val RESUMABLE_UPLOAD_THRESHOLD_BYTES = 6L * 1024 * 1024
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Singleton
@@ -127,13 +147,80 @@ class SupabaseExerciseCatalogRepository @Inject constructor(
         return null
     }
 
-    override suspend fun saveCustomExercise(exercise: ExerciseDefinition) {
+    override suspend fun saveCustomExercise(
+        exercise: ExerciseDefinition,
+        mediaUpdate: CustomExerciseMediaUpdate,
+    ) {
         val ownerUserId = requireUserId()
-        val customExercise = exercise.copy(isCustom = true)
+        val previousObjectPaths = exercise.mediaAssets.flatMap { asset ->
+            listOfNotNull(asset.imageRef, asset.videoRef, asset.thumbnailRef)
+        }.mapNotNull(String::toExerciseMediaObjectPath)
+        var uploadedObjectPath: String? = null
+
+        val customExercise = when (mediaUpdate) {
+            CustomExerciseMediaUpdate.Unchanged -> exercise
+            CustomExerciseMediaUpdate.Remove -> exercise.copy(mediaAssets = emptyList())
+            is CustomExerciseMediaUpdate.Replace -> {
+                val mediaType = requireNotNull(SUPPORTED_EXERCISE_MEDIA[mediaUpdate.mimeType.lowercase()]) {
+                    "Selected exercise media type is not supported."
+                }
+                val mediaFile = File(mediaUpdate.localFilePath)
+                require(mediaFile.isFile && mediaFile.length() > 0L) {
+                    "Selected exercise media file is unavailable."
+                }
+                val maxBytes = if (mediaType.isVideo) {
+                    MAX_EXERCISE_VIDEO_BYTES
+                } else {
+                    MAX_EXERCISE_IMAGE_BYTES
+                }
+                require(mediaFile.length() <= maxBytes) {
+                    if (mediaType.isVideo) {
+                        "Exercise video is too large. Maximum size is 50 MB."
+                    } else {
+                        "Exercise image is too large. Maximum size is 10 MB."
+                    }
+                }
+
+                val objectPath = exerciseMediaObjectPath(
+                    ownerUserId = ownerUserId,
+                    exerciseId = exercise.id,
+                    mediaFile = mediaFile,
+                    extension = mediaType.extension,
+                )
+                val bucket = supabaseClient.storage.from(EXERCISE_MEDIA_BUCKET)
+                bucket.uploadExerciseMedia(
+                    objectPath = objectPath,
+                    mediaFile = mediaFile,
+                    contentType = ContentType.parse(mediaUpdate.mimeType),
+                )
+                uploadedObjectPath = objectPath
+                val publicUrl = bucket.publicUrl(objectPath)
+
+                exercise.copy(
+                    mediaAssets = listOf(
+                        ExerciseMediaAsset(
+                            id = "${exercise.id}_custom_media",
+                            variant = ExerciseMediaVariant.NEUTRAL,
+                            imageRef = publicUrl.takeUnless { mediaType.isVideo },
+                            videoRef = publicUrl.takeIf { mediaType.isVideo },
+                            provenanceId = "user-generated",
+                            releaseStatus = ExerciseMediaReleaseStatus.APPROVED,
+                        )
+                    )
+                )
+            }
+        }.copy(isCustom = true)
         val row = customExercise.toCustomExerciseRow(ownerUserId)
 
-        supabaseClient.from("custom_exercises").upsert(row) {
-            onConflict = "id"
+        try {
+            supabaseClient.from("custom_exercises").upsert(row) {
+                onConflict = "id"
+            }
+        } catch (error: Exception) {
+            uploadedObjectPath?.let { path ->
+                runCatching { supabaseClient.storage.from(EXERCISE_MEDIA_BUCKET).delete(path) }
+            }
+            throw error
         }
 
         dao.upsertCustomExerciseDefinitions(
@@ -145,10 +232,34 @@ class SupabaseExerciseCatalogRepository @Inject constructor(
                 )
             )
         )
+
+        if (mediaUpdate != CustomExerciseMediaUpdate.Unchanged) {
+            val activeObjectPath = uploadedObjectPath
+            previousObjectPaths
+                .filterNot { path -> path == activeObjectPath }
+                .forEach { path ->
+                    runCatching { supabaseClient.storage.from(EXERCISE_MEDIA_BUCKET).delete(path) }
+                }
+        }
     }
 
     override suspend fun deleteCustomExercise(exerciseId: String) {
         val ownerUserId = requireUserId()
+        val cachedExercise = dao.getCustomExerciseDefinition(ownerUserId, exerciseId)
+            ?.let { entity -> codec.decodeExerciseDefinition(entity.definitionJson) }
+        val exercise = cachedExercise ?: supabaseClient.from("custom_exercises").select {
+            filter {
+                eq("user_id", ownerUserId)
+                eq("id", exerciseId)
+            }
+        }.decodeSingleOrNull<CustomExerciseRowDto>()?.toDomain()
+        val mediaObjectPaths = exercise
+            ?.mediaAssets
+            .orEmpty()
+            .flatMap { asset ->
+                listOfNotNull(asset.imageRef, asset.videoRef, asset.thumbnailRef)
+            }
+            .mapNotNull(String::toExerciseMediaObjectPath)
 
         supabaseClient.from("custom_exercises").delete {
             filter {
@@ -158,6 +269,9 @@ class SupabaseExerciseCatalogRepository @Inject constructor(
         }
 
         dao.deleteCustomExerciseDefinition(ownerUserId, exerciseId)
+        mediaObjectPaths.forEach { path ->
+            runCatching { supabaseClient.storage.from(EXERCISE_MEDIA_BUCKET).delete(path) }
+        }
     }
 
     private suspend fun syncRemoteCustomExercises(ownerUserId: String) {
@@ -201,6 +315,69 @@ class SupabaseExerciseCatalogRepository @Inject constructor(
     private fun isUuid(value: String): Boolean {
         return runCatching { java.util.UUID.fromString(value) }.isSuccess
     }
+
+    private fun exerciseMediaObjectPath(
+        ownerUserId: String,
+        exerciseId: String,
+        mediaFile: File,
+        extension: String,
+    ): String {
+        val sourceFingerprint = UUID.nameUUIDFromBytes(
+            "${mediaFile.absolutePath}:${mediaFile.length()}:${mediaFile.lastModified()}".toByteArray()
+        )
+        return "$ownerUserId/$exerciseId/$sourceFingerprint.$extension"
+    }
+}
+
+private suspend fun BucketApi.uploadExerciseMedia(
+    objectPath: String,
+    mediaFile: File,
+    contentType: ContentType,
+) {
+    if (mediaFile.length() <= RESUMABLE_UPLOAD_THRESHOLD_BYTES) {
+        upload(objectPath, mediaFile) {
+            this.contentType = contentType
+        }
+        return
+    }
+
+    val upload = resumable.createOrContinueUpload(objectPath, mediaFile) {
+        this.contentType = contentType
+    }
+    try {
+        upload.startOrResumeUploading()
+        withTimeout(10.minutes) {
+            upload.stateFlow.first { state -> state.isDone }
+        }
+    } catch (error: Exception) {
+        upload.pause()
+        throw error
+    }
+}
+
+private data class ExerciseMediaType(
+    val extension: String,
+    val isVideo: Boolean,
+)
+
+private val SUPPORTED_EXERCISE_MEDIA = mapOf(
+    "image/jpeg" to ExerciseMediaType(extension = "jpg", isVideo = false),
+    "image/png" to ExerciseMediaType(extension = "png", isVideo = false),
+    "image/gif" to ExerciseMediaType(extension = "gif", isVideo = false),
+    "video/mp4" to ExerciseMediaType(extension = "mp4", isVideo = true),
+    "video/webm" to ExerciseMediaType(extension = "webm", isVideo = true),
+    "video/quicktime" to ExerciseMediaType(extension = "mov", isVideo = true),
+    "video/x-m4v" to ExerciseMediaType(extension = "m4v", isVideo = true),
+    "video/3gpp" to ExerciseMediaType(extension = "3gp", isVideo = true),
+)
+
+private fun String.toExerciseMediaObjectPath(): String? {
+    val marker = "/storage/v1/object/public/$EXERCISE_MEDIA_BUCKET/"
+    val encodedPath = substringAfter(marker, missingDelimiterValue = "")
+        .substringBefore('?')
+        .takeIf(String::isNotBlank)
+        ?: return null
+    return URLDecoder.decode(encodedPath, StandardCharsets.UTF_8.toString())
 }
 
 @Serializable

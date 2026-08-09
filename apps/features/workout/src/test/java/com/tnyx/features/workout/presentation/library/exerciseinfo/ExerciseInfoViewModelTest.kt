@@ -72,7 +72,10 @@ class ExerciseInfoViewModelTest {
             return null
         }
 
-        override suspend fun saveCustomExercise(exercise: ExerciseDefinition) = Unit
+        override suspend fun saveCustomExercise(
+            exercise: ExerciseDefinition,
+            mediaUpdate: com.tnyx.features.workout.domain.repository.CustomExerciseMediaUpdate,
+        ) = Unit
 
         override suspend fun deleteCustomExercise(exerciseId: String) = Unit
     }

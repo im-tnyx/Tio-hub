@@ -14,6 +14,7 @@ data class CreateExerciseUiState(
     val otherMuscles: String = "Select (optional)",
     val exerciseType: String = "Select",
     val assetUri: String? = null,
+    val assetMimeType: String? = null,
     val showImageSourceBottomSheet: Boolean = false,
     val showEquipmentBottomSheet: Boolean = false,
     val showBodyPartBottomSheet: Boolean = false,
@@ -26,7 +27,11 @@ data class CreateExerciseUiState(
 sealed interface CreateExerciseAction {
     data class NameChanged(val name: String) : CreateExerciseAction
     data class InstructionsChanged(val instructions: String) : CreateExerciseAction
-    data class AssetSelected(val uri: String?) : CreateExerciseAction
+    data class AssetSelected(
+        val uri: String,
+        val localFilePath: String,
+        val mimeType: String,
+    ) : CreateExerciseAction
     data object AddAssetClicked : CreateExerciseAction
     data object RemoveAssetClicked : CreateExerciseAction
     data object CameraClicked : CreateExerciseAction

@@ -71,7 +71,10 @@ class SearchExercisesViewModelTest {
             return exercisesState.value.find { it.id == exerciseId }
         }
 
-        override suspend fun saveCustomExercise(exercise: ExerciseDefinition) {}
+        override suspend fun saveCustomExercise(
+            exercise: ExerciseDefinition,
+            mediaUpdate: com.tnyx.features.workout.domain.repository.CustomExerciseMediaUpdate,
+        ) {}
 
         override suspend fun deleteCustomExercise(exerciseId: String) {
             exercisesState.value = exercisesState.value.filterNot { it.id == exerciseId }

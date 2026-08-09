@@ -57,12 +57,16 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.coil.compose)
+    implementation(libs.coil.gif)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.datasource.okhttp)
     implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.media3.transformer)
+    implementation(libs.androidx.media3.effect)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
 }

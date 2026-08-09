@@ -23,3 +23,8 @@ Enhance `TnyxWeeklyCalendar` with configurable starting day of week (Default: Su
 ## Verification
 - Unit compile check for `:core`, `:features:settings`, `:features:workout`, and `:features:nutrition`.
 - Verify App Settings First Day of Week BottomSheet, multi-schedule dots, calorie arcs, and completed solid badge rendering.
+
+## Latest Checkpoint (2026-08-09)
+- Aggregate Android validation passed with `:shared:test`, core/workout/onboarding/settings unit tests, `:app:testDebugUnitTest`, and `:app:assembleDebug`.
+- Repository diff checks are clean and the implementation is split into atomic commits on `feature/dynamic-ring-weekly-calendar`.
+- Calendar-specific device visual smoke for first-day ordering, ring states, and multi-schedule dots remains before task closure.

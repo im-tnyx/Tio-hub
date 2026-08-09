@@ -22,8 +22,6 @@ import io.github.jan.supabase.storage.storage
 import io.github.jan.supabase.storage.upload
 import io.ktor.http.ContentType
 import java.io.File
-import java.net.URLDecoder
-import java.nio.charset.StandardCharsets
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -41,12 +39,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.Serializable
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
-private const val EXERCISE_MEDIA_BUCKET = "tio-exercise-media"
 private const val MAX_EXERCISE_IMAGE_BYTES = 10L * 1024 * 1024
 private const val MAX_EXERCISE_VIDEO_BYTES = 50L * 1024 * 1024
 private const val RESUMABLE_UPLOAD_THRESHOLD_BYTES = 6L * 1024 * 1024
+private val EXERCISE_MEDIA_SIGNED_URL_TTL = 1.hours
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Singleton
@@ -69,7 +68,12 @@ class SupabaseExerciseCatalogRepository @Inject constructor(
             flowOf(emptyList())
         } else {
             dao.observeCustomExerciseDefinitions(ownerUserId)
-                .map { entities -> entities.map { codec.decodeExerciseDefinition(it.definitionJson) } }
+                .map { entities ->
+                    entities.map { entity ->
+                        codec.decodeExerciseDefinition(entity.definitionJson)
+                            .withResolvedExerciseMediaReferences(ownerUserId)
+                    }
+                }
         }
     }
 
@@ -118,7 +122,9 @@ class SupabaseExerciseCatalogRepository @Inject constructor(
         if (ownerUserId != null) {
             runCatching {
                 dao.getCustomExerciseDefinition(ownerUserId, cleanId)?.let { entity ->
-                    return codec.decodeExerciseDefinition(entity.definitionJson).copy(isCustom = true)
+                    return codec.decodeExerciseDefinition(entity.definitionJson)
+                        .copy(isCustom = true)
+                        .withResolvedExerciseMediaReferences(ownerUserId)
                 }
 
                 val remoteRow = supabaseClient.from("custom_exercises").select {
@@ -129,7 +135,7 @@ class SupabaseExerciseCatalogRepository @Inject constructor(
                 }.decodeSingleOrNull<CustomExerciseRowDto>()
 
                 if (remoteRow != null) {
-                    val exercise = remoteRow.toDomain()
+                    val exercise = remoteRow.toDomain().withDurableExerciseMediaReferences()
                     dao.upsertCustomExerciseDefinitions(
                         listOf(
                             exercise.toCustomCacheEntity(
@@ -139,7 +145,7 @@ class SupabaseExerciseCatalogRepository @Inject constructor(
                             )
                         )
                     )
-                    return exercise
+                    return exercise.withResolvedExerciseMediaReferences(ownerUserId)
                 }
             }
         }
@@ -152,14 +158,15 @@ class SupabaseExerciseCatalogRepository @Inject constructor(
         mediaUpdate: CustomExerciseMediaUpdate,
     ) {
         val ownerUserId = requireUserId()
-        val previousObjectPaths = exercise.mediaAssets.flatMap { asset ->
+        val durableExercise = exercise.withDurableExerciseMediaReferences()
+        val previousObjectPaths = durableExercise.mediaAssets.flatMap { asset ->
             listOfNotNull(asset.imageRef, asset.videoRef, asset.thumbnailRef)
-        }.mapNotNull(String::toExerciseMediaObjectPath)
+        }.mapNotNull { reference -> reference.toOwnedExerciseMediaObjectPath(ownerUserId) }
         var uploadedObjectPath: String? = null
 
         val customExercise = when (mediaUpdate) {
-            CustomExerciseMediaUpdate.Unchanged -> exercise
-            CustomExerciseMediaUpdate.Remove -> exercise.copy(mediaAssets = emptyList())
+            CustomExerciseMediaUpdate.Unchanged -> durableExercise
+            CustomExerciseMediaUpdate.Remove -> durableExercise.copy(mediaAssets = emptyList())
             is CustomExerciseMediaUpdate.Replace -> {
                 val mediaType = requireNotNull(SUPPORTED_EXERCISE_MEDIA[mediaUpdate.mimeType.lowercase()]) {
                     "Selected exercise media type is not supported."
@@ -194,15 +201,15 @@ class SupabaseExerciseCatalogRepository @Inject constructor(
                     contentType = ContentType.parse(mediaUpdate.mimeType),
                 )
                 uploadedObjectPath = objectPath
-                val publicUrl = bucket.publicUrl(objectPath)
+                val storageReference = objectPath.toExerciseMediaStorageReference()
 
-                exercise.copy(
+                durableExercise.copy(
                     mediaAssets = listOf(
                         ExerciseMediaAsset(
                             id = "${exercise.id}_custom_media",
                             variant = ExerciseMediaVariant.NEUTRAL,
-                            imageRef = publicUrl.takeUnless { mediaType.isVideo },
-                            videoRef = publicUrl.takeIf { mediaType.isVideo },
+                            imageRef = storageReference.takeUnless { mediaType.isVideo },
+                            videoRef = storageReference.takeIf { mediaType.isVideo },
                             provenanceId = "user-generated",
                             releaseStatus = ExerciseMediaReleaseStatus.APPROVED,
                         )
@@ -259,7 +266,7 @@ class SupabaseExerciseCatalogRepository @Inject constructor(
             .flatMap { asset ->
                 listOfNotNull(asset.imageRef, asset.videoRef, asset.thumbnailRef)
             }
-            .mapNotNull(String::toExerciseMediaObjectPath)
+            .mapNotNull { reference -> reference.toOwnedExerciseMediaObjectPath(ownerUserId) }
 
         supabaseClient.from("custom_exercises").delete {
             filter {
@@ -281,7 +288,7 @@ class SupabaseExerciseCatalogRepository @Inject constructor(
 
         val syncedAtMs = System.currentTimeMillis()
         val entities = remoteRows.map { row ->
-            row.toDomain().toCustomCacheEntity(
+            row.toDomain().withDurableExerciseMediaReferences().toCustomCacheEntity(
                 ownerUserId = ownerUserId,
                 codec = codec,
                 syncedAtMs = syncedAtMs,
@@ -327,6 +334,42 @@ class SupabaseExerciseCatalogRepository @Inject constructor(
         )
         return "$ownerUserId/$exerciseId/$sourceFingerprint.$extension"
     }
+
+    private suspend fun ExerciseDefinition.withResolvedExerciseMediaReferences(
+        ownerUserId: String,
+    ): ExerciseDefinition {
+        val objectPaths = mediaAssets
+            .flatMap { asset -> listOfNotNull(asset.imageRef, asset.videoRef, asset.thumbnailRef) }
+            .mapNotNull { reference -> reference.toOwnedExerciseMediaObjectPath(ownerUserId) }
+            .distinct()
+        if (objectPaths.isEmpty()) return this
+
+        val bucket = supabaseClient.storage.from(EXERCISE_MEDIA_BUCKET)
+        val signedUrls = objectPaths.associateWith { path ->
+            runCatching {
+                bucket.createSignedUrl(path = path, expiresIn = EXERCISE_MEDIA_SIGNED_URL_TTL)
+            }.getOrNull()
+        }
+
+        return copy(
+            mediaAssets = mediaAssets.map { asset ->
+                asset.copy(
+                    imageRef = asset.imageRef.resolveExerciseMediaReference(ownerUserId, signedUrls),
+                    videoRef = asset.videoRef.resolveExerciseMediaReference(ownerUserId, signedUrls),
+                    thumbnailRef = asset.thumbnailRef.resolveExerciseMediaReference(ownerUserId, signedUrls),
+                )
+            }
+        )
+    }
+}
+
+private fun String?.resolveExerciseMediaReference(
+    ownerUserId: String,
+    signedUrls: Map<String, String?>,
+): String? {
+    val reference = this ?: return null
+    val objectPath = reference.toOwnedExerciseMediaObjectPath(ownerUserId) ?: return reference
+    return signedUrls[objectPath]
 }
 
 private suspend fun BucketApi.uploadExerciseMedia(
@@ -370,15 +413,6 @@ private val SUPPORTED_EXERCISE_MEDIA = mapOf(
     "video/x-m4v" to ExerciseMediaType(extension = "m4v", isVideo = true),
     "video/3gpp" to ExerciseMediaType(extension = "3gp", isVideo = true),
 )
-
-private fun String.toExerciseMediaObjectPath(): String? {
-    val marker = "/storage/v1/object/public/$EXERCISE_MEDIA_BUCKET/"
-    val encodedPath = substringAfter(marker, missingDelimiterValue = "")
-        .substringBefore('?')
-        .takeIf(String::isNotBlank)
-        ?: return null
-    return URLDecoder.decode(encodedPath, StandardCharsets.UTF_8.toString())
-}
 
 @Serializable
 private data class CustomExerciseRowDto(

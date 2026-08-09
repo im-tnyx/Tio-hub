@@ -36,12 +36,18 @@ enum class CropAspectRatio(val ratio: Float, val label: String) {
     SQUARE(1f, "1 : 1"),
 }
 
+enum class ImageCropOutputFormat {
+    JPEG,
+    PNG,
+}
+
 @Composable
 fun ImageCropperDialog(
     visible: Boolean,
     imageUri: Uri?,
     onDismissRequest: () -> Unit,
     onCropSuccess: (ByteArray) -> Unit,
+    outputFormat: ImageCropOutputFormat = ImageCropOutputFormat.JPEG,
     modifier: Modifier = Modifier,
 ) {
     if (!visible || imageUri == null) return
@@ -140,6 +146,7 @@ fun ImageCropperDialog(
                                     cropTop = cropperState.cropTop.value,
                                     cropRight = cropperState.cropRight.value,
                                     cropBottom = cropperState.cropBottom.value,
+                                    outputFormat = outputFormat,
                                 )
                                 withContext(Dispatchers.Main) {
                                     isProcessing = false

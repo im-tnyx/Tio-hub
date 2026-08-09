@@ -22,6 +22,7 @@ internal fun processAndCropBitmap(
     cropTop: Float,
     cropRight: Float,
     cropBottom: Float,
+    outputFormat: ImageCropOutputFormat,
 ): ByteArray? {
     return runCatching {
         if (stageSize.width <= 0f || stageSize.height <= 0f || imageDisplaySize.width <= 0f || imageDisplaySize.height <= 0f) {
@@ -75,7 +76,11 @@ internal fun processAndCropBitmap(
         )
 
         ByteArrayOutputStream().use { output ->
-            croppedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, output)
+            val (format, quality) = when (outputFormat) {
+                ImageCropOutputFormat.JPEG -> Bitmap.CompressFormat.JPEG to 90
+                ImageCropOutputFormat.PNG -> Bitmap.CompressFormat.PNG to 100
+            }
+            croppedBitmap.compress(format, quality, output)
             output.toByteArray()
         }
     }.getOrNull()

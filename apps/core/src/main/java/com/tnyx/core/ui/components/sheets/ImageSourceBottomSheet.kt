@@ -23,6 +23,7 @@ fun ImageSourceBottomSheet(
     onRemoveClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     title: String = "Select Photo",
+    removeText: String = "Remove Photo",
 ) {
     TnyxModalBottomSheet(
         visible = visible,
@@ -64,7 +65,7 @@ fun ImageSourceBottomSheet(
             Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceM))
 
             TnyxSecondaryButton(
-                text = "Remove Photo",
+                text = removeText,
                 onPressed = onRemoveClick,
                 expand = true,
                 size = com.tnyx.core.ui.components.buttons.TnyxButtonSize.Compact,

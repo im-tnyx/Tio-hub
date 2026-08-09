@@ -1,5 +1,6 @@
 package com.tnyx.routing.graphs
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import com.tnyx.core.theme.TnyxTheme
 import com.tnyx.core.ui.shell.domain.model.ShellTab
 import com.tnyx.core.ui.shell.domain.model.deriveHomeExperienceMode
 import com.tnyx.features.home.presentation.home.HomeRoute
@@ -70,7 +72,7 @@ fun NavGraphBuilder.mainGraph(
             onCreateProgramClick = {},
             onCreateRoutineClick = {},
             onCreateExerciseClick = {
-                navController.navigate(WorkoutDestination.CreateExercise)
+                navController.navigate(WorkoutDestination.CreateExercise())
             }
         )
     }
@@ -104,7 +106,9 @@ private fun TopLevelFoundationScreen(
     description: String,
 ) {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(TnyxTheme.colors.background),
         contentAlignment = Alignment.Center,
     ) {
         Column(

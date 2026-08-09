@@ -2,6 +2,7 @@ package com.tnyx.features.workout.presentation.library.exercises
 
 import androidx.compose.runtime.Immutable
 import com.tnyx.shared.workout.domain.model.ExerciseDefinition
+import com.tnyx.shared.workout.domain.model.ExerciseMediaVariant
 
 enum class ExerciseViewType { LIST, GRID }
 
@@ -14,6 +15,7 @@ data class SearchExercisesUiState(
     val exercises: List<ExerciseDefinition> = emptyList(),
     val isLoading: Boolean = false,
     val viewType: ExerciseViewType = ExerciseViewType.LIST,
+    val mediaVariant: ExerciseMediaVariant? = null,
     val selectedExerciseForActions: ExerciseDefinition? = null,
 )
 
@@ -29,5 +31,7 @@ sealed interface SearchExercisesAction {
     data class ExerciseInfoClicked(val exerciseId: String) : SearchExercisesAction
     data class ExerciseSelected(val exerciseId: String) : SearchExercisesAction
     data class ExerciseLongClicked(val exerciseId: String) : SearchExercisesAction
+    data class EditCustomExerciseClicked(val exerciseId: String) : SearchExercisesAction
+    data class DeleteCustomExerciseClicked(val exerciseId: String) : SearchExercisesAction
     data object ExerciseActionsDismissed : SearchExercisesAction
 }

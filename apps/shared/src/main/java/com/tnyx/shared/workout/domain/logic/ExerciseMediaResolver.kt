@@ -39,17 +39,21 @@ object ExerciseMediaResolver {
             )
         }
 
-        if (requestedVariant != ExerciseMediaVariant.NEUTRAL) {
-            val neutralAsset = eligibleAssets.latestFor(ExerciseMediaVariant.NEUTRAL)
-            if (neutralAsset != null) {
-                return ResolvedExerciseMedia(
-                    exerciseId = exercise.id,
-                    requestedVariant = requestedVariant,
-                    resolvedVariant = neutralAsset.variant,
-                    asset = neutralAsset,
-                    reason = ExerciseMediaResolutionReason.NEUTRAL_FALLBACK
-                )
-            }
+        val fallbackAsset = if (requestedVariant == ExerciseMediaVariant.NEUTRAL) {
+            eligibleAssets.latestFor(ExerciseMediaVariant.MALE)
+                ?: eligibleAssets.latestFor(ExerciseMediaVariant.FEMALE)
+        } else {
+            eligibleAssets.latestFor(ExerciseMediaVariant.NEUTRAL)
+        }
+
+        if (fallbackAsset != null) {
+            return ResolvedExerciseMedia(
+                exerciseId = exercise.id,
+                requestedVariant = requestedVariant,
+                resolvedVariant = fallbackAsset.variant,
+                asset = fallbackAsset,
+                reason = ExerciseMediaResolutionReason.NEUTRAL_FALLBACK
+            )
         }
 
         return ResolvedExerciseMedia(

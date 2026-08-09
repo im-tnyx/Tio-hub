@@ -11,6 +11,7 @@ import com.tnyx.features.workout.presentation.WorkoutHistoryRoute
 import com.tnyx.features.workout.presentation.WorkoutRoute
 import com.tnyx.features.workout.presentation.library.ExerciseLibraryRoute
 import com.tnyx.features.workout.presentation.library.createexercise.CreateExerciseRoute
+import com.tnyx.features.workout.presentation.library.exerciseinfo.ExerciseInfoRoute
 import com.tnyx.features.workout.presentation.library.exercises.SearchExercisesRoute
 import com.tnyx.routing.routes.MainRoute
 import kotlinx.serialization.Serializable
@@ -41,7 +42,7 @@ fun NavGraphBuilder.workoutGraph(
                 onCreateProgramClick = {},
                 onCreateRoutineClick = {},
                 onCreateExerciseClick = {
-                    navController.navigate(WorkoutDestination.CreateExercise)
+                    navController.navigate(WorkoutDestination.CreateExercise())
                 }
             )
         }
@@ -51,9 +52,20 @@ fun NavGraphBuilder.workoutGraph(
         ) {
             SearchExercisesRoute(
                 onNavigateBack = { navController.popBackStack() },
+                onExerciseInfoClick = { exerciseId ->
+                    navController.navigate(WorkoutDestination.ExerciseInfo(exerciseId = exerciseId))
+                },
                 onCreateClick = {
-                    navController.navigate(WorkoutDestination.CreateExercise)
-                }
+                    navController.navigate(WorkoutDestination.CreateExercise())
+                },
+                onEditCustomExercise = { exerciseId ->
+                    navController.navigate(WorkoutDestination.CreateExercise(exerciseId = exerciseId))
+                },
+            )
+        }
+        composable<WorkoutDestination.ExerciseInfo> {
+            ExerciseInfoRoute(
+                onNavigateBack = { navController.popBackStack() },
             )
         }
         composable<WorkoutDestination.CreateExercise> {
@@ -80,5 +92,8 @@ sealed interface WorkoutDestination {
     data object SearchExercises : WorkoutDestination
 
     @Serializable
-    data object CreateExercise : WorkoutDestination
+    data class ExerciseInfo(val exerciseId: String) : WorkoutDestination
+
+    @Serializable
+    data class CreateExercise(val exerciseId: String? = null) : WorkoutDestination
 }

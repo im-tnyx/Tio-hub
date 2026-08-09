@@ -3,8 +3,10 @@ package com.tnyx.features.workout.presentation.library.createexercise
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Accessibility
 import androidx.compose.material.icons.outlined.AccessibilityNew
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.PhotoCamera
@@ -89,7 +92,7 @@ fun CreateExerciseScreen(
                         text = "Save",
                         onPressed = { onAction(CreateExerciseAction.SaveClicked) },
                         enabled = !state.isSaving,
-                        height = 36.dp,
+                        size = com.tnyx.core.ui.components.buttons.TnyxButtonSize.Compact,
                         modifier = Modifier.padding(end = TnyxDimens.SpaceS)
                     )
                 },
@@ -303,6 +306,18 @@ fun CreateExerciseScreen(
                 .ifBlank { null }
         }
     }
+
+    // Image Source Selection Bottom Sheet (Camera / Gallery / Remove Photo)
+    com.tnyx.core.ui.components.sheets.ImageSourceBottomSheet(
+        visible = state.showImageSourceBottomSheet,
+        onDismissRequest = { onAction(CreateExerciseAction.ImageSourceBottomSheetDismissed) },
+        onCameraClick = { onAction(CreateExerciseAction.CameraClicked) },
+        onGalleryClick = { onAction(CreateExerciseAction.GalleryClicked) },
+        onRemoveClick = if (!state.assetUri.isNullOrBlank()) {
+            { onAction(CreateExerciseAction.RemoveAssetClicked) }
+        } else null,
+        title = "Select Exercise Photo",
+    )
 
     // Equipment Selection Bottom Sheet
     EquipmentSelectionBottomSheet(

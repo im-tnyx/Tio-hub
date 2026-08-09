@@ -1,8 +1,11 @@
 package com.tnyx.features.workout.presentation.library.createexercise
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.tnyx.features.workout.domain.repository.ExerciseCatalogRepository
+import com.tnyx.features.workout.navigation.WorkoutDestination
 import com.tnyx.shared.workout.domain.model.ExerciseDefinition
 import com.tnyx.shared.workout.domain.model.ExerciseTrackingType
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,14 +27,28 @@ sealed interface CreateExerciseEvent {
 
 @HiltViewModel
 class CreateExerciseViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val catalogRepository: ExerciseCatalogRepository,
 ) : ViewModel() {
+    private val route = savedStateHandle.toRoute<WorkoutDestination.CreateExercise>()
 
     private val _uiState = MutableStateFlow(CreateExerciseUiState())
     val uiState: StateFlow<CreateExerciseUiState> = _uiState.asStateFlow()
 
     private val _eventFlow = MutableSharedFlow<CreateExerciseEvent>()
     val eventFlow: SharedFlow<CreateExerciseEvent> = _eventFlow.asSharedFlow()
+
+    init {
+        val exerciseId = route.exerciseId
+        if (!exerciseId.isNullOrBlank()) {
+            viewModelScope.launch {
+                val exercise = catalogRepository.getExerciseById(exerciseId)
+                if (exercise?.isCustom == true) {
+                    _uiState.value = exercise.toEditUiState()
+                }
+            }
+        }
+    }
 
     fun onAction(action: CreateExerciseAction) {
         when (action) {
@@ -43,6 +60,19 @@ class CreateExerciseViewModel @Inject constructor(
             }
             is CreateExerciseAction.AssetSelected -> {
                 _uiState.update { it.copy(assetUri = action.uri) }
+            }
+            CreateExerciseAction.AddAssetClicked -> {
+                _uiState.update { it.copy(showImageSourceBottomSheet = true) }
+            }
+            CreateExerciseAction.RemoveAssetClicked -> {
+                _uiState.update { it.copy(assetUri = null, showImageSourceBottomSheet = false) }
+            }
+            CreateExerciseAction.ImageSourceBottomSheetDismissed -> {
+                _uiState.update { it.copy(showImageSourceBottomSheet = false) }
+            }
+            CreateExerciseAction.CameraClicked,
+            CreateExerciseAction.GalleryClicked -> {
+                _uiState.update { it.copy(showImageSourceBottomSheet = false) }
             }
             CreateExerciseAction.EquipmentClicked -> {
                 _uiState.update { it.copy(showEquipmentBottomSheet = true) }
@@ -107,9 +137,6 @@ class CreateExerciseViewModel @Inject constructor(
             CreateExerciseAction.SaveClicked -> {
                 saveExercise()
             }
-            CreateExerciseAction.AddAssetClicked -> {
-                // Media asset picker placeholder
-            }
             CreateExerciseAction.BackClicked -> {
                 // Handled at navigation level
             }
@@ -129,8 +156,12 @@ class CreateExerciseViewModel @Inject constructor(
             _uiState.update { it.copy(isSaving = true) }
 
             val exerciseDefinition = ExerciseDefinition(
-                id = UUID.randomUUID().toString(),
+                id = currentState.exerciseId ?: UUID.randomUUID().toString(),
                 name = currentState.exerciseName.trim(),
+                bodyPart = currentState.bodyPart
+                    .trim()
+                    .takeIf { it.isNotEmpty() && !it.contains("select", ignoreCase = true) && !it.contains("optional", ignoreCase = true) }
+                    ?.lowercase(),
                 primaryMuscleGroups = currentState.primaryMuscleGroup.split(",")
                     .map { it.trim().lowercase() }
                     .filter { it.isNotEmpty() && !it.contains("select", ignoreCase = true) },
@@ -141,7 +172,8 @@ class CreateExerciseViewModel @Inject constructor(
                     .map { it.trim().lowercase() }
                     .filter { it.isNotEmpty() && !it.contains("select", ignoreCase = true) && !it.contains("optional", ignoreCase = true) },
                 instructions = if (currentState.instructions.isNotBlank()) listOf(currentState.instructions.trim()) else emptyList(),
-                trackingType = mapToTrackingType(currentState.exerciseType)
+                trackingType = mapToTrackingType(currentState.exerciseType),
+                isCustom = true,
             )
 
             try {
@@ -164,5 +196,48 @@ class CreateExerciseViewModel @Inject constructor(
             typeString.contains("Bodyweight", ignoreCase = true) -> ExerciseTrackingType.BODYWEIGHT_REPS
             else -> ExerciseTrackingType.WEIGHT_REPS
         }
+    }
+}
+
+private fun ExerciseDefinition.toEditUiState(): CreateExerciseUiState {
+    return CreateExerciseUiState(
+        exerciseId = id,
+        isEditMode = true,
+        exerciseName = name,
+        instructions = instructions.joinToString(separator = "\n"),
+        equipment = equipment.joinToStringOrDefault("Select (optional)"),
+        bodyPart = bodyPart?.replaceFirstChar { char ->
+            if (char.isLowerCase()) char.titlecase() else char.toString()
+        } ?: "Select (optional)",
+        primaryMuscleGroup = primaryMuscleGroups.joinToStringOrDefault("Select"),
+        otherMuscles = secondaryMuscleGroups.joinToStringOrDefault("Select (optional)"),
+        exerciseType = trackingType.toUiLabel(),
+        assetUri = mediaAssets.firstOrNull()?.imageRef ?: mediaAssets.firstOrNull()?.thumbnailRef ?: mediaAssets.firstOrNull()?.videoRef,
+    )
+}
+
+private fun List<String>.joinToStringOrDefault(defaultValue: String): String {
+    return if (isEmpty()) {
+        defaultValue
+    } else {
+        joinToString(separator = ", ") { value ->
+            value.replace("_", " ").split(" ")
+                .joinToString(" ") { word ->
+                    word.replaceFirstChar { char ->
+                        if (char.isLowerCase()) char.titlecase() else char.toString()
+                    }
+                }
+        }
+    }
+}
+
+private fun ExerciseTrackingType.toUiLabel(): String {
+    return when (this) {
+        ExerciseTrackingType.WEIGHT_REPS -> "Weight & Reps"
+        ExerciseTrackingType.BODYWEIGHT_REPS -> "Bodyweight Reps"
+        ExerciseTrackingType.ASSISTED_BODYWEIGHT_REPS -> "Assisted Bodyweight Reps"
+        ExerciseTrackingType.DURATION -> "Duration"
+        ExerciseTrackingType.DISTANCE_DURATION -> "Distance & Duration"
+        ExerciseTrackingType.STEPS_DURATION -> "Steps & Duration"
     }
 }

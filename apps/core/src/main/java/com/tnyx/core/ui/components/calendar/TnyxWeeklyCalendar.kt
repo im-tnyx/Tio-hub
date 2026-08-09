@@ -134,7 +134,7 @@ fun TnyxWeeklyCalendar(
             val sideContentColor = if (isTodaySelectedAndVisible) {
                 TnyxTheme.colors.textSecondary.copy(alpha = tokens.contentAlpha)
             } else {
-                TnyxTheme.colors.accent
+                TnyxTheme.colors.primary
             }
 
             Column(
@@ -243,7 +243,7 @@ private fun CalendarDayItem(
     val dayName = date.dayOfWeek.name.take(3).lowercase()
         .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
 
-    val accentColor = TnyxTheme.colors.accent
+    val accentColor = TnyxTheme.colors.primary
     val pumpkinColor = TnyxPalette.Pumpkin
 
     val isHighlight = isSelected || isToday
@@ -281,7 +281,7 @@ private fun CalendarDayItem(
             text = dayName.uppercase(),
             style = TnyxTheme.typography.labelSmall,
             color = dayNameColor,
-            fontSize = 11.sp,
+            fontSize = 12.sp,
             fontWeight = if (isHighlight) FontWeight.Bold else FontWeight.Medium
         )
 

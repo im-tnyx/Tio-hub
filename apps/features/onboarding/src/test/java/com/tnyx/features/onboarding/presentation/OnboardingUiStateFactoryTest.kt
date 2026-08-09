@@ -45,7 +45,7 @@ class OnboardingUiStateFactoryTest {
         assertTrue(state.canSkipSection)
         assertTrue(state.hasPersistenceError)
         assertEquals(6, state.sectionNumber)
-        assertEquals(17, state.stepNumber)
+        assertEquals(18, state.stepNumber)
     }
 
     @Test
@@ -63,9 +63,9 @@ class OnboardingUiStateFactoryTest {
 
         assertEquals(6, state.sectionNumber)
         assertEquals(8, state.sectionCount)
-        assertEquals(13, state.stepNumber)
-        assertEquals(21, state.totalSteps)
-        assertEquals(13f / 21f, state.completedFraction, 0.0001f)
+        assertEquals(14, state.stepNumber)
+        assertEquals(22, state.totalSteps)
+        assertEquals(14f / 22f, state.completedFraction, 0.0001f)
     }
 
     @Test
@@ -82,8 +82,8 @@ class OnboardingUiStateFactoryTest {
         val state = factory(checkpoint, DefaultOnboardingFlow.definition)
 
         assertEquals(6, state.sectionNumber)
-        assertEquals(20, state.stepNumber)
-        assertEquals(31, state.totalSteps)
+        assertEquals(21, state.stepNumber)
+        assertEquals(32, state.totalSteps)
     }
 
     @Test
@@ -99,8 +99,8 @@ class OnboardingUiStateFactoryTest {
         val state = factory(checkpoint, DefaultOnboardingFlow.definition)
 
         assertEquals(6, state.sectionNumber)
-        assertEquals(17, state.stepNumber)
-        assertEquals(30, state.totalSteps)
+        assertEquals(18, state.stepNumber)
+        assertEquals(31, state.totalSteps)
     }
 
     private fun checkpoint(

@@ -21,7 +21,7 @@ class OnboardingFlowDefinitionTest {
             listOf("intro", "profile", "body_goal", "mobile", "workout_intro", "workout", "targets", "source", "review"),
             flow.sections.map { section -> section.id.value },
         )
-        assertEquals(31, flow.totalSteps)
+        assertEquals(32, flow.totalSteps)
         assertEquals(
             OnboardingPosition(
                 sectionId = OnboardingSectionIds.Intro,
@@ -44,7 +44,7 @@ class OnboardingFlowDefinitionTest {
         val flow = DefaultOnboardingFlow.definition
         val introEnd = OnboardingPosition(
             sectionId = OnboardingSectionIds.Intro,
-            stepId = OnboardingStepIds.IntroWelcome,
+            stepId = OnboardingStepIds.IntroExperienceMode,
         )
         val profileStart = OnboardingPosition(
             sectionId = OnboardingSectionIds.Profile,
@@ -59,6 +59,7 @@ class OnboardingFlowDefinitionTest {
             stepId = OnboardingStepIds.BodyGoalPrimaryGoal,
         )
 
+        assertEquals(introEnd, flow.next(flow.firstPosition()))
         assertEquals(profileStart, flow.next(introEnd))
         assertEquals(introEnd, flow.previous(profileStart))
         assertEquals(bodyStart, flow.next(profileEnd))

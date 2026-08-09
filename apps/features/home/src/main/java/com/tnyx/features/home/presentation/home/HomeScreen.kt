@@ -1,5 +1,6 @@
 package com.tnyx.features.home.presentation.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.tnyx.core.theme.TnyxTheme
 import com.tnyx.core.ui.shell.domain.model.HomeExperienceMode
 
 @Composable
@@ -26,7 +28,9 @@ fun HomeScreen(
     }
 
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .background(TnyxTheme.colors.background),
         contentAlignment = Alignment.Center,
     ) {
         Column(

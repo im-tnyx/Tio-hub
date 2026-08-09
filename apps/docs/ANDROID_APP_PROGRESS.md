@@ -199,13 +199,13 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
 - [x] Workout and its reused core Button, Input, Card, and Header consumers resolve visual state through `TnyxTheme` component/semantic tokens without feature-local hardcoded colors, dimensions, alpha values, or typography overrides.
 - [x] Workout source now has additive exercise tracking types/snapshots and a feature-owned reusable exercise editor with keyed multiple-exercise, set, and metric UI state; Active mode is wired while Routine-edit and Read-only consumers remain future work.
 - [x] Active Workout now uses a dense full-width set table with tracking-type columns, add-set, latest completed-session `Previous` mapping/copy, and an RPE 5-10 selector for strength/reps exercises.
-- [ ] The 2026-08-02 validation rerun no longer has the earlier Workout
-  `kotlin.test.*` compilation gap: `:features:workout:test` is restored to
-  local green, while `:app:testDebugUnitTest` remains environment-blocked in
-  Robolectric artifact setup on the current Codex Windows machine.
-- [ ] Exercise catalog/media, routine builder, notes, live rest timer, advanced set types, reordering, and device UX smoke are not implemented yet.
+- [x] **Live `custom_exercises` Supabase Persistence:** Supabase project `ublwxylwdqjdykqcncuv` now has `custom_exercises` with owner-scoped authenticated RLS for the custom exercise create/search slice.
+- [x] **App-Owned Workout Catalog Merge:** `SupabaseExerciseCatalogRepository` now merges bundled exercise definitions with owner-scoped remote custom exercises and caches the remote slice in Phone Room.
+- [x] The 2026-08-08 validation rerun restored the full local gate for
+  `:shared:test :features:workout:test :app:testDebugUnitTest`.
+- [ ] Full first-party exercise catalog/media coverage, routine builder, notes, live rest timer, advanced set types, reordering, and device UX smoke are not implemented yet.
 
-Boundary note: shared contracts, Phone persistence/recovery, and the first repository-backed Phone UI slice are implemented. Approved media catalog integration, routine building, advanced session UX, Settings UI, remote outbox delivery, and real Wear sync remain unimplemented. The blueprint allows a Tio-owned visual UI while preserving the approved Lyfta-derived core UX behavior.
+Boundary note: shared contracts, Phone persistence/recovery, custom exercise persistence, and the first Exercise Info media UI are implemented. Complete provenance-approved media coverage, routine building, advanced session UX, remote outbox delivery, and real Wear sync remain unimplemented. The blueprint allows a Tio-owned visual UI while preserving the approved Lyfta-derived core UX behavior.
 
 ### Profile
 

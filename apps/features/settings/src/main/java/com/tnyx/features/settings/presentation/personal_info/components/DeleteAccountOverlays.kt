@@ -14,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -28,7 +27,7 @@ import com.tnyx.features.settings.presentation.personal_info.PersonalInfoUiState
 @Composable
 fun DeleteAccountOverlays(
     state: PersonalInfoUiState,
-    onAction: (PersonalInfoAction) -> Unit
+    onAction: (PersonalInfoAction) -> Unit,
 ) {
     if (state.deleteStep == DeleteAccountStep.Idle) return
 
@@ -43,7 +42,7 @@ fun DeleteAccountOverlays(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.9f))
+                .background(TnyxTheme.colors.background.copy(alpha = 0.95f))
         ) {
             // Close Button
             IconButton(
@@ -52,9 +51,13 @@ fun DeleteAccountOverlays(
                     .align(Alignment.TopEnd)
                     .padding(TnyxTheme.dimens.SpaceM)
                     .statusBarsPadding()
-                    .background(Color.White.copy(alpha = 0.1f), CircleShape)
+                    .background(TnyxTheme.colors.textPrimary.copy(alpha = 0.1f), CircleShape)
             ) {
-                Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    tint = TnyxTheme.colors.textPrimary
+                )
             }
 
             when (state.deleteStep) {
@@ -84,14 +87,14 @@ private fun BoxScope.ConfirmOverlay(onAction: (PersonalInfoAction) -> Unit) {
         Text(
             text = "Are you sure?",
             style = TnyxTheme.typography.headlineLarge,
-            color = Color.White,
+            color = TnyxTheme.colors.textPrimary,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceM))
         Text(
             text = "This means all your saved progress will be deleted permanently.",
-            color = Color.White.copy(alpha = 0.7f),
+            color = TnyxTheme.colors.textSecondary,
             textAlign = TextAlign.Center,
             style = TnyxTheme.typography.bodyLarge
         )
@@ -110,7 +113,10 @@ private fun BoxScope.ConfirmOverlay(onAction: (PersonalInfoAction) -> Unit) {
                 .fillMaxWidth()
                 .height(TnyxTheme.components.button.height),
             shape = TnyxTheme.shapes.Material.medium,
-            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black)
+            colors = ButtonDefaults.buttonColors(
+                containerColor = TnyxTheme.colors.textPrimary,
+                contentColor = TnyxTheme.colors.background
+            )
         ) {
             Text("Keep Account", fontWeight = FontWeight.Bold)
         }
@@ -145,14 +151,14 @@ private fun BoxScope.HoldToDeleteOverlay(
         Text(
             text = "Hold this button",
             style = TnyxTheme.typography.headlineLarge,
-            color = Color.White,
+            color = TnyxTheme.colors.textPrimary,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
         Text(
             text = "to delete all your progress permanently.",
-            color = Color.White.copy(alpha = 0.7f),
+            color = TnyxTheme.colors.textSecondary,
             textAlign = TextAlign.Center,
             style = TnyxTheme.typography.bodyLarge
         )
@@ -174,7 +180,10 @@ private fun BoxScope.HoldToDeleteOverlay(
                 .fillMaxWidth()
                 .height(TnyxTheme.components.button.height),
             shape = TnyxTheme.shapes.Material.medium,
-            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black)
+            colors = ButtonDefaults.buttonColors(
+                containerColor = TnyxTheme.colors.textPrimary,
+                contentColor = TnyxTheme.colors.background
+            )
         ) {
             Text("Keep Account", fontWeight = FontWeight.Bold)
         }
@@ -217,7 +226,7 @@ private fun HoldToDeleteButton(
                 modifier = Modifier.fillMaxSize(),
                 color = TnyxTheme.colors.error,
                 strokeWidth = 6.dp,
-                trackColor = Color.White.copy(alpha = 0.1f)
+                trackColor = TnyxTheme.colors.textPrimary.copy(alpha = 0.1f)
             )
 
             Box(
@@ -235,7 +244,7 @@ private fun HoldToDeleteButton(
                 Icon(
                     imageVector = Icons.Default.Lock,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = TnyxTheme.colors.background,
                     modifier = Modifier.size(32.dp)
                 )
             }
@@ -252,24 +261,29 @@ private fun BoxScope.CompletedOverlay(onAction: (PersonalInfoAction) -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(
-            Icons.Default.Lock,
+            imageVector = Icons.Default.Lock,
             contentDescription = null,
-            tint = Color.Green,
+            tint = TnyxTheme.colors.success,
             modifier = Modifier.size(64.dp)
         )
         Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceM))
         Text(
             text = "Account Deleted",
             style = TnyxTheme.typography.headlineSmall,
-            color = Color.White,
+            color = TnyxTheme.colors.textPrimary,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceXL))
         Button(
             onClick = { onAction(PersonalInfoAction.OnDeleteCompletedShown) },
-            modifier = Modifier.fillMaxWidth().height(TnyxTheme.components.button.height),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(TnyxTheme.components.button.height),
             shape = TnyxTheme.shapes.Material.medium,
-            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black)
+            colors = ButtonDefaults.buttonColors(
+                containerColor = TnyxTheme.colors.textPrimary,
+                contentColor = TnyxTheme.colors.background
+            )
         ) {
             Text("Close", fontWeight = FontWeight.Bold)
         }

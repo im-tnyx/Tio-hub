@@ -48,51 +48,28 @@ fun PersonalInfoScreen(
 
     Scaffold(
         topBar = {
-            Surface(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .statusBarsPadding(),
-                color = TnyxTheme.colors.background,
-                tonalElevation = 0.dp,
+                    .background(TnyxTheme.colors.background)
+                    .statusBarsPadding()
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .padding(horizontal = TnyxTheme.dimens.SpaceM),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    IconButton(
-                        onClick = { onAction(PersonalInfoAction.OnBackClicked) },
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TnyxTheme.colors.textPrimary,
-                            modifier = Modifier.size(24.dp),
+                com.tnyx.core.ui.components.layouts.TnyxScreenHeader(
+                    title = "Personal Information",
+                    size = com.tnyx.core.theme.tokens.components.TnyxHeaderSize.Standard,
+                    uppercaseTitle = false,
+                    navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
+                    onNavigationClick = { onAction(PersonalInfoAction.OnBackClicked) },
+                    actions = {
+                        TnyxUserAvatar(
+                            imageUrl = state.avatarUrl,
+                            displayName = state.fullName,
+                            membershipTier = state.membershipTier,
+                            size = TnyxAvatarSize.Small,
+                            onClick = { onAction(PersonalInfoAction.OnChangePhotoClicked) },
                         )
                     }
-
-                    Spacer(modifier = Modifier.width(TnyxTheme.dimens.SpaceM))
-
-                    Text(
-                        text = "Personal Information",
-                        style = TnyxTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                        ),
-                        color = TnyxTheme.colors.textPrimary,
-                        modifier = Modifier.weight(1f),
-                    )
-
-                    TnyxUserAvatar(
-                        imageUrl = state.avatarUrl,
-                        displayName = state.fullName,
-                        membershipTier = state.membershipTier,
-                        size = TnyxAvatarSize.Small,
-                        onClick = { onAction(PersonalInfoAction.OnChangePhotoClicked) },
-                    )
-                }
+                )
             }
         },
         bottomBar = {

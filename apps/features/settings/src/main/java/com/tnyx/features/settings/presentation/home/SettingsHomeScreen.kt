@@ -224,7 +224,7 @@ private fun SettingsProUpgradeCard(
             Icon(
                 imageVector = Icons.Rounded.Stars,
                 contentDescription = null,
-                tint = TnyxTheme.colors.warning,
+                tint = TnyxTheme.colors.accent,
                 modifier = Modifier.size(TnyxTheme.dimens.IconM)
             )
             Spacer(modifier = Modifier.width(TnyxTheme.dimens.SpaceM))
@@ -239,8 +239,8 @@ private fun SettingsProUpgradeCard(
                 onClick = onUnlock,
                 shape = CircleShape,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = TnyxTheme.colors.warning,
-                    contentColor = Color.Black
+                    containerColor = TnyxTheme.colors.primaryButtonContainer,
+                    contentColor = TnyxTheme.colors.primaryButtonContent
                 ),
                 contentPadding = PaddingValues(
                     horizontal = TnyxTheme.dimens.SpaceM,
@@ -261,22 +261,18 @@ private fun SettingsProUpgradeCard(
 private fun SettingsTopBar(
     onBack: () -> Unit
 ) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
+            .background(TnyxTheme.colors.background)
             .statusBarsPadding()
-            .padding(horizontal = TnyxTheme.dimens.SpaceM, vertical = TnyxTheme.dimens.SpaceS),
-        verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = onBack) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, tint = TnyxTheme.colors.textPrimary)
-        }
-        Text(
-            text = "Settings",
-            style = TnyxTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = TnyxTheme.colors.textPrimary,
-            modifier = Modifier.weight(1f)
+        com.tnyx.core.ui.components.layouts.TnyxScreenHeader(
+            title = "Settings",
+            size = com.tnyx.core.theme.tokens.components.TnyxHeaderSize.Standard,
+            uppercaseTitle = false,
+            navigationIcon = Icons.AutoMirrored.Rounded.ArrowBack,
+            onNavigationClick = onBack
         )
     }
 }

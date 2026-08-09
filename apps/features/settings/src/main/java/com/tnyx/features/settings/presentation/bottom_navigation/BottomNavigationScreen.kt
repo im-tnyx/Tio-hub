@@ -173,7 +173,7 @@ fun BottomNavigationScreen(
                         .padding(padding),
                     contentAlignment = Alignment.Center,
                 ) {
-                    CircularProgressIndicator(color = TnyxTheme.colors.warning)
+                    CircularProgressIndicator(color = TnyxTheme.colors.primary)
                 }
             } else {
                 Column(
@@ -306,29 +306,18 @@ fun BottomNavigationScreen(
 
 @Composable
 private fun EditorTopBar(onBack: () -> Unit) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(TnyxTheme.colors.background)
             .statusBarsPadding()
-            .padding(
-                horizontal = TnyxTheme.dimens.SpaceS,
-                vertical = TnyxTheme.dimens.SpaceS,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = onBack) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                contentDescription = "Back",
-                tint = TnyxTheme.colors.textPrimary,
-            )
-        }
-        Text(
-            text = "Bottom navigation",
-            style = TnyxTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = TnyxTheme.colors.textPrimary,
+        com.tnyx.core.ui.components.layouts.TnyxScreenHeader(
+            title = "Bottom Navigation",
+            size = com.tnyx.core.theme.tokens.components.TnyxHeaderSize.Standard,
+            uppercaseTitle = false,
+            navigationIcon = Icons.AutoMirrored.Rounded.ArrowBack,
+            onNavigationClick = onBack
         )
     }
 }
@@ -367,11 +356,16 @@ private fun EditorBottomBar(
                 enabled = canSave,
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = TnyxTheme.colors.warning,
-                    contentColor = TnyxTheme.colors.background,
+                    containerColor = TnyxTheme.colors.primaryButtonContainer,
+                    contentColor = TnyxTheme.colors.primaryButtonContent,
+                    disabledContainerColor = TnyxTheme.colors.primaryButtonContainer.copy(alpha = 0.4f),
+                    disabledContentColor = TnyxTheme.colors.primaryButtonContent.copy(alpha = 0.6f),
                 ),
             ) {
-                Text(if (isSaving) "Saving…" else "Save")
+                Text(
+                    text = if (isSaving) "Saving…" else "Save",
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
@@ -836,7 +830,7 @@ private fun AvailableTabActionBadge(
             tint = when {
                 !enabled -> TnyxTheme.colors.textMuted
                 isSelected -> TnyxTheme.colors.error
-                else -> TnyxTheme.colors.warning
+                else -> TnyxTheme.colors.accent
             },
             modifier = Modifier.size(TnyxTheme.dimens.IconXXS),
         )
@@ -1088,7 +1082,7 @@ private fun TabIcon(
             painter = painterResource(id = outlineIconRes),
             contentDescription = null,
             tint = when {
-                highlighted -> TnyxTheme.colors.warning
+                highlighted -> TnyxTheme.colors.primary
                 muted -> TnyxTheme.colors.textMuted
                 else -> TnyxTheme.colors.textSecondary
             },
@@ -1099,7 +1093,7 @@ private fun TabIcon(
             imageVector = Icons.Outlined.AutoAwesome,
             contentDescription = null,
             tint = when {
-                highlighted -> TnyxTheme.colors.warning
+                highlighted -> TnyxTheme.colors.primary
                 muted -> TnyxTheme.colors.textMuted
                 else -> TnyxTheme.colors.ai
             },

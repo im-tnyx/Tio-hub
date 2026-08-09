@@ -261,14 +261,14 @@ private fun FirstDayOfWeekBottomSheet(
                         text = if (day == "Sunday") "Sunday (Default)" else day,
                         style = TnyxTheme.typography.bodyLarge,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isSelected) TnyxTheme.colors.accent else TnyxTheme.colors.textPrimary,
+                        color = if (isSelected) TnyxTheme.colors.primary else TnyxTheme.colors.textPrimary,
                     )
 
                     if (isSelected) {
                         Icon(
                             imageVector = Icons.Default.Check,
                             contentDescription = "Selected",
-                            tint = TnyxTheme.colors.accent,
+                            tint = TnyxTheme.colors.primary,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -280,26 +280,18 @@ private fun FirstDayOfWeekBottomSheet(
 
 @Composable
 private fun AppPreferencesTopBar(onBack: () -> Unit) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(TnyxTheme.colors.background)
             .statusBarsPadding()
-            .padding(horizontal = 8.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = onBack) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                contentDescription = "Back",
-                tint = TnyxTheme.colors.textPrimary,
-            )
-        }
-        Text(
-            text = "App Settings",
-            style = TnyxTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = TnyxTheme.colors.textPrimary,
+        com.tnyx.core.ui.components.layouts.TnyxScreenHeader(
+            title = "App Settings",
+            size = com.tnyx.core.theme.tokens.components.TnyxHeaderSize.Standard,
+            uppercaseTitle = false,
+            navigationIcon = Icons.AutoMirrored.Rounded.ArrowBack,
+            onNavigationClick = onBack
         )
     }
 }
@@ -420,8 +412,8 @@ private fun PreferenceSwitch(
         checked = checked,
         onCheckedChange = onCheckedChange,
         colors = SwitchDefaults.colors(
-            checkedThumbColor = TnyxTheme.colors.warning,
-            checkedTrackColor = TnyxTheme.colors.warning.copy(alpha = 0.3f),
+            checkedThumbColor = TnyxTheme.colors.primary,
+            checkedTrackColor = TnyxTheme.colors.primary.copy(alpha = 0.3f),
             uncheckedThumbColor = TnyxTheme.colors.textMuted,
             uncheckedTrackColor = TnyxTheme.colors.textMuted.copy(alpha = 0.2f),
         ),
@@ -518,8 +510,8 @@ private fun VolumeRow(
                 onValueChange = onChanged,
                 valueRange = 0f..1f,
                 colors = SliderDefaults.colors(
-                    thumbColor = TnyxTheme.colors.warning,
-                    activeTrackColor = TnyxTheme.colors.warning,
+                    thumbColor = TnyxTheme.colors.primary,
+                    activeTrackColor = TnyxTheme.colors.primary,
                     inactiveTrackColor = TnyxTheme.colors.textMuted.copy(alpha = 0.2f),
                 ),
                 modifier = Modifier.weight(1f),

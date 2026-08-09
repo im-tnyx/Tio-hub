@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.sp
 import com.tnyx.core.theme.TnyxTheme
 import com.tnyx.core.theme.tokens.components.TnyxHeaderSize
 import com.tnyx.core.theme.tokens.foundation.TnyxPalette
-import com.tnyx.core.ui.components.calendar.TnyxWeeklyCalendar
 import com.tnyx.core.ui.components.cards.TnyxCard
 import com.tnyx.core.ui.components.cards.TnyxCardVariant
 import com.tnyx.core.ui.components.layouts.TnyxScreenHeader
@@ -47,20 +46,18 @@ fun NutritionOverviewScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            Column(modifier = Modifier.background(TnyxTheme.colors.background)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(TnyxTheme.colors.background)
+                    .statusBarsPadding()
+            ) {
                 TnyxScreenHeader(
                     title = "Nutrition Overview",
                     size = TnyxHeaderSize.Standard,
                     uppercaseTitle = false,
                     navigationIcon = Icons.AutoMirrored.Rounded.ArrowBack,
                     onNavigationClick = { onAction(NutritionOverviewAction.BackClicked) }
-                )
-
-                // Calendar header
-                TnyxWeeklyCalendar(
-                    selectedDate = state.selectedDate,
-                    onDateSelected = { onAction(NutritionOverviewAction.DateSelected(it)) },
-                    allowFutureDates = false
                 )
             }
         },

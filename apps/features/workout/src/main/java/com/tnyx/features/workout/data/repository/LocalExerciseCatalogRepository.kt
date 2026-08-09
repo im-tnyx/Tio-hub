@@ -39,9 +39,20 @@ class LocalExerciseCatalogRepository @Inject constructor() : ExerciseCatalogRepo
         }
     }
 
+    override suspend fun getExerciseById(exerciseId: String): ExerciseDefinition? {
+        return exercisesState.value.find { exercise -> exercise.id == exerciseId }
+    }
+
     override suspend fun saveCustomExercise(exercise: ExerciseDefinition) {
         exercisesState.update { current ->
-            listOf(exercise) + current
+            val customExercise = exercise.copy(isCustom = true)
+            listOf(customExercise) + current.filterNot { existing -> existing.id == customExercise.id }
+        }
+    }
+
+    override suspend fun deleteCustomExercise(exerciseId: String) {
+        exercisesState.update { current ->
+            current.filterNot { exercise -> exercise.id == exerciseId && exercise.isCustom }
         }
     }
 }

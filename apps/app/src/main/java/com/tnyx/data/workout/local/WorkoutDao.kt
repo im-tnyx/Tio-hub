@@ -61,6 +61,41 @@ interface WorkoutDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertExerciseDefinitions(entities: List<WorkoutExerciseDefinitionEntity>)
 
+    @Query(
+        """
+        SELECT * FROM workout_custom_exercise
+        WHERE ownerUserId = :ownerUserId
+        ORDER BY name COLLATE NOCASE, exerciseId
+        """
+    )
+    fun observeCustomExerciseDefinitions(ownerUserId: String): Flow<List<WorkoutCustomExerciseEntity>>
+
+    @Query(
+        """
+        SELECT * FROM workout_custom_exercise
+        WHERE ownerUserId = :ownerUserId AND exerciseId = :exerciseId
+        LIMIT 1
+        """
+    )
+    suspend fun getCustomExerciseDefinition(
+        ownerUserId: String,
+        exerciseId: String
+    ): WorkoutCustomExerciseEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertCustomExerciseDefinitions(entities: List<WorkoutCustomExerciseEntity>)
+
+    @Query("DELETE FROM workout_custom_exercise WHERE ownerUserId = :ownerUserId")
+    suspend fun deleteCustomExerciseDefinitionsForOwner(ownerUserId: String)
+
+    @Query(
+        """
+        DELETE FROM workout_custom_exercise
+        WHERE ownerUserId = :ownerUserId AND exerciseId = :exerciseId
+        """
+    )
+    suspend fun deleteCustomExerciseDefinition(ownerUserId: String, exerciseId: String)
+
     @Query("SELECT * FROM workout_routine ORDER BY name COLLATE NOCASE, routineId")
     fun observeRoutines(): Flow<List<WorkoutRoutineEntity>>
 

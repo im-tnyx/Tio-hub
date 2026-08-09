@@ -140,6 +140,7 @@ data class ExerciseCatalogDto(
         return ExerciseDefinition(
             id = id,
             name = title,
+            bodyPart = muscleGroup.takeIf { it.isNotBlank() },
             primaryMuscleGroups = if (muscleGroup.isNotBlank()) listOf(muscleGroup) else emptyList(),
             secondaryMuscleGroups = otherMuscles,
             equipment = if (equipmentCategory.isNotBlank()) listOf(equipmentCategory) else emptyList(),

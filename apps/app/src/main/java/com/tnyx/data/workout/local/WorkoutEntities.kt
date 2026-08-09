@@ -69,6 +69,20 @@ data class WorkoutExerciseDefinitionEntity(
 )
 
 @Entity(
+    tableName = "workout_custom_exercise",
+    primaryKeys = ["ownerUserId", "exerciseId"],
+    indices = [Index(value = ["ownerUserId"])]
+)
+data class WorkoutCustomExerciseEntity(
+    val ownerUserId: String,
+    val exerciseId: String,
+    val name: String,
+    val contractVersion: Int,
+    val definitionJson: String,
+    val syncedAtMs: Long
+)
+
+@Entity(
     tableName = "workout_routine",
     indices = [Index(value = ["lastPerformedAtMs"])]
 )

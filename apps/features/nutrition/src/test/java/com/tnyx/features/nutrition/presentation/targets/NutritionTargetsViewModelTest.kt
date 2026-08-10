@@ -134,6 +134,8 @@ private class FakeNutritionTargetsRepository(
         error("Not needed for NutritionTargetsViewModelTest")
     }
 
+    override suspend fun getMealLog(mealId: String): NutritionMeal? = null
+
     override suspend fun getNutritionTargets(): NutritionTargetsSnapshot {
         getTargetsCallCount += 1
         return currentTargets

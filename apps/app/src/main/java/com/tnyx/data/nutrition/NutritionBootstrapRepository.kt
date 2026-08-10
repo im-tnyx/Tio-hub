@@ -2,6 +2,7 @@ package com.tnyx.data.nutrition
 
 import com.tnyx.features.nutrition.domain.models.MealDiarySnapshot
 import com.tnyx.features.nutrition.domain.models.MealItem
+import com.tnyx.features.nutrition.domain.models.MealPhotoUpdate
 import com.tnyx.features.nutrition.domain.models.NutritionMeal
 import com.tnyx.features.nutrition.domain.models.NutritionTargetsSnapshot
 import com.tnyx.features.nutrition.domain.repository.NutritionRepository
@@ -9,6 +10,9 @@ import com.tnyx.shared.auth.domain.repository.AuthSessionProvider
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.storage.storage
+import io.github.jan.supabase.storage.upload
+import io.ktor.http.ContentType
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -20,11 +24,14 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.Serializable
 import kotlin.math.roundToLong
+import kotlin.time.Duration.Companion.hours
 
 private const val DEFAULT_SLEEP_LABEL = "10:00 PM"
 private const val DEFAULT_WAKE_LABEL = "06:00 AM"
 private val dbTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
 private val uiTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.US)
+private const val MAX_MEAL_PHOTO_BYTES = 10 * 1024 * 1024
+private val MEAL_PHOTO_SIGNED_URL_TTL = 1.hours
 
 class NutritionBootstrapRepository @Inject constructor(
     private val sessionProvider: AuthSessionProvider,
@@ -58,21 +65,46 @@ class NutritionBootstrapRepository @Inject constructor(
         val userId = resolvedUserId()
             ?: return emptyList()
 
-        return runCatching {
-            val logs = supabaseClient.from("meal_logs").select {
-                filter {
-                    eq("user_id", userId)
-                    eq("log_date", date.toString())
-                }
-            }.decodeList<MealLogDto>()
-
-            logs.map { log ->
-                val items = supabaseClient.from("meal_log_items").select {
-                    filter { eq("meal_log_id", log.id) }
-                }.decodeList<MealLogItemDto>()
-                log.toNutritionMeal(items)
+        val logs = supabaseClient.from("meal_logs").select {
+            filter {
+                eq("user_id", userId)
+                eq("log_date", date.toString())
             }
-        }.getOrElse { emptyList() }
+        }.decodeList<MealLogDto>()
+
+        return logs.map { log ->
+            val items = supabaseClient.from("meal_log_items").select {
+                filter {
+                    eq("meal_log_id", log.id)
+                    eq("user_id", userId)
+                }
+            }.decodeList<MealLogItemDto>()
+            log.toNutritionMeal(
+                items = items,
+                resolvedImageUrl = resolveMealPhotoReference(log.image_url, userId),
+            )
+        }
+    }
+
+    override suspend fun getMealLog(mealId: String): NutritionMeal? {
+        val userId = requireUserId()
+        val log = supabaseClient.from("meal_logs").select {
+            filter {
+                eq("id", mealId)
+                eq("user_id", userId)
+            }
+        }.decodeList<MealLogDto>().firstOrNull() ?: return null
+
+        val items = supabaseClient.from("meal_log_items").select {
+            filter {
+                eq("meal_log_id", mealId)
+                eq("user_id", userId)
+            }
+        }.decodeList<MealLogItemDto>()
+        return log.toNutritionMeal(
+            items = items,
+            resolvedImageUrl = resolveMealPhotoReference(log.image_url, userId),
+        )
     }
 
     // ── Nutrition Targets ──────────────────────────────────────────────────
@@ -142,30 +174,138 @@ class NutritionBootstrapRepository @Inject constructor(
     // ── Meal Log CRUD ──────────────────────────────────────────────────────
 
     override suspend fun saveMealLog(date: LocalDate, meal: NutritionMeal): NutritionMeal {
+        return saveMealLogWithPhoto(date, meal, MealPhotoUpdate.Unchanged)
+    }
+
+    override suspend fun saveMealLogWithPhoto(
+        date: LocalDate,
+        meal: NutritionMeal,
+        photoUpdate: MealPhotoUpdate,
+    ): NutritionMeal {
         val userId = requireUserId()
         val id = meal.id.ifBlank { UUID.randomUUID().toString() }
 
-        supabaseClient.from("meal_logs").upsert(
-            MealLogDto(
-                id = id,
-                user_id = userId,
-                log_date = date.toString(),
-                meal_type = meal.type,
-                name = meal.name,
-                image_url = meal.imageUrl,
-            )
-        ) { onConflict = "id" }
+        require(meal.name.isNotBlank()) { "Meal name is required" }
+        require(meal.items.isNotEmpty()) { "At least one food item is required" }
 
-        return meal.copy(id = id)
+        val previousImageReference = meal.id.takeIf(String::isNotBlank)?.let { mealId ->
+            supabaseClient.from("meal_logs").select {
+                filter {
+                    eq("id", mealId)
+                    eq("user_id", userId)
+                }
+            }.decodeList<MealLogDto>().firstOrNull()?.image_url
+        }
+        val previousObjectPath = previousImageReference
+            ?.toOwnedNutritionMediaObjectPath(userId)
+        var uploadedObjectPath: String? = null
+        val durableImageReference = when (photoUpdate) {
+            MealPhotoUpdate.Unchanged -> meal.imageUrl
+                ?.toNutritionMediaObjectPath()
+                ?.toNutritionMediaStorageReference()
+                ?: meal.imageUrl
+            MealPhotoUpdate.Remove -> null
+            is MealPhotoUpdate.Replace -> {
+                val mediaType = requireNotNull(SUPPORTED_MEAL_PHOTOS[photoUpdate.mimeType.lowercase()]) {
+                    "Selected meal photo type is not supported."
+                }
+                require(photoUpdate.bytes.isNotEmpty()) { "Selected meal photo is empty." }
+                require(photoUpdate.bytes.size <= MAX_MEAL_PHOTO_BYTES) {
+                    "Meal photo is too large. Maximum size is 10 MB."
+                }
+                val objectPath = "$userId/$id/${UUID.randomUUID()}.${mediaType.extension}"
+                supabaseClient.storage.from(NUTRITION_MEDIA_BUCKET).upload(
+                    path = objectPath,
+                    data = photoUpdate.bytes,
+                ) {
+                    contentType = mediaType.contentType
+                }
+                uploadedObjectPath = objectPath
+                objectPath.toNutritionMediaStorageReference()
+            }
+        }
+
+        try {
+            supabaseClient.from("meal_logs").upsert(
+                MealLogDto(
+                    id = id,
+                    user_id = userId,
+                    log_date = date.toString(),
+                    meal_type = meal.type,
+                    name = meal.name,
+                    image_url = durableImageReference,
+                )
+            ) { onConflict = "id" }
+
+            val existingItemIds = supabaseClient.from("meal_log_items").select {
+                filter {
+                    eq("meal_log_id", id)
+                    eq("user_id", userId)
+                }
+            }.decodeList<MealLogItemDto>().mapTo(mutableSetOf()) { it.id }
+
+            val persistedItems = meal.items.map { item ->
+                require(item.name.isNotBlank()) { "Food item name is required" }
+                require(item.quantity > 0.0) { "Food item quantity must be greater than zero" }
+                require(item.hasValidNutrition()) { "Food item nutrition cannot be negative" }
+
+                val itemId = item.id.ifBlank { UUID.randomUUID().toString() }
+                val persistedItem = item.copy(id = itemId)
+                supabaseClient.from("meal_log_items").upsert(
+                    MealLogItemDto.fromDomain(
+                        mealLogId = id,
+                        userId = userId,
+                        item = persistedItem,
+                    )
+                ) { onConflict = "id" }
+                existingItemIds.remove(itemId)
+                persistedItem
+            }
+
+            existingItemIds.forEach { staleItemId ->
+                deleteMealLogItem(staleItemId)
+            }
+
+            if (photoUpdate != MealPhotoUpdate.Unchanged) {
+                previousObjectPath
+                    ?.takeIf { path -> path != uploadedObjectPath }
+                    ?.let { path ->
+                        runCatching {
+                            supabaseClient.storage.from(NUTRITION_MEDIA_BUCKET).delete(path)
+                        }
+                    }
+            }
+
+            return meal.copy(
+                id = id,
+                imageUrl = durableImageReference,
+                items = persistedItems,
+            )
+        } catch (error: Exception) {
+            uploadedObjectPath?.let { path ->
+                runCatching { supabaseClient.storage.from(NUTRITION_MEDIA_BUCKET).delete(path) }
+            }
+            throw error
+        }
     }
 
     override suspend fun deleteMealLog(mealId: String) {
         val userId = requireUserId()
+        val imageObjectPath = supabaseClient.from("meal_logs").select {
+            filter {
+                eq("id", mealId)
+                eq("user_id", userId)
+            }
+        }.decodeList<MealLogDto>().firstOrNull()?.image_url
+            ?.toOwnedNutritionMediaObjectPath(userId)
         supabaseClient.from("meal_logs").delete {
             filter {
                 eq("id", mealId)
                 eq("user_id", userId)
             }
+        }
+        imageObjectPath?.let { path ->
+            runCatching { supabaseClient.storage.from(NUTRITION_MEDIA_BUCKET).delete(path) }
         }
     }
 
@@ -174,21 +314,10 @@ class NutritionBootstrapRepository @Inject constructor(
         val id = item.id.ifBlank { UUID.randomUUID().toString() }
 
         supabaseClient.from("meal_log_items").upsert(
-            MealLogItemDto(
-                id = id,
-                meal_log_id = mealLogId,
-                user_id = userId,
-                name = item.name,
-                quantity = item.quantity,
-                unit = item.unit,
-                calories = item.calories,
-                protein = item.protein,
-                carbs = item.carbs,
-                fats = item.fats,
-                fiber = item.fiber,
-                sugar = item.sugar,
-                trans_fat = item.transFat,
-                saturated_fat = item.saturatedFat,
+            MealLogItemDto.fromDomain(
+                mealLogId = mealLogId,
+                userId = userId,
+                item = item.copy(id = id),
             )
         ) { onConflict = "id" }
 
@@ -238,6 +367,17 @@ class NutritionBootstrapRepository @Inject constructor(
 
     private fun resolvedUserId(): String? {
         return supabaseClient.auth.currentUserOrNull()?.id
+    }
+
+    private suspend fun resolveMealPhotoReference(reference: String?, userId: String): String? {
+        val value = reference ?: return null
+        val objectPath = value.toOwnedNutritionMediaObjectPath(userId) ?: return value
+        return runCatching {
+            supabaseClient.storage.from(NUTRITION_MEDIA_BUCKET).createSignedUrl(
+                path = objectPath,
+                expiresIn = MEAL_PHOTO_SIGNED_URL_TTL,
+            )
+        }.getOrNull()
     }
 
     private fun UserNutritionProfileDto.toTargetsSnapshot(): NutritionTargetsSnapshot {
@@ -358,11 +498,14 @@ private data class MealLogDto(
     val name: String,
     val image_url: String? = null,
 ) {
-    fun toNutritionMeal(items: List<MealLogItemDto>): NutritionMeal = NutritionMeal(
+    fun toNutritionMeal(
+        items: List<MealLogItemDto>,
+        resolvedImageUrl: String? = image_url,
+    ): NutritionMeal = NutritionMeal(
         id = id,
         name = name,
         type = meal_type,
-        imageUrl = image_url,
+        imageUrl = resolvedImageUrl,
         items = items.map { it.toMealItem() },
     )
 }
@@ -398,4 +541,50 @@ private data class MealLogItemDto(
         transFat = trans_fat,
         saturatedFat = saturated_fat,
     )
+
+    companion object {
+        fun fromDomain(
+            mealLogId: String,
+            userId: String,
+            item: MealItem,
+        ): MealLogItemDto = MealLogItemDto(
+            id = item.id,
+            meal_log_id = mealLogId,
+            user_id = userId,
+            name = item.name.trim(),
+            quantity = item.quantity,
+            unit = item.unit.trim().ifBlank { "serving" },
+            calories = item.calories,
+            protein = item.protein,
+            carbs = item.carbs,
+            fats = item.fats,
+            fiber = item.fiber,
+            sugar = item.sugar,
+            trans_fat = item.transFat,
+            saturated_fat = item.saturatedFat,
+        )
+    }
 }
+
+private fun MealItem.hasValidNutrition(): Boolean {
+    return calories >= 0 &&
+        protein >= 0.0 &&
+        carbs >= 0.0 &&
+        fats >= 0.0 &&
+        fiber >= 0.0 &&
+        sugar >= 0.0 &&
+        transFat >= 0.0 &&
+        saturatedFat >= 0.0
+}
+
+private data class SupportedMealPhoto(
+    val extension: String,
+    val contentType: ContentType,
+)
+
+private val SUPPORTED_MEAL_PHOTOS = mapOf(
+    "image/jpeg" to SupportedMealPhoto("jpg", ContentType.Image.JPEG),
+    "image/jpg" to SupportedMealPhoto("jpg", ContentType.Image.JPEG),
+    "image/png" to SupportedMealPhoto("png", ContentType.Image.PNG),
+    "image/webp" to SupportedMealPhoto("webp", ContentType.parse("image/webp")),
+)

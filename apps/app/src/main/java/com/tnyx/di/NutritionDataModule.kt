@@ -1,6 +1,10 @@
 package com.tnyx.di
 
 import com.tnyx.data.nutrition.NutritionBootstrapRepository
+import com.tnyx.data.nutrition.SupabaseFoodSearchRepository
+import com.tnyx.data.nutrition.SupabaseMealPhotoRecognitionRepository
+import com.tnyx.features.nutrition.domain.repository.FoodSearchRepository
+import com.tnyx.features.nutrition.domain.repository.MealPhotoRecognitionRepository
 import com.tnyx.features.nutrition.domain.repository.NutritionRepository
 import dagger.Binds
 import dagger.Module
@@ -19,6 +23,18 @@ abstract class NutritionDataModule {
     abstract fun bindNutritionRepository(
         repository: NutritionBootstrapRepository,
     ): NutritionRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindFoodSearchRepository(
+        repository: SupabaseFoodSearchRepository,
+    ): FoodSearchRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindMealPhotoRecognitionRepository(
+        repository: SupabaseMealPhotoRecognitionRepository,
+    ): MealPhotoRecognitionRepository
 
     companion object {
         @Provides

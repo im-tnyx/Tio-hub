@@ -61,6 +61,8 @@ fun MainScreen(
     }
 
     val isBottomNavVisible = when {
+        currentDestination?.hasRoute<NutritionScreen.MealSearch>() == true -> false
+        currentDestination?.hasRoute<NutritionScreen.MealCamera>() == true -> false
         currentDestination?.hasRoute<NutritionScreen.MealEditor>() == true -> false
         currentDestination?.hasRoute<NutritionScreen.MealItemEditor>() == true -> false
         currentDestination?.hasRoute<NutritionScreen.Targets>() == true -> false

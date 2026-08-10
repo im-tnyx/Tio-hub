@@ -1,8 +1,10 @@
 package com.tnyx.features.nutrition.domain.models
 
 import androidx.compose.runtime.Immutable
+import kotlinx.serialization.Serializable
 
 @Immutable
+@Serializable
 data class MealItem(
     val id: String,
     val name: String,
@@ -22,6 +24,7 @@ data class MealItem(
 }
 
 @Immutable
+@Serializable
 data class NutritionMeal(
     val id: String,
     val name: String,

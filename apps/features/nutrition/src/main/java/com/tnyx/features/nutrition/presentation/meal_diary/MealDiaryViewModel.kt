@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
@@ -24,7 +23,6 @@ class MealDiaryViewModel @Inject constructor(
 ) : ViewModel() {
 
     private var loadJob: Job? = null
-    private var refreshJob: Job? = null
 
     private val _uiState = MutableStateFlow(
         MealDiaryUiState(
@@ -40,7 +38,6 @@ class MealDiaryViewModel @Inject constructor(
 
     init {
         loadDiary(initialDate)
-        startAutoRefresh()
     }
 
     fun handleAction(action: MealDiaryAction) {
@@ -58,18 +55,31 @@ class MealDiaryViewModel @Inject constructor(
                     _effect.emit(MealDiaryEffect.ShowOverview(action.target))
                 }
             }
+            MealDiaryAction.RefreshRequested -> {
+                loadDiary(_uiState.value.selectedDate, showLoading = false)
+            }
             MealDiaryAction.FabToggled -> {
                 _uiState.update { it.copy(isFabExpanded = !it.isFabExpanded) }
             }
             MealDiaryAction.FabCollapsed -> {
                 _uiState.update { it.copy(isFabExpanded = false) }
             }
-            MealDiaryAction.AddMealClicked,
-            MealDiaryAction.AddMealVoiceClicked,
-            MealDiaryAction.AddMealCameraClicked -> {
+            MealDiaryAction.AddMealClicked -> {
                 _uiState.update { it.copy(isFabExpanded = false) }
                 viewModelScope.launch {
                     _effect.emit(MealDiaryEffect.NavigateToSearch(_uiState.value.selectedDate))
+                }
+            }
+            MealDiaryAction.AddMealVoiceClicked -> {
+                _uiState.update { it.copy(isFabExpanded = false) }
+                viewModelScope.launch {
+                    _effect.emit(MealDiaryEffect.NavigateToSearch(_uiState.value.selectedDate))
+                }
+            }
+            MealDiaryAction.AddMealCameraClicked -> {
+                _uiState.update { it.copy(isFabExpanded = false) }
+                viewModelScope.launch {
+                    _effect.emit(MealDiaryEffect.NavigateToMealCamera(_uiState.value.selectedDate))
                 }
             }
             MealDiaryAction.OptionsMenuToggled -> {
@@ -110,21 +120,19 @@ class MealDiaryViewModel @Inject constructor(
             )
         }
         loadJob = viewModelScope.launch {
-            val snapshot = nutritionRepository.getMealDiary(date)
-            _uiState.value = snapshot.toUiState()
-        }
-    }
-
-    private fun startAutoRefresh() {
-        refreshJob?.cancel()
-        refreshJob = viewModelScope.launch {
-            while (true) {
-                delay(10_000L)
-                loadDiary(
-                    date = _uiState.value.selectedDate,
-                    showLoading = false,
-                )
-            }
+            runCatching { nutritionRepository.getMealDiary(date) }
+                .onSuccess { snapshot ->
+                    _uiState.value = snapshot.toUiState()
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = error.message?.takeIf(String::isNotBlank)
+                                ?: "Meal diary could not be loaded.",
+                        )
+                    }
+                }
         }
     }
 
@@ -153,6 +161,7 @@ class MealDiaryViewModel @Inject constructor(
             mineralsProgress = mineralsProgress,
             meals = meals,
             isLoading = false,
+            errorMessage = null,
             isFabExpanded = false, // Always collapse FAB after a diary reload
         )
     }

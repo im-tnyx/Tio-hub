@@ -7,10 +7,14 @@ import com.tnyx.features.nutrition.domain.models.NutritionTargetsSnapshot
 import com.tnyx.features.nutrition.domain.repository.NutritionRepository
 import java.time.LocalDate
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Rule
 import org.junit.Test
 
@@ -37,6 +41,10 @@ class MealDiaryViewModelTest {
         assertEquals(1700, state.caloriesGoal)
         assertEquals(16.5, state.proteinConsumed, 0.0)
         assertEquals(130.0, state.proteinGoal, 0.0)
+        assertEquals(6.0, state.fiberConsumed, 0.0)
+        assertEquals(40.0, state.carbsConsumed, 0.0)
+        assertEquals(8.0, state.sugarConsumed, 0.0)
+        assertEquals(12.0, state.fatsConsumed, 0.0)
         assertEquals(2.2, state.waterConsumed, 0.0)
         assertEquals(3.4, state.waterGoal, 0.0)
         assertFalse(state.isLoading)
@@ -64,6 +72,41 @@ class MealDiaryViewModelTest {
         assertEquals(nextDate, state.selectedDate)
         assertEquals("Next Meal", state.meals.single().name)
         assertFalse(state.isLoading)
+    }
+
+    @Test
+    fun repositoryFailureIsNotRenderedAsEmptyDiary() = runTest {
+        val selectedDate = LocalDate.of(2026, 8, 9)
+        val repository = FakeNutritionRepository(snapshots = emptyMap())
+
+        val viewModel = MealDiaryViewModel(repository, selectedDate)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isLoading)
+        assertNotNull(viewModel.uiState.value.errorMessage)
+    }
+
+    @Test
+    fun cameraFabNavigatesToDedicatedCameraForSelectedDate() = runTest {
+        val selectedDate = LocalDate.of(2026, 8, 10)
+        val viewModel = MealDiaryViewModel(
+            FakeNutritionRepository(mapOf(selectedDate to snapshot(selectedDate))),
+            selectedDate,
+        )
+        advanceUntilIdle()
+        viewModel.handleAction(MealDiaryAction.FabToggled)
+        val effect = async(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effect.first()
+        }
+
+        viewModel.handleAction(MealDiaryAction.AddMealCameraClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            MealDiaryEffect.NavigateToMealCamera(selectedDate),
+            effect.await(),
+        )
+        assertFalse(viewModel.uiState.value.isFabExpanded)
     }
 
     private fun snapshot(
@@ -119,6 +162,8 @@ private class FakeNutritionRepository(
             "Missing test snapshot for $date"
         }
     }
+
+    override suspend fun getMealLog(mealId: String): NutritionMeal? = null
 
     override suspend fun getNutritionTargets(): NutritionTargetsSnapshot {
         error("Not needed for MealDiaryViewModelTest")

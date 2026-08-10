@@ -1,7 +1,7 @@
 # TNYX Android: Multi-Tier Nutrition Search & Logging Architecture
 
-Document Status: Canonical Nutrition API Architecture Reference
-Last Verified: 2026-07-31
+Document Status: Partial runtime implementation; remaining tiers planned
+Last Verified: 2026-08-09
 Owner: Android Engineering / Product
 
 ---
@@ -80,4 +80,27 @@ apps/features/nutrition/
 ---
 
 ## 🔒 Security & Key Management
-- API Keys, OAuth Secret Tokens, and App IDs MUST be supplied via environment variables (`buildConfigField` or encrypted local properties) and NEVER hardcoded in client source files.
+- Provider API keys, OAuth client secrets, and app secrets MUST remain in a
+  trusted backend or Supabase Edge Function. They must never be shipped through
+  Android `BuildConfig`, resources, encrypted local properties, or client source.
+- Android will call a Tio-owned authenticated search gateway. The gateway owns
+  provider selection, rate limiting, response normalization, caching, and
+  credential rotation.
+- The current runtime implements manual meal logging, text search, same-screen
+  ML Kit barcode capture, and an authenticated `nutrition-food-search` Supabase
+  Edge Function.
+- Android debounces Search Meals query changes before calling
+  `FoodSearchRepository`; cancellation prevents stale requests from replacing
+  newer results.
+- The live first slice normalizes Open Food Facts Search-a-licious results into
+  `MealItem` drafts. It requests India-tagged products first and fills sparse
+  regional results from a deduplicated global fallback. Checked-in function
+  source also normalizes exact Open Food Facts product-by-code responses, then
+  tries FatSecret Barcode v2 with `region=IN`, and finally can fall back to
+  Edamam's UPC parser when server-side Edamam credentials are configured. None
+  of these exact branches is present in active remote version 13. FatSecret
+  barcode access and storable-data terms plus Edamam attribution and
+  plan-specific caching rights must be verified before release. FatSecret text
+  search, voice, USDA fallback, caching infrastructure, and complete
+  multi-provider orchestration remain planned.
+- Provider credentials are not present in the repository or Android client.

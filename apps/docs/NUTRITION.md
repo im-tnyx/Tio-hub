@@ -1,17 +1,17 @@
 # TNYX Android: Nutrition Feature Reference
 
 Document Status: Source-aligned nutrition reference
-Last Verified: 2026-08-01
+Last Verified: 2026-08-10
 Owner: Android Engineering
 Truth Boundary: This document describes checked-in Android source under `apps/features/nutrition` and shared reusable UI under `apps/core`. Runtime source remains final truth.
 
-This document explains the current nutrition feature shape, especially the Meal Diary screen, the reusable calendar/header components it depends on, and the boundary between current UI work and future Supabase-backed persistence.
+This document explains the current nutrition feature shape, especially the Meal Diary screen, text-only meal logging, the reusable calendar/header components it depends on, and the current Supabase persistence boundary.
 
 ---
 
 ## 1. Current Scope
 
-The current pushed nutrition work now spans both UI/design-system refinement and the first live Supabase nutrition diary schema slice.
+The current nutrition work spans UI/design-system refinement and the first live Supabase nutrition diary schema slice.
 
 Implemented in current source:
 
@@ -25,12 +25,68 @@ Implemented in current source:
 - Nutrition card progress bars.
 - Filled/outlined navigation icon resource pairs.
 - New nutrition icon assets for protein/fiber.
+- Text-only meal and food-item entry without external provider dependencies.
+- Existing meal and item loading for edit flows.
+- Aggregate meal-with-items persistence through `NutritionRepository`.
+- Visible validation and repository failure states.
+- Immediate diary refresh after a successful save or delete.
+- Authenticated food search through the live `nutrition-food-search` Supabase
+  Edge Function and Open Food Facts Search-a-licious. India-tagged products are
+  ranked first, with deduplicated global results filling any remaining slots.
+- Dedicated Search Meals screen with debounced typing, loading, empty and
+  failure states, grouped source results, and selected-item handoff into Meal
+  Editor. Group headers open a standalone full-result view without refetching,
+  and shell bottom navigation is hidden on this route.
+- Meal Editor owns meal-level name, aggregate calories/macros, item collection,
+  category/date and persistence. Add item opens Search Meals in result-return
+  mode so the existing draft remains intact; tapping an item opens
+  MealItemEditor for detailed micronutrition editing.
+- Meal Editor supports direct Camera or Gallery meal-photo selection without an
+  image crop step. JPEG, PNG, and WebP photos are limited to 10 MB, previewed as
+  draft state, and uploaded only when the user chooses `Save Meal`.
+- The app persists durable private Storage object references and resolves
+  short-lived signed URLs for rendering; replacement, removal, and meal delete
+  paths clean up owned objects.
+- The Meal Diary camera FAB opens a dedicated CameraX screen with runtime
+  permission handling, live back-camera preview, flash control, in-screen
+  gallery selection, shutter capture, captured-photo preview, and explicit
+  `Retry` / `Done` actions. It does not open the image cropper.
+- The same camera screen exposes balanced Gallery / shutter / Barcode controls.
+  Barcode mode analyzes the existing preview locally with bundled ML Kit for
+  EAN/UPC codes. The Android repository first requests an exact barcode lookup;
+  an exact response opens Meal Editor directly, while no match falls back to
+  Search Meals with the detected code prefilled.
+- `Done` prepares a separate orientation-corrected, center-normalized 512x512
+  JPEG analysis copy,
+  keeps the original draft photo unchanged, and hands a successful detected
+  meal plus the temporary photo into Meal Editor without auto-saving.
 
 Not implemented by this change:
 
-- Device-validated Meal Diary / Meal Editor route behavior for the new live diary tables.
-- Meal add/edit/delete API writes.
-- Food search/catalog backend integration (documented in `NUTRITION_SEARCH_ARCHITECTURE.md`: FatSecret India, Edamam NLP, Open Food Facts, USDA Fallback).
+- Device-validated Meal Diary / Meal Editor route behavior for the completed text-only flow.
+- Production-qualified meal-photo recognition. Android is wired to the
+  authenticated `nutrition-meal-photo-analyze` Edge Function, and active function
+  version 10 has `verify_jwt=true` with provider credentials stored only as remote
+  secrets. The checked-in source uses FatSecret v2 first and retries the supported
+  v1 model only when v2 returns `No food item detected`, but that compatibility
+  fallback is not yet deployed. Connected-device requests against remote version 10
+  completed provider authentication and returned the no-food response for both a
+  laptop-screen photo and a real mixed-food photo.
+  A real-meal success response, nutrition accuracy, licensing, and the storable-data
+  contract still require verification before provider-derived nutrition can be
+  treated as a durable production source.
+- Live exact barcode lookup deployment and positive indexed-product verification.
+  The checked-in Edge Function now uses Open Food Facts product-by-code first,
+  FatSecret Barcode v2 with `region=IN` second, and an optional server-side
+  Edamam UPC fallback last. Active remote version 13 remains
+  text-search-only, so scanned codes still cannot use any exact branch on the
+  installed app. FatSecret barcode access plus storable-data terms and Edamam
+  attribution plus plan-specific caching rights remain release gates; voice,
+  USDA fallback, caching infrastructure, and complete multi-provider
+  orchestration also remain pending.
+- Offline nutrition write queue and conflict resolution.
+- Live meal-photo upload until the checked-in `tio-nutrition-media` migration
+  is explicitly applied and its owner-scoped Storage policies are verified.
 
 Important boundary: `MealDiaryViewModel` now reads through a repository
 boundary instead of owning sample meals directly. The current app bootstrap
@@ -38,7 +94,9 @@ repository reads live Supabase nutrition targets and targets live
 `meal_logs` / `meal_log_items` tables when a real Supabase session exists.
 One manual verification log plus item were inserted on 2026-08-01 to confirm
 the live write path, but device-side route validation is still a separate
-runtime concern.
+runtime concern. The live tables now also enforce least-privilege grants,
+command-specific owner RLS, parent/item ownership integrity, input constraints,
+and automatic `updated_at` maintenance.
 
 ---
 
@@ -353,7 +411,8 @@ Nutrition usage:
 - `MealDiaryScreen` passes `state.selectedDate`.
 - `MealDiaryScreen` emits `MealDiaryAction.DateSelected(date)` when user selects a date.
 - `MealDiaryViewModel` updates `selectedDate` in state.
-- Current ViewModel does not yet fetch persisted meals for that date.
+- The ViewModel fetches persisted meals for the selected date and reloads after
+  successful editor mutations.
 
 ---
 
@@ -586,19 +645,10 @@ The canonical incremental backend plan lives in:
 apps/docs/SUPABASE_INCREMENTAL_SETUP_PLAN.md
 ```
 
-Nutrition persistence should follow that plan.
-
-Minimum future slice:
-
-- Define nutrition read behavior first.
-- Add tables only when required.
-- Add RLS and ownership rules.
-- Add local/dev seed data.
-- Add repository contracts.
-- Keep `MealDiaryViewModel` on repository data and replace seeded repository
-  meals with real persistence when tables land.
-- Keep screens dumb.
-- Validate signed-in/signed-out access.
+Nutrition persistence follows that plan. The current live meal slice includes
+`meal_logs` and `meal_log_items`, explicit authenticated CRUD grants,
+command-specific owner RLS, composite parent ownership enforcement, data
+constraints, timestamp triggers, and a covering parent-owner index.
 
 Remaining likely future tables from the Supabase plan:
 
@@ -620,8 +670,11 @@ Source-observed notes:
 - `MealDiaryViewModel` now reloads selected-date data through
   `NutritionRepository`.
 - The current repository expects live meal tables to exist and now has them on
-  the connected project, but the device path still needs runtime validation.
-- `AddMealClicked` emits an effect, but actual add meal screen/persistence is not validated here.
+  the connected project. Database-level authenticated CRUD, cross-user
+  isolation, cascade delete, grants, policies, and migrations were verified;
+  the device path still needs runtime validation.
+- `AddMealClicked` opens the text-only Meal Editor; authenticated device
+  persistence smoke remains pending.
 - `NutritionNutrientCard` accepts `icon: Any`, which is flexible but weakly typed.
 - Water, vitamin, and mineral progress are bootstrap repository values backed
   by the current bootstrap boundary, not fully persisted diary truth.

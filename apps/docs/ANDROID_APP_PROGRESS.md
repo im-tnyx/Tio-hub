@@ -172,12 +172,68 @@ Important: `profile`, `settings`, और `progress` अभी skeleton boundarie
 - [x] Meal Diary reads through `NutritionRepository`.
 - [x] App-owned `NutritionBootstrapRepository` reads live `user_nutrition_profiles` targets.
 - [x] Fake seeded diary meals, fake water progress, and fake vitamin/mineral progress are removed.
-- [x] Meal Diary refreshes the selected date periodically.
+- [x] Meal Diary refreshes deterministically on initial load, date selection,
+  and successful meal mutation; uncontrolled polling has been removed.
 - [x] **Real `meal_logs` & `meal_log_items` Supabase Persistence:** `NutritionRepository` extends CRUD methods (`saveMealLog`, `deleteMealLog`, `saveMealLogItem`, `updateMealLogItem`, `deleteMealLogItem`).
 - [x] **Meal Log DTOs & Table Mapping:** `NutritionBootstrapRepository` decodes and persists `meal_logs` and `meal_log_items` table records for active Supabase user.
 - [x] **Live Nutrition Diary Tables Applied:** Supabase project `ublwxylwdqjdykqcncuv` now has `meal_logs` and `meal_log_items` with owner-scoped RLS, and one manual verification log+item row exists.
+- [x] **Live Nutrition Diary Hardening:** `anon` table access is revoked;
+  authenticated access is limited to CRUD and protected by command-specific
+  owner RLS, composite meal/item ownership, validation constraints,
+  `updated_at` triggers, and a covering parent-owner index. Rollback-only live
+  verification passed owner CRUD, cross-user isolation, and cascade delete.
 - [x] **Flutter-Matched `ExpandableMealFab`:** 420ms FastOutSlowIn animated floating action button with main icon scale+fade switch and 3 animated sub-actions (Mic, Camera, Search) with backdrop overlay.
-- [x] **MealEditor & MealItemEditor Wiring:** Both ViewModels inject `NutritionRepository` and perform live database CRUD operations.
+- [x] **MealEditor & MealItemEditor Wiring:** `MealItemEditor` returns validated
+  micronutrition draft items while `MealEditor` owns aggregate summaries and
+  repository-backed persistence. Add item returns through Search Meals without
+  replacing the active meal draft.
+- [x] **Text-Only Meal Logging Runtime:** Manual meal/item drafts now save from
+  `MealEditor` as one repository aggregate, existing meals/items load for edit,
+  successful mutations refresh Meal Diary immediately, and failures remain
+  visible instead of navigating away.
+- [x] **Crop-Free Meal Photo Client Path:** Meal Editor now launches Camera or
+  Gallery directly, previews JPEG/PNG/WebP drafts up to 10 MB, and uploads only
+  with `Save Meal`. Private durable references, signed rendering URLs, and
+  owned-object cleanup are implemented in the app repository.
+- [x] **Dedicated Meal Camera Client Flow:** The camera FAB now opens a
+  CameraX-backed `Capture your meal` route with permission, live preview,
+  flash, gallery, capture, Retry/Done, temp-file cleanup, and crop-free
+  Meal Editor draft handoff. Recognition input is a separate orientation-corrected,
+  center-normalized 512x512 JPEG copy; the original draft photo remains unchanged.
+- [x] **Same-Screen Barcode Capture:** The CameraX route renders balanced
+  Gallery / shutter / Barcode controls. Barcode mode keeps the existing preview,
+  analyzes EAN-13, EAN-8, UPC-A, and UPC-E locally with bundled ML Kit, and opens
+  the exact matched item in Meal Editor or falls back to Search Meals. A
+  connected-device scan-to-search handoff passed.
+- [ ] **Live Meal Photo Recognition:** The authenticated Android repository and
+  `nutrition-meal-photo-analyze` Edge Function are live. Active version 10 uses
+  `verify_jwt=true`, remote-only provider secrets, OAuth2-first authentication,
+  and an OAuth1 fallback for the configured consumer credentials. The checked-in
+  source adds a v1 model retry only when v2 returns `No food item detected`, but
+  that revision is not yet deployed. Connected-device smoke reached FatSecret,
+  but positive recognition still requires verification. Accuracy, licensing, and
+  storable-data
+  compliance remain required before this item can be marked complete.
+- [ ] **Live Nutrition Media Storage:** The owner-scoped private
+  `tio-nutrition-media` bucket migration is checked in but has not been applied
+  or verified against live Supabase.
+- [x] **Live Authenticated Food Search:** `MealSearchViewModel` submits debounced
+  Search Meals queries through `FoodSearchRepository`; the app-owned Supabase adapter invokes
+  active Edge Function `nutrition-food-search` version 13 with JWT verification
+  and permanent-user enforcement.
+  The function normalizes Open Food Facts Search-a-licious results into
+  save-compatible UUID-backed `MealItem` drafts.
+- [ ] **Live Exact Barcode Resolution:** Checked-in `nutrition-food-search`
+  supports authenticated Open Food Facts product-by-code lookup followed by
+  FatSecret Barcode v2 (`region=IN`) and then an optional server-side Edamam UPC
+  fallback. Android rejects legacy text responses as exact matches. Active
+  remote version 13 contains none of these exact branches, so deployment,
+  provider-access verification, attribution/storable-data/caching-rights
+  verification, and positive barcode smoke are pending.
+- [ ] Voice, USDA fallback, cache infrastructure, and complete provider
+  orchestration remain unimplemented; no provider secret ships in Android.
+- [ ] Authenticated device smoke remains required for meal create/edit/delete;
+  positive food search has returned live `200` responses on the connected device.
 
 
 ### Workout

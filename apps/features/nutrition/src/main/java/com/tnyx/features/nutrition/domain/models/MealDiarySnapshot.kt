@@ -16,4 +16,9 @@ data class MealDiarySnapshot(
     val vitaminsProgress: Double,
     val mineralsProgress: Double,
     val meals: List<NutritionMeal>,
+    val micronutrientsConsumed: MicronutrientSnapshot = MicronutrientSnapshot(),
+    val micronutrientTargets: MicronutrientSnapshot = MicronutrientSnapshot(),
+    val sodiumConsumedMg: Double? = null,
+    val sodiumLimitMg: Double? = null,
+    val nutritionReferenceStatus: String = "unavailable",
 )

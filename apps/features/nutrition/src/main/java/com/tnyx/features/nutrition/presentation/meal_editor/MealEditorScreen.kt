@@ -1,38 +1,40 @@
 package com.tnyx.features.nutrition.presentation.meal_editor
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.AddAPhoto
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.tnyx.core.theme.TnyxTheme
 import com.tnyx.core.ui.components.buttons.TnyxPrimaryButton
+import com.tnyx.core.ui.components.buttons.TnyxSecondaryButton
+import com.tnyx.core.ui.components.buttons.TnyxSecondaryVariant
 import com.tnyx.core.ui.components.cards.TnyxCard
 import com.tnyx.core.ui.components.cards.TnyxCardVariant
 import com.tnyx.core.ui.components.inputs.CupertinoDateTimePicker
+import com.tnyx.core.ui.components.layouts.TnyxScreenHeader
 import com.tnyx.core.ui.components.sheets.ImageSourceBottomSheet
+import com.tnyx.core.theme.tokens.components.TnyxHeaderSize
 import com.tnyx.features.nutrition.domain.models.NutritionMeal
 import com.tnyx.features.nutrition.presentation.meal_editor.widgets.MealNameEditorBottomSheet
 import com.tnyx.features.nutrition.presentation.meal_editor.widgets.MealItemTile
@@ -50,37 +52,22 @@ fun MealEditorScreen(
     onAction: (MealEditorAction) -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
-    val isExistingMeal = state.meal.id.isNotBlank()
-
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Edit your meal",
-                        style = TnyxTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                        color = TnyxTheme.colors.textPrimary,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { onAction(MealEditorAction.BackClicked) }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TnyxTheme.colors.textPrimary,
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = TnyxTheme.colors.background,
-                    titleContentColor = TnyxTheme.colors.textPrimary,
-                )
+            TnyxScreenHeader(
+                title = "Edit your meal",
+                modifier = Modifier.statusBarsPadding(),
+                size = TnyxHeaderSize.Standard,
+                navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
+                onNavigationClick = { onAction(MealEditorAction.BackClicked) },
+                uppercaseTitle = false,
+                reserveNavigationSpace = false,
             )
         },
         bottomBar = {
             MealEditorBottomBar(
                 category = state.meal.type,
-                isExistingMeal = isExistingMeal,
+                isExistingMeal = state.meal.id.isNotBlank(),
                 isSaving = state.isSaving,
                 logDateTime = state.logDateTime,
                 onCategoryChanged = { onAction(MealEditorAction.CategoryChanged(it)) },
@@ -97,13 +84,13 @@ fun MealEditorScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(TnyxTheme.dimens.SpaceM)
         ) {
             MealIdentityEditor(
                 meal = state.meal,
                 photoModel = state.photoPreviewBytes ?: state.meal.imageUrl,
                 enabled = !state.isLoading && !state.isSaving,
                 onPhotoClicked = { onAction(MealEditorAction.PhotoClicked) },
+                onPhotoRemoved = { onAction(MealEditorAction.PhotoRemoved) },
                 onNameEditClicked = { onAction(MealEditorAction.EditNameRequested) },
                 onServingCountClicked = { onAction(MealEditorAction.ServingCountEditorRequested) },
                 onServingSizeClicked = { onAction(MealEditorAction.ServingEditorRequested) },
@@ -112,9 +99,12 @@ fun MealEditorScreen(
             state.errorMessage
                 ?.takeUnless { it == "Enter a meal name." }
                 ?.let { message ->
-                    Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
                     Text(
                         text = message,
+                        modifier = Modifier.padding(
+                            horizontal = TnyxTheme.dimens.SpaceM,
+                            vertical = TnyxTheme.dimens.SpaceS,
+                        ),
                         style = TnyxTheme.typography.bodySmall,
                         color = TnyxTheme.colors.error,
                     )
@@ -123,20 +113,29 @@ fun MealEditorScreen(
             if (state.isLoading) {
                 Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceM))
                 LinearProgressIndicator(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = TnyxTheme.dimens.SpaceM),
                     color = TnyxTheme.colors.primary,
                     trackColor = TnyxTheme.colors.surfaceVariant,
                 )
             }
             
-            Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceM))
-
             MealNutritionSummary(meal = state.meal)
 
-            Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceL))
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = TnyxTheme.dimens.SpaceM),
+                color = TnyxTheme.colors.surfaceContainerHighest,
+            )
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = TnyxTheme.dimens.SpaceM,
+                        top = TnyxTheme.dimens.SpaceM,
+                        end = TnyxTheme.dimens.SpaceS,
+                    ),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -147,15 +146,11 @@ fun MealEditorScreen(
                     color = TnyxTheme.colors.textPrimary
                 )
                 
-                TnyxCard(
-                    variant = TnyxCardVariant.Outlined,
-                    padding = TnyxTheme.dimens.SpaceS,
-                    onClick = { onAction(MealEditorAction.AddItemClicked) },
-                ) {
+                TextButton(onClick = { onAction(MealEditorAction.AddItemClicked) }) {
                     Text(
                         text = "+ Add item",
                         style = TnyxTheme.typography.labelLarge,
-                        color = TnyxTheme.colors.textPrimary,
+                        color = TnyxTheme.colors.info,
                         fontWeight = FontWeight.SemiBold,
                     )
                 }
@@ -164,35 +159,28 @@ fun MealEditorScreen(
             Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
 
             if (state.meal.items.isEmpty()) {
-                TnyxCard(
-                    variant = TnyxCardVariant.Normal,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(
-                        text = "No items added yet. Use Add item to search foods.",
-                        style = TnyxTheme.typography.bodyMedium,
-                        color = TnyxTheme.colors.textSecondary,
-                    )
-                }
+                Text(
+                    text = "No items added yet. Use Add item to search foods.",
+                    modifier = Modifier.padding(
+                        horizontal = TnyxTheme.dimens.SpaceM,
+                        vertical = TnyxTheme.dimens.SpaceL,
+                    ),
+                    style = TnyxTheme.typography.bodyMedium,
+                    color = TnyxTheme.colors.textSecondary,
+                )
             } else {
-                TnyxCard(
-                    variant = TnyxCardVariant.Outlined,
-                    padding = TnyxTheme.dimens.SpaceNone,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Column {
-                        state.meal.items.forEachIndexed { index, item ->
-                            MealItemTile(
-                                item = item,
-                                onDelete = { onAction(MealEditorAction.ItemDeleted(item.id)) },
-                                onTap = { onAction(MealEditorAction.ItemClicked(item)) },
+                Column {
+                    state.meal.items.forEachIndexed { index, item ->
+                        MealItemTile(
+                            item = item,
+                            onDelete = { onAction(MealEditorAction.ItemDeleted(item.id)) },
+                            onTap = { onAction(MealEditorAction.ItemClicked(item)) },
+                        )
+                        if (index < state.meal.items.lastIndex) {
+                            HorizontalDivider(
+                                color = TnyxTheme.colors.surfaceContainerHighest,
+                                modifier = Modifier.padding(start = TnyxTheme.dimens.SpaceM),
                             )
-                            if (index < state.meal.items.lastIndex) {
-                                HorizontalDivider(
-                                    color = TnyxTheme.components.card.outlinedBorderColor,
-                                    modifier = Modifier.padding(start = TnyxTheme.dimens.SpaceM),
-                                )
-                            }
                         }
                     }
                 }
@@ -255,69 +243,92 @@ private fun MealIdentityEditor(
     photoModel: Any?,
     enabled: Boolean,
     onPhotoClicked: () -> Unit,
+    onPhotoRemoved: () -> Unit,
     onNameEditClicked: () -> Unit,
     onServingCountClicked: () -> Unit,
     onServingSizeClicked: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(IntrinsicSize.Min),
-        horizontalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceSM),
-    ) {
-        TnyxCard(
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Box(
             modifier = Modifier
-                .weight(0.38f)
-                .fillMaxHeight(),
-            variant = TnyxCardVariant.Normal,
-            padding = TnyxTheme.dimens.SpaceNone,
-            onClick = onPhotoClicked,
+                .fillMaxWidth()
+                .padding(
+                    start = TnyxTheme.dimens.SpaceM,
+                    top = TnyxTheme.dimens.SpaceS,
+                    end = TnyxTheme.dimens.SpaceM,
+                )
+                .aspectRatio(MEAL_PHOTO_ASPECT_RATIO)
+                .clip(TnyxTheme.shapes.Material.large)
+                .background(TnyxTheme.colors.surfaceContainerLow)
+                .clickable(enabled = enabled, onClick = onPhotoClicked),
         ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                if (photoModel != null) {
-                    AsyncImage(
-                        model = photoModel,
-                        contentDescription = "Meal photo",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                    )
-                } else {
+            if (photoModel != null) {
+                AsyncImage(
+                    model = photoModel,
+                    contentDescription = "Meal photo",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceS),
+                ) {
                     Icon(
                         imageVector = Icons.Outlined.AddAPhoto,
                         contentDescription = null,
-                        modifier = Modifier
-                            .size(TnyxTheme.dimens.IconL)
-                            .align(Alignment.Center),
+                        modifier = Modifier.size(TnyxTheme.dimens.IconL),
                         tint = TnyxTheme.colors.textSecondary,
                     )
+                    Text(
+                        text = "Add meal photo",
+                        style = TnyxTheme.typography.labelLarge,
+                        color = TnyxTheme.colors.textSecondary,
+                    )
                 }
+            }
 
+            Surface(
+                modifier = Modifier
+                    .padding(TnyxTheme.dimens.SpaceSM)
+                    .align(Alignment.TopEnd),
+                shape = CircleShape,
+                color = TnyxTheme.colors.surfaceContainerHighest,
+            ) {
+                IconButton(onClick = onPhotoClicked, enabled = enabled) {
+                    Icon(
+                        imageVector = Icons.Outlined.AddAPhoto,
+                        contentDescription = if (photoModel == null) "Add meal photo" else "Change meal photo",
+                        tint = TnyxTheme.colors.textPrimary,
+                    )
+                }
+            }
+
+            if (photoModel != null) {
                 Surface(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter),
-                    color = TnyxTheme.colors.surfaceContainerHigh,
+                        .padding(TnyxTheme.dimens.SpaceSM)
+                        .align(Alignment.BottomEnd),
+                    shape = CircleShape,
+                    color = TnyxTheme.colors.surfaceContainerHighest,
                 ) {
-                    Text(
-                        text = if (photoModel == null) "Add photo" else "Change photo",
-                        modifier = Modifier.padding(
-                            horizontal = TnyxTheme.dimens.SpaceS,
-                            vertical = TnyxTheme.dimens.SpaceXS,
-                        ).fillMaxWidth(),
-                        style = TnyxTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                        color = TnyxTheme.colors.textPrimary,
-                        textAlign = TextAlign.Center,
-                    )
+                    IconButton(onClick = onPhotoRemoved, enabled = enabled) {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = "Remove meal photo",
+                            tint = TnyxTheme.colors.error,
+                        )
+                    }
                 }
             }
         }
 
-        Column(
-            modifier = Modifier.weight(0.62f),
-            verticalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceS),
-        ) {
+        Column(modifier = Modifier.padding(horizontal = TnyxTheme.dimens.SpaceM)) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = TnyxTheme.dimens.SpaceL, bottom = TnyxTheme.dimens.SpaceM),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
@@ -344,116 +355,118 @@ private fun MealIdentityEditor(
                 }
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceXS),
-            ) {
-                ServingValueCard(
-                    label = "Servings",
-                    value = meal.servingSize.toServingCountLabel(),
-                    contentDescription = "Edit servings",
-                    onClick = onServingCountClicked,
-                    modifier = Modifier.weight(1f),
-                )
-                ServingValueCard(
-                    label = "Serving size",
-                    value = meal.servingsDescription.ifBlank { "1 serving" },
-                    contentDescription = "Edit serving size",
-                    onClick = onServingSizeClicked,
-                    modifier = Modifier.weight(1f),
-                )
-            }
+            ServingValueRow(
+                label = "Servings",
+                value = meal.servingSize.toServingCountLabel(),
+                contentDescription = "Edit servings",
+                enabled = enabled,
+                onClick = onServingCountClicked,
+            )
+            HorizontalDivider(color = TnyxTheme.colors.surfaceContainerHighest)
+            ServingValueRow(
+                label = "Serving size",
+                value = meal.servingsDescription.ifBlank { "1 serving" },
+                contentDescription = "Edit serving size",
+                enabled = enabled,
+                onClick = onServingSizeClicked,
+            )
         }
     }
 }
 
 @Composable
-private fun ServingValueCard(
+private fun ServingValueRow(
     label: String,
     value: String,
     contentDescription: String,
+    enabled: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    TnyxCard(
-        modifier = modifier,
-        variant = TnyxCardVariant.Outlined,
-        padding = TnyxTheme.dimens.SpaceS,
-        onClick = onClick,
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(vertical = TnyxTheme.dimens.SpaceM),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = label,
-                    style = TnyxTheme.typography.labelSmall,
-                    color = TnyxTheme.colors.textSecondary,
-                    maxLines = 1,
-                )
-                Text(
-                    text = value,
-                    style = TnyxTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = TnyxTheme.colors.textPrimary,
-                    maxLines = 1,
-                )
-            }
-            Icon(
-                imageVector = Icons.Rounded.ArrowDropDown,
-                contentDescription = contentDescription,
-                tint = TnyxTheme.colors.textSecondary,
-                modifier = Modifier.size(TnyxTheme.dimens.IconS),
-            )
-        }
+        Text(
+            text = label,
+            modifier = Modifier.weight(1f),
+            style = TnyxTheme.typography.bodyMedium,
+            color = TnyxTheme.colors.textSecondary,
+            maxLines = 1,
+        )
+        Text(
+            text = value,
+            style = TnyxTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+            color = TnyxTheme.colors.textPrimary,
+            maxLines = 1,
+        )
+        Spacer(modifier = Modifier.width(TnyxTheme.dimens.SpaceXS))
+        Icon(
+            imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+            contentDescription = contentDescription,
+            tint = TnyxTheme.colors.textSecondary,
+            modifier = Modifier.size(TnyxTheme.dimens.IconM),
+        )
     }
 }
 
 @Composable
 private fun MealNutritionSummary(meal: NutritionMeal) {
-    TnyxCard(
-        variant = TnyxCardVariant.Normal,
-        padding = TnyxTheme.dimens.SpaceSM,
-        modifier = Modifier.fillMaxWidth(),
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = TnyxTheme.dimens.SpaceM,
+                vertical = TnyxTheme.dimens.SpaceL,
+            ),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CalorieMacroRing(
-                meal = meal,
-                modifier = Modifier.size(
-                    TnyxTheme.dimens.SpaceHuge + TnyxTheme.dimens.SpaceS,
-                ),
-            )
-            Spacer(modifier = Modifier.width(TnyxTheme.dimens.SpaceSM))
-            NutritionMetric(
-                label = "Carbs",
-                value = "${meal.totalCarbs.toNutrientLabel()}g",
-                color = TnyxTheme.colors.nutrition.carbs,
-                modifier = Modifier.weight(1f),
-            )
-            NutritionMetric(
-                label = "Fat",
-                value = "${meal.totalFats.toNutrientLabel()}g",
-                color = TnyxTheme.colors.nutrition.fats,
-                modifier = Modifier.weight(1f),
-            )
-            NutritionMetric(
-                label = "Protein",
-                value = "${meal.totalProtein.toNutrientLabel()}g",
-                color = TnyxTheme.colors.nutrition.protein,
-                modifier = Modifier.weight(1f),
-            )
-            NutritionMetric(
-                label = "Fiber",
-                value = "${meal.totalFiber.toNutrientLabel()}g",
-                color = TnyxTheme.colors.success,
-                modifier = Modifier.weight(1f),
-            )
-        }
+        CalorieMacroRing(
+            meal = meal,
+            modifier = Modifier.size(
+                TnyxTheme.dimens.SpaceHuge + TnyxTheme.dimens.SpaceS,
+            ),
+        )
+        Spacer(modifier = Modifier.width(TnyxTheme.dimens.SpaceSM))
+        NutritionMetric(
+            label = "Carbs",
+            value = "${meal.totalCarbs.toNutrientLabel()}g",
+            color = TnyxTheme.colors.nutrition.carbs,
+            modifier = Modifier.weight(1f),
+        )
+        NutritionMetricDivider()
+        NutritionMetric(
+            label = "Fat",
+            value = "${meal.totalFats.toNutrientLabel()}g",
+            color = TnyxTheme.colors.nutrition.fats,
+            modifier = Modifier.weight(1f),
+        )
+        NutritionMetricDivider()
+        NutritionMetric(
+            label = "Protein",
+            value = "${meal.totalProtein.toNutrientLabel()}g",
+            color = TnyxTheme.colors.nutrition.protein,
+            modifier = Modifier.weight(1f),
+        )
+        NutritionMetricDivider()
+        NutritionMetric(
+            label = "Fiber",
+            value = "${meal.totalFiber.toNutrientLabel()}g",
+            color = TnyxTheme.colors.success,
+            modifier = Modifier.weight(1f),
+        )
     }
+}
+
+@Composable
+private fun NutritionMetricDivider() {
+    VerticalDivider(
+        modifier = Modifier.height(TnyxTheme.dimens.SpaceXXL),
+        color = TnyxTheme.colors.surfaceContainerHighest,
+    )
 }
 
 @Composable
@@ -556,16 +569,17 @@ private fun MealEditorBottomBar(
     val categories = listOf("BREAKFAST", "LUNCH", "DINNER", "SNACKS")
 
     Surface(
-        color = TnyxTheme.colors.surface,
-        tonalElevation = 8.dp,
-        border = BorderStroke(0.5.dp, TnyxTheme.colors.textPrimary.copy(alpha = 0.1f))
+        color = TnyxTheme.colors.surfaceRaised,
+        shadowElevation = TnyxTheme.elevation.Level4,
     ) {
         Column(
             modifier = Modifier
                 .navigationBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(
+                    horizontal = TnyxTheme.dimens.SpaceM,
+                    vertical = TnyxTheme.dimens.SpaceSM,
+                ),
         ) {
-            // Category & Date Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -576,8 +590,15 @@ private fun MealEditorBottomBar(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .clickable { showDropdown = true }
-                            .padding(vertical = 4.dp, horizontal = 4.dp)
+                            .padding(vertical = TnyxTheme.dimens.SpaceXS),
                     ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Restaurant,
+                            contentDescription = null,
+                            modifier = Modifier.size(TnyxTheme.dimens.IconS),
+                            tint = TnyxTheme.colors.nutrition.calories,
+                        )
+                        Spacer(modifier = Modifier.width(TnyxTheme.dimens.SpaceS))
                         Text(
                             text = category.ifBlank { "BREAKFAST" },
                             style = TnyxTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
@@ -592,37 +613,63 @@ private fun MealEditorBottomBar(
 
                     DropdownMenu(
                         expanded = showDropdown,
-                        onDismissRequest = { showDropdown = false }
+                        onDismissRequest = { showDropdown = false },
+                        containerColor = Color.Transparent,
+                        tonalElevation = TnyxTheme.elevation.None,
+                        shadowElevation = TnyxTheme.elevation.None,
                     ) {
-                        categories.forEach { cat ->
-                            DropdownMenuItem(
-                                text = {
+                        TnyxCard(
+                            variant = TnyxCardVariant.Elevated,
+                            padding = TnyxTheme.dimens.SpaceNone,
+                        ) {
+                            Column {
+                                categories.forEachIndexed { index, cat ->
                                     Text(
                                         text = cat,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                onCategoryChanged(cat)
+                                                showDropdown = false
+                                            }
+                                            .padding(
+                                                horizontal = TnyxTheme.dimens.SpaceM,
+                                                vertical = TnyxTheme.dimens.SpaceSM,
+                                            ),
                                         style = TnyxTheme.typography.bodyMedium.copy(
-                                            fontWeight = if (cat == category) FontWeight.Bold else FontWeight.Normal
+                                            fontWeight = if (cat == category) {
+                                                FontWeight.Bold
+                                            } else {
+                                                FontWeight.Normal
+                                            },
                                         ),
+                                        color = if (cat == category) {
+                                            TnyxTheme.colors.primary
+                                        } else {
+                                            TnyxTheme.colors.textPrimary
+                                        },
                                     )
-                                },
-                                onClick = {
-                                    onCategoryChanged(cat)
-                                    showDropdown = false
+
+                                    if (index < categories.lastIndex) {
+                                        HorizontalDivider(
+                                            color = TnyxTheme.colors.surfaceContainerHighest,
+                                        )
+                                    }
                                 }
-                            )
+                            }
                         }
                     }
                 }
 
-                // Date Indicator
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceXS),
                     modifier = Modifier.clickable(onClick = onLogDateClicked),
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.CalendarMonth,
                         contentDescription = "Date",
-                        modifier = Modifier.size(16.dp),
+                        modifier = Modifier.size(TnyxTheme.dimens.IconXS),
                         tint = TnyxTheme.colors.textSecondary,
                     )
                     Text(
@@ -633,50 +680,40 @@ private fun MealEditorBottomBar(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceS))
 
-            // Action Buttons Row (Delete/Cancel + Save)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceSM),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                OutlinedButton(
-                    onClick = onDelete,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(44.dp),
-                    shape = CircleShape,
-                    border = BorderStroke(1.dp, if (isExistingMeal) TnyxTheme.colors.error.copy(alpha = 0.4f) else TnyxTheme.colors.textPrimary.copy(alpha = 0.15f)),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (isExistingMeal) TnyxTheme.colors.error else TnyxTheme.colors.textPrimary
-                    )
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        if (isExistingMeal) {
+                TnyxSecondaryButton(
+                    text = if (isExistingMeal) "Delete" else "Cancel",
+                    onPressed = onDelete,
+                    modifier = Modifier.weight(1f),
+                    variant = if (isExistingMeal) {
+                        TnyxSecondaryVariant.Destructive
+                    } else {
+                        TnyxSecondaryVariant.Muted
+                    },
+                    leading = if (isExistingMeal) {
+                        {
                             Icon(
                                 imageVector = Icons.Outlined.Delete,
                                 contentDescription = null,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(TnyxTheme.dimens.IconXS),
                             )
                         }
-                        Text(
-                            text = if (isExistingMeal) "Delete" else "Cancel",
-                            style = TnyxTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
-                        )
-                    }
-                }
+                    } else {
+                        null
+                    },
+                )
 
                 TnyxPrimaryButton(
                     text = if (isSaving) "Saving..." else "Save Meal",
                     onPressed = onSave,
                     enabled = !isSaving,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(44.dp)
+                    modifier = Modifier.weight(1f),
                 )
             }
         }
@@ -684,11 +721,12 @@ private fun MealEditorBottomBar(
 }
 
 private fun LocalDateTime.toLogDateLabel(): String {
-    return if (toLocalDate() == java.time.LocalDate.now()) {
+    val dateLabel = if (toLocalDate() == java.time.LocalDate.now()) {
         "Today"
     } else {
         format(DateTimeFormatter.ofPattern("d MMM", Locale.US))
     }
+    return "$dateLabel, ${format(DateTimeFormatter.ofPattern("h:mm a", Locale.US))}"
 }
 
 private fun Double.toNutrientLabel(): String {
@@ -705,4 +743,5 @@ private const val CARBS_CALORIES_PER_GRAM = 4.0
 private const val FAT_CALORIES_PER_GRAM = 9.0
 private const val FIBER_CALORIES_PER_GRAM = 2.0
 private const val FULL_CIRCLE_DEGREES = 360.0
+private const val MEAL_PHOTO_ASPECT_RATIO = 16f / 9f
 

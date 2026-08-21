@@ -17,7 +17,16 @@ data class MealItem(
     val fiber: Double = 0.0,
     val sugar: Double = 0.0,
     val transFat: Double = 0.0,
-    val saturatedFat: Double = 0.0
+    val saturatedFat: Double = 0.0,
+    val sodium: Double? = null,
+    val cholesterol: Double? = null,
+    val micronutrients: MicronutrientSnapshot = MicronutrientSnapshot(),
+    val servingSnapshot: ServingSnapshot? = null,
+    val rawInput: String? = null,
+    val inputSource: String = "manual",
+    val imageUrl: String? = null,
+    val confidenceScore: Double? = null,
+    val nutritionSnapshot: NutritionSnapshot? = null,
 ) {
     val totalCalories: Int get() = (calories * quantity).toInt()
     val totalProtein: Double get() = protein * quantity
@@ -25,10 +34,81 @@ data class MealItem(
 
 @Immutable
 @Serializable
+data class MicronutrientSnapshot(
+    val vitaminAMcgRae: Double? = null,
+    val vitaminCMg: Double? = null,
+    val vitaminDMcg: Double? = null,
+    val vitaminEMg: Double? = null,
+    val vitaminKMcg: Double? = null,
+    val thiaminMg: Double? = null,
+    val riboflavinMg: Double? = null,
+    val niacinMg: Double? = null,
+    val vitaminB6Mg: Double? = null,
+    val vitaminB12Mcg: Double? = null,
+    val folateMcg: Double? = null,
+    val calciumMg: Double? = null,
+    val ironMg: Double? = null,
+    val magnesiumMg: Double? = null,
+    val potassiumMg: Double? = null,
+    val zincMg: Double? = null,
+    val seleniumMcg: Double? = null,
+    val phosphorusMg: Double? = null,
+    val copperMg: Double? = null,
+    val manganeseMg: Double? = null,
+    val iodineMcg: Double? = null,
+) {
+    fun values(): List<Double> = listOfNotNull(
+        vitaminAMcgRae,
+        vitaminCMg,
+        vitaminDMcg,
+        vitaminEMg,
+        vitaminKMcg,
+        thiaminMg,
+        riboflavinMg,
+        niacinMg,
+        vitaminB6Mg,
+        vitaminB12Mcg,
+        folateMcg,
+        calciumMg,
+        ironMg,
+        magnesiumMg,
+        potassiumMg,
+        zincMg,
+        seleniumMcg,
+        phosphorusMg,
+        copperMg,
+        manganeseMg,
+        iodineMcg,
+    )
+}
+
+@Immutable
+@Serializable
+data class ServingSnapshot(
+    val label: String? = null,
+    val amount: Double? = null,
+    val unit: String? = null,
+    val grams: Double? = null,
+)
+
+@Immutable
+@Serializable
+data class NutritionSnapshot(
+    val schemaVersion: Int = 1,
+    val provider: String? = null,
+    val providerFoodId: String? = null,
+    val brand: String? = null,
+    val barcode: String? = null,
+    val region: String? = null,
+)
+
+@Immutable
+@Serializable
 data class NutritionMeal(
     val id: String,
     val name: String,
     val type: String, // BREAKFAST, LUNCH, etc.
+    val loggedAtEpochMillis: Long? = null,
     val imageUrl: String? = null,
     val items: List<MealItem> = emptyList(),
     val servingSize: Double = 1.0,

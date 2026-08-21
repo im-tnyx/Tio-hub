@@ -176,7 +176,7 @@ private fun mealTypeFor(date: LocalDate): String {
     return when (hour) {
         in 5..10 -> "BREAKFAST"
         in 11..15 -> "LUNCH"
-        in 16..18 -> "SNACK"
+        in 16..18 -> "SNACKS"
         else -> "DINNER"
     }
 }

@@ -7,6 +7,7 @@ import com.tnyx.features.nutrition.domain.models.NutritionTargetsSnapshot
 import com.tnyx.features.nutrition.domain.repository.NutritionRepository
 import com.tnyx.features.nutrition.presentation.meal_diary.MainDispatcherRule
 import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -146,7 +147,7 @@ private class FakeNutritionTargetsRepository(
         lastUpdatedTargets = targets
     }
 
-    override suspend fun saveMealLog(date: LocalDate, meal: NutritionMeal): NutritionMeal = meal
+    override suspend fun saveMealLog(loggedAt: LocalDateTime, meal: NutritionMeal): NutritionMeal = meal
     override suspend fun deleteMealLog(mealId: String) {}
     override suspend fun saveMealLogItem(mealLogId: String, item: MealItem): MealItem = item
     override suspend fun updateMealLogItem(item: MealItem) {}

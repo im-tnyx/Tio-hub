@@ -108,6 +108,7 @@ fun MealDiaryScreen(
             item {
                 Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                     NutritionVitaminSection(
+                        state = state,
                         onOverviewRequested = { onAction(MealDiaryAction.OverviewRequested(it)) }
                     )
                 }

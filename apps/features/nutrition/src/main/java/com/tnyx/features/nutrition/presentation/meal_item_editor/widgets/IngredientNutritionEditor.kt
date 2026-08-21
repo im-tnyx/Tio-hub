@@ -109,6 +109,7 @@ fun MicronutrientEditorCard(
     expanded: Boolean,
     onToggle: () -> Unit,
     onNutrientChanged: (String, Double) -> Unit,
+    onMicronutrientChanged: (String, Double?) -> Unit,
 ) {
     TnyxCard(
         modifier = Modifier.fillMaxWidth(),
@@ -146,6 +147,28 @@ fun MicronutrientEditorCard(
                     }
                     NutrientEditorRow("Saturated fat", item.saturatedFat, "g") {
                         onNutrientChanged("saturatedFat", it)
+                    }
+                    MicronutrientSectionLabel("Vitamins")
+                    vitaminEditorValues(item).forEach { nutrient ->
+                        NullableNutrientEditorRow(
+                            label = nutrient.label,
+                            value = nutrient.value,
+                            unit = nutrient.unit,
+                            onValueChanged = { value ->
+                                onMicronutrientChanged(nutrient.field, value)
+                            },
+                        )
+                    }
+                    MicronutrientSectionLabel("Minerals")
+                    mineralEditorValues(item).forEach { nutrient ->
+                        NullableNutrientEditorRow(
+                            label = nutrient.label,
+                            value = nutrient.value,
+                            unit = nutrient.unit,
+                            onValueChanged = { value ->
+                                onMicronutrientChanged(nutrient.field, value)
+                            },
+                        )
                     }
                 }
             }
@@ -211,6 +234,111 @@ private fun EditableNumberField(
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
     )
 }
+
+@Composable
+private fun MicronutrientSectionLabel(label: String) {
+    Text(
+        text = label,
+        modifier = Modifier.padding(top = TnyxTheme.dimens.SpaceS),
+        style = TnyxTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+        color = TnyxTheme.colors.textPrimary,
+    )
+}
+
+@Composable
+private fun NullableNutrientEditorRow(
+    label: String,
+    value: Double?,
+    unit: String,
+    onValueChanged: (Double?) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TnyxTheme.dimens.SpaceS),
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier.weight(1.1f),
+            style = TnyxTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = TnyxTheme.colors.textSecondary,
+            maxLines = 1,
+        )
+        EditableNullableNumberField(
+            value = value,
+            onValueChanged = onValueChanged,
+            modifier = Modifier.weight(0.9f),
+        )
+        TnyxCard(
+            modifier = Modifier.weight(1.5f),
+            variant = TnyxCardVariant.Surface,
+            padding = TnyxTheme.dimens.SpaceSM,
+        ) {
+            Text(
+                text = unit,
+                style = TnyxTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+                color = TnyxTheme.colors.textPrimary,
+            )
+        }
+    }
+}
+
+@Composable
+private fun EditableNullableNumberField(
+    value: Double?,
+    onValueChanged: (Double?) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var input by remember(value) {
+        mutableStateOf(value?.toEditableNumber().orEmpty())
+    }
+
+    TnyxTextField(
+        value = input,
+        onValueChange = { nextValue ->
+            val normalized = nextValue.filter { it.isDigit() || it == '.' }
+            input = normalized
+            onValueChanged(normalized.toDoubleOrNull())
+        },
+        modifier = modifier,
+        variant = TnyxTextFieldVariant.Compact,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+    )
+}
+
+private data class MicronutrientEditorValue(
+    val label: String,
+    val field: String,
+    val value: Double?,
+    val unit: String,
+)
+
+private fun vitaminEditorValues(item: MealItem): List<MicronutrientEditorValue> = listOf(
+    MicronutrientEditorValue("Vitamin A", "vitaminAMcgRae", item.micronutrients.vitaminAMcgRae, "mcg RAE"),
+    MicronutrientEditorValue("Vitamin C", "vitaminCMg", item.micronutrients.vitaminCMg, "mg"),
+    MicronutrientEditorValue("Vitamin D", "vitaminDMcg", item.micronutrients.vitaminDMcg, "mcg"),
+    MicronutrientEditorValue("Vitamin E", "vitaminEMg", item.micronutrients.vitaminEMg, "mg"),
+    MicronutrientEditorValue("Vitamin K", "vitaminKMcg", item.micronutrients.vitaminKMcg, "mcg"),
+    MicronutrientEditorValue("Thiamin", "thiaminMg", item.micronutrients.thiaminMg, "mg"),
+    MicronutrientEditorValue("Riboflavin", "riboflavinMg", item.micronutrients.riboflavinMg, "mg"),
+    MicronutrientEditorValue("Niacin", "niacinMg", item.micronutrients.niacinMg, "mg"),
+    MicronutrientEditorValue("Vitamin B6", "vitaminB6Mg", item.micronutrients.vitaminB6Mg, "mg"),
+    MicronutrientEditorValue("Vitamin B12", "vitaminB12Mcg", item.micronutrients.vitaminB12Mcg, "mcg"),
+    MicronutrientEditorValue("Folate", "folateMcg", item.micronutrients.folateMcg, "mcg"),
+)
+
+private fun mineralEditorValues(item: MealItem): List<MicronutrientEditorValue> = listOf(
+    MicronutrientEditorValue("Calcium", "calciumMg", item.micronutrients.calciumMg, "mg"),
+    MicronutrientEditorValue("Iron", "ironMg", item.micronutrients.ironMg, "mg"),
+    MicronutrientEditorValue("Magnesium", "magnesiumMg", item.micronutrients.magnesiumMg, "mg"),
+    MicronutrientEditorValue("Potassium", "potassiumMg", item.micronutrients.potassiumMg, "mg"),
+    MicronutrientEditorValue("Zinc", "zincMg", item.micronutrients.zincMg, "mg"),
+    MicronutrientEditorValue("Selenium", "seleniumMcg", item.micronutrients.seleniumMcg, "mcg"),
+    MicronutrientEditorValue("Phosphorus", "phosphorusMg", item.micronutrients.phosphorusMg, "mg"),
+    MicronutrientEditorValue("Copper", "copperMg", item.micronutrients.copperMg, "mg"),
+    MicronutrientEditorValue("Manganese", "manganeseMg", item.micronutrients.manganeseMg, "mg"),
+    MicronutrientEditorValue("Iodine", "iodineMcg", item.micronutrients.iodineMcg, "mcg"),
+)
 
 @Composable
 private fun IngredientUnitDropdown(

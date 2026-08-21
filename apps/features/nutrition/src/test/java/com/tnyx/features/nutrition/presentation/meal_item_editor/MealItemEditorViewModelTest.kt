@@ -71,10 +71,18 @@ class MealItemEditorViewModelTest {
         viewModel.handleAction(MealItemEditorAction.MicronutrientsToggled)
         viewModel.handleAction(MealItemEditorAction.NutrientChanged("saturatedFat", 1.5))
         viewModel.handleAction(MealItemEditorAction.NutrientChanged("transFat", 0.2))
+        viewModel.handleAction(MealItemEditorAction.MicronutrientChanged("vitaminCMg", 12.0))
+        viewModel.handleAction(MealItemEditorAction.MicronutrientChanged("ironMg", 2.5))
 
         assertTrue(viewModel.uiState.value.isMicronutrientsExpanded)
         assertEquals(1.5, viewModel.uiState.value.item.saturatedFat, 0.0)
         assertEquals(0.2, viewModel.uiState.value.item.transFat, 0.0)
+        assertEquals(12.0, viewModel.uiState.value.item.micronutrients.vitaminCMg ?: 0.0, 0.0)
+        assertEquals(2.5, viewModel.uiState.value.item.micronutrients.ironMg ?: 0.0, 0.0)
+
+        viewModel.handleAction(MealItemEditorAction.MicronutrientChanged("ironMg", null))
+
+        assertEquals(null, viewModel.uiState.value.item.micronutrients.ironMg)
     }
 
     private fun createViewModel(): MealItemEditorViewModel {

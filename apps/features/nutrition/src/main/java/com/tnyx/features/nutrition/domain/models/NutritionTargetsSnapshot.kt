@@ -15,4 +15,15 @@ data class NutritionTargetsSnapshot(
     val sleepTargetHours: String,
     val formattedSleepTime: String,
     val formattedWakeTime: String,
+    val referenceTargets: NutritionReferenceTargets = NutritionReferenceTargets(),
+)
+
+data class NutritionReferenceTargets(
+    val status: String = "unavailable",
+    val micronutrients: MicronutrientSnapshot = MicronutrientSnapshot(),
+    val sodiumLimitMg: Double? = null,
+    val referenceSex: String? = null,
+    val age: Int? = null,
+    val referenceVersion: Int? = null,
+    val sourceUrl: String? = null,
 )

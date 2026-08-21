@@ -23,6 +23,7 @@ sealed class MealItemEditorAction {
     data class QuantityChanged(val quantity: Double) : MealItemEditorAction()
     data class UnitChanged(val unit: String) : MealItemEditorAction()
     data class NutrientChanged(val field: String, val value: Double) : MealItemEditorAction()
+    data class MicronutrientChanged(val field: String, val value: Double?) : MealItemEditorAction()
     data object MicronutrientsToggled : MealItemEditorAction()
     data object ResetClicked : MealItemEditorAction()
     data object SaveClicked : MealItemEditorAction()

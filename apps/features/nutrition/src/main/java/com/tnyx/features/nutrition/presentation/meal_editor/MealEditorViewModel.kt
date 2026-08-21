@@ -8,8 +8,10 @@ import com.tnyx.features.nutrition.domain.models.MealPhotoUpdate
 import com.tnyx.features.nutrition.domain.models.NutritionMeal
 import com.tnyx.features.nutrition.domain.repository.NutritionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,7 +41,9 @@ class MealEditorViewModel @Inject constructor(
                 name = "",
                 type = "BREAKFAST",
             ),
-            logDateTime = logDate.atTime(LocalDateTime.now().toLocalTime()),
+            logDateTime = logDate.atTime(
+                LocalDateTime.now().withSecond(0).withNano(0).toLocalTime(),
+            ),
         ),
     )
     val uiState = _uiState.asStateFlow()
@@ -275,7 +279,17 @@ class MealEditorViewModel @Inject constructor(
                         if (meal == null) {
                             it.copy(isLoading = false, errorMessage = "Meal was not found.")
                         } else {
-                            it.copy(meal = meal, isLoading = false)
+                            it.copy(
+                                meal = meal,
+                                logDateTime = meal.loggedAtEpochMillis
+                                    ?.let { epochMillis ->
+                                        Instant.ofEpochMilli(epochMillis)
+                                            .atZone(ZoneId.systemDefault())
+                                            .toLocalDateTime()
+                                    }
+                                    ?: it.logDateTime,
+                                isLoading = false,
+                            )
                         }
                     }
                 }
@@ -388,7 +402,7 @@ class MealEditorViewModel @Inject constructor(
             _uiState.update { it.copy(isSaving = true, errorMessage = null) }
             runCatching {
                 nutritionRepository.saveMealLogWithPhoto(
-                    date = _uiState.value.logDateTime.toLocalDate(),
+                    loggedAt = _uiState.value.logDateTime,
                     meal = _uiState.value.meal,
                     photoUpdate = pendingPhotoUpdate,
                 )

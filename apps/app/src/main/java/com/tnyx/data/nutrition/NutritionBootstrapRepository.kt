@@ -3,18 +3,27 @@ package com.tnyx.data.nutrition
 import com.tnyx.features.nutrition.domain.models.MealDiarySnapshot
 import com.tnyx.features.nutrition.domain.models.MealItem
 import com.tnyx.features.nutrition.domain.models.MealPhotoUpdate
+import com.tnyx.features.nutrition.domain.models.MicronutrientSnapshot
 import com.tnyx.features.nutrition.domain.models.NutritionMeal
+import com.tnyx.features.nutrition.domain.models.NutritionReferenceTargets
+import com.tnyx.features.nutrition.domain.models.NutritionSnapshot
 import com.tnyx.features.nutrition.domain.models.NutritionTargetsSnapshot
+import com.tnyx.features.nutrition.domain.models.ServingSnapshot
 import com.tnyx.features.nutrition.domain.repository.NutritionRepository
 import com.tnyx.shared.auth.domain.repository.AuthSessionProvider
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.storage.storage
 import io.github.jan.supabase.storage.upload
 import io.ktor.http.ContentType
+import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.UUID
@@ -43,6 +52,8 @@ class NutritionBootstrapRepository @Inject constructor(
     override suspend fun getMealDiary(date: LocalDate): MealDiarySnapshot {
         val goals = getNutritionTargets()
         val meals = fetchMealLogsForDate(date)
+        val micronutrientsConsumed = meals.aggregateMicronutrients()
+        val micronutrientTargets = goals.referenceTargets.micronutrients
 
         return MealDiarySnapshot(
             selectedDate = date,
@@ -55,9 +66,14 @@ class NutritionBootstrapRepository @Inject constructor(
             fatsGoal = goals.fatTarget,
             waterConsumedLiters = 0.0,
             waterGoalLiters = goals.waterTargetLitres,
-            vitaminsProgress = 0.0,
-            mineralsProgress = 0.0,
+            vitaminsProgress = micronutrientsConsumed.vitaminProgressAgainst(micronutrientTargets),
+            mineralsProgress = micronutrientsConsumed.mineralProgressAgainst(micronutrientTargets),
             meals = meals,
+            micronutrientsConsumed = micronutrientsConsumed,
+            micronutrientTargets = micronutrientTargets,
+            sodiumConsumedMg = meals.sumNullable { item -> item.sodium },
+            sodiumLimitMg = goals.referenceTargets.sodiumLimitMg,
+            nutritionReferenceStatus = goals.referenceTargets.status,
         )
     }
 
@@ -116,7 +132,7 @@ class NutritionBootstrapRepository @Inject constructor(
             return nutritionTargetsDefaults()
         }
 
-        return runCatching {
+        val profileTargets = runCatching {
             supabaseClient.from("user_nutrition_profiles").select {
                 filter {
                     eq("user_id", supabaseUserId)
@@ -127,6 +143,15 @@ class NutritionBootstrapRepository @Inject constructor(
         }.getOrElse {
             nutritionTargetsDefaults()
         }
+        val referenceTargets = runCatching {
+            supabaseClient.postgrest
+                .rpc("get_my_nutrition_reference_targets")
+                .decodeAs<NutritionReferenceTargetsDto>()
+                .toDomain()
+        }.getOrElse {
+            NutritionReferenceTargets(status = "unavailable")
+        }
+        return profileTargets.copy(referenceTargets = referenceTargets)
     }
 
     override suspend fun updateNutritionTargets(targets: NutritionTargetsSnapshot) {
@@ -173,12 +198,12 @@ class NutritionBootstrapRepository @Inject constructor(
 
     // ── Meal Log CRUD ──────────────────────────────────────────────────────
 
-    override suspend fun saveMealLog(date: LocalDate, meal: NutritionMeal): NutritionMeal {
-        return saveMealLogWithPhoto(date, meal, MealPhotoUpdate.Unchanged)
+    override suspend fun saveMealLog(loggedAt: LocalDateTime, meal: NutritionMeal): NutritionMeal {
+        return saveMealLogWithPhoto(loggedAt, meal, MealPhotoUpdate.Unchanged)
     }
 
     override suspend fun saveMealLogWithPhoto(
-        date: LocalDate,
+        loggedAt: LocalDateTime,
         meal: NutritionMeal,
         photoUpdate: MealPhotoUpdate,
     ): NutritionMeal {
@@ -187,6 +212,7 @@ class NutritionBootstrapRepository @Inject constructor(
 
         require(meal.name.isNotBlank()) { "Meal name is required" }
         require(meal.items.isNotEmpty()) { "At least one food item is required" }
+        val loggedAtInstant = loggedAt.atZone(ZoneId.systemDefault()).toInstant()
 
         val previousImageReference = meal.id.takeIf(String::isNotBlank)?.let { mealId ->
             supabaseClient.from("meal_logs").select {
@@ -230,7 +256,8 @@ class NutritionBootstrapRepository @Inject constructor(
                 MealLogDto(
                     id = id,
                     user_id = userId,
-                    log_date = date.toString(),
+                    log_date = loggedAt.toLocalDate().toString(),
+                    logged_at = loggedAtInstant.toString(),
                     meal_type = meal.type,
                     name = meal.name,
                     image_url = durableImageReference,
@@ -278,6 +305,7 @@ class NutritionBootstrapRepository @Inject constructor(
 
             return meal.copy(
                 id = id,
+                loggedAtEpochMillis = loggedAtInstant.toEpochMilli(),
                 imageUrl = durableImageReference,
                 items = persistedItems,
             )
@@ -327,19 +355,7 @@ class NutritionBootstrapRepository @Inject constructor(
     override suspend fun updateMealLogItem(item: MealItem) {
         val userId = requireUserId()
         supabaseClient.from("meal_log_items").update(
-            mapOf(
-                "name" to item.name,
-                "quantity" to item.quantity,
-                "unit" to item.unit,
-                "calories" to item.calories,
-                "protein" to item.protein,
-                "carbs" to item.carbs,
-                "fats" to item.fats,
-                "fiber" to item.fiber,
-                "sugar" to item.sugar,
-                "trans_fat" to item.transFat,
-                "saturated_fat" to item.saturatedFat,
-            )
+            MealLogItemUpdateDto.fromDomain(item),
         ) {
             filter {
                 eq("id", item.id)
@@ -444,6 +460,87 @@ private fun NutritionTargetsSnapshot.hasConfiguredTargets(): Boolean {
         waterTargetLitres > 0.0
 }
 
+private fun List<NutritionMeal>.aggregateMicronutrients(): MicronutrientSnapshot {
+    return MicronutrientSnapshot(
+        vitaminAMcgRae = sumNullable { it.micronutrients.vitaminAMcgRae },
+        vitaminCMg = sumNullable { it.micronutrients.vitaminCMg },
+        vitaminDMcg = sumNullable { it.micronutrients.vitaminDMcg },
+        vitaminEMg = sumNullable { it.micronutrients.vitaminEMg },
+        vitaminKMcg = sumNullable { it.micronutrients.vitaminKMcg },
+        thiaminMg = sumNullable { it.micronutrients.thiaminMg },
+        riboflavinMg = sumNullable { it.micronutrients.riboflavinMg },
+        niacinMg = sumNullable { it.micronutrients.niacinMg },
+        vitaminB6Mg = sumNullable { it.micronutrients.vitaminB6Mg },
+        vitaminB12Mcg = sumNullable { it.micronutrients.vitaminB12Mcg },
+        folateMcg = sumNullable { it.micronutrients.folateMcg },
+        calciumMg = sumNullable { it.micronutrients.calciumMg },
+        ironMg = sumNullable { it.micronutrients.ironMg },
+        magnesiumMg = sumNullable { it.micronutrients.magnesiumMg },
+        potassiumMg = sumNullable { it.micronutrients.potassiumMg },
+        zincMg = sumNullable { it.micronutrients.zincMg },
+        seleniumMcg = sumNullable { it.micronutrients.seleniumMcg },
+        phosphorusMg = sumNullable { it.micronutrients.phosphorusMg },
+        copperMg = sumNullable { it.micronutrients.copperMg },
+        manganeseMg = sumNullable { it.micronutrients.manganeseMg },
+        iodineMcg = sumNullable { it.micronutrients.iodineMcg },
+    )
+}
+
+private inline fun List<NutritionMeal>.sumNullable(
+    value: (MealItem) -> Double?,
+): Double? {
+    var hasReportedValue = false
+    var total = 0.0
+    forEach { meal ->
+        meal.items.forEach { item ->
+            value(item)?.let { amount ->
+                hasReportedValue = true
+                total += amount * item.quantity
+            }
+        }
+    }
+    return total.takeIf { hasReportedValue }
+}
+
+private fun MicronutrientSnapshot.vitaminProgressAgainst(
+    targets: MicronutrientSnapshot,
+): Double = averageProgress(
+    vitaminAMcgRae to targets.vitaminAMcgRae,
+    vitaminCMg to targets.vitaminCMg,
+    vitaminDMcg to targets.vitaminDMcg,
+    vitaminEMg to targets.vitaminEMg,
+    vitaminKMcg to targets.vitaminKMcg,
+    thiaminMg to targets.thiaminMg,
+    riboflavinMg to targets.riboflavinMg,
+    niacinMg to targets.niacinMg,
+    vitaminB6Mg to targets.vitaminB6Mg,
+    vitaminB12Mcg to targets.vitaminB12Mcg,
+    folateMcg to targets.folateMcg,
+)
+
+private fun MicronutrientSnapshot.mineralProgressAgainst(
+    targets: MicronutrientSnapshot,
+): Double = averageProgress(
+    calciumMg to targets.calciumMg,
+    ironMg to targets.ironMg,
+    magnesiumMg to targets.magnesiumMg,
+    potassiumMg to targets.potassiumMg,
+    zincMg to targets.zincMg,
+    seleniumMcg to targets.seleniumMcg,
+    phosphorusMg to targets.phosphorusMg,
+    copperMg to targets.copperMg,
+    manganeseMg to targets.manganeseMg,
+    iodineMcg to targets.iodineMcg,
+)
+
+private fun averageProgress(vararg values: Pair<Double?, Double?>): Double {
+    val reported = values.mapNotNull { (consumed, target) ->
+        if (consumed == null || target == null || target <= 0.0) null
+        else (consumed / target).coerceIn(0.0, 1.0)
+    }
+    return reported.average().takeUnless(Double::isNaN) ?: 0.0
+}
+
 private fun nutritionTargetsDefaults(): NutritionTargetsSnapshot {
     return NutritionTargetsSnapshot(
         dynamicCaloriesEnabled = false,
@@ -490,10 +587,32 @@ private data class MacroTargetsDto(
 )
 
 @Serializable
+private data class NutritionReferenceTargetsDto(
+    val status: String,
+    val targets: MicronutrientSnapshot = MicronutrientSnapshot(),
+    val sodiumLimitMg: Double? = null,
+    val referenceSex: String? = null,
+    val age: Int? = null,
+    val referenceVersion: Int? = null,
+    val sourceUrl: String? = null,
+) {
+    fun toDomain(): NutritionReferenceTargets = NutritionReferenceTargets(
+        status = status,
+        micronutrients = targets,
+        sodiumLimitMg = sodiumLimitMg,
+        referenceSex = referenceSex,
+        age = age,
+        referenceVersion = referenceVersion,
+        sourceUrl = sourceUrl,
+    )
+}
+
+@Serializable
 private data class MealLogDto(
     val id: String,
     val user_id: String,
     val log_date: String,
+    val logged_at: String? = null,
     val meal_type: String,
     val name: String,
     val image_url: String? = null,
@@ -505,6 +624,7 @@ private data class MealLogDto(
         id = id,
         name = name,
         type = meal_type,
+        loggedAtEpochMillis = logged_at.toEpochMillisOrNull(),
         imageUrl = resolvedImageUrl,
         items = items.map { it.toMealItem() },
     )
@@ -526,6 +646,15 @@ private data class MealLogItemDto(
     val sugar: Double = 0.0,
     val trans_fat: Double = 0.0,
     val saturated_fat: Double = 0.0,
+    val sodium: Double? = null,
+    val cholesterol: Double? = null,
+    val micronutrients: MicronutrientSnapshot = MicronutrientSnapshot(),
+    val serving_snapshot: ServingSnapshot? = null,
+    val raw_input: String? = null,
+    val input_source: String = "manual",
+    val image_url: String? = null,
+    val confidence_score: Double? = null,
+    val nutrition_snapshot: NutritionSnapshot? = null,
 ) {
     fun toMealItem(): MealItem = MealItem(
         id = id,
@@ -540,6 +669,15 @@ private data class MealLogItemDto(
         sugar = sugar,
         transFat = trans_fat,
         saturatedFat = saturated_fat,
+        sodium = sodium,
+        cholesterol = cholesterol,
+        micronutrients = micronutrients,
+        servingSnapshot = serving_snapshot,
+        rawInput = raw_input,
+        inputSource = input_source,
+        imageUrl = image_url,
+        confidenceScore = confidence_score,
+        nutritionSnapshot = nutrition_snapshot,
     )
 
     companion object {
@@ -562,20 +700,86 @@ private data class MealLogItemDto(
             sugar = item.sugar,
             trans_fat = item.transFat,
             saturated_fat = item.saturatedFat,
+            sodium = item.sodium,
+            cholesterol = item.cholesterol,
+            micronutrients = item.micronutrients,
+            serving_snapshot = item.servingSnapshot,
+            raw_input = item.rawInput,
+            input_source = item.inputSource,
+            image_url = item.imageUrl,
+            confidence_score = item.confidenceScore,
+            nutrition_snapshot = item.nutritionSnapshot,
+        )
+    }
+}
+
+private fun String?.toEpochMillisOrNull(): Long? {
+    if (this.isNullOrBlank()) return null
+    return runCatching { OffsetDateTime.parse(this).toInstant().toEpochMilli() }
+        .recoverCatching { Instant.parse(this).toEpochMilli() }
+        .getOrNull()
+}
+
+@Serializable
+private data class MealLogItemUpdateDto(
+    val name: String,
+    val quantity: Double,
+    val unit: String,
+    val calories: Int,
+    val protein: Double,
+    val carbs: Double,
+    val fats: Double,
+    val fiber: Double,
+    val sugar: Double,
+    val trans_fat: Double,
+    val saturated_fat: Double,
+    val sodium: Double?,
+    val cholesterol: Double?,
+    val micronutrients: MicronutrientSnapshot,
+    val serving_snapshot: ServingSnapshot?,
+    val raw_input: String?,
+    val input_source: String,
+    val image_url: String?,
+    val confidence_score: Double?,
+    val nutrition_snapshot: NutritionSnapshot?,
+) {
+    companion object {
+        fun fromDomain(item: MealItem): MealLogItemUpdateDto = MealLogItemUpdateDto(
+            name = item.name.trim(),
+            quantity = item.quantity,
+            unit = item.unit.trim().ifBlank { "serving" },
+            calories = item.calories,
+            protein = item.protein,
+            carbs = item.carbs,
+            fats = item.fats,
+            fiber = item.fiber,
+            sugar = item.sugar,
+            trans_fat = item.transFat,
+            saturated_fat = item.saturatedFat,
+            sodium = item.sodium,
+            cholesterol = item.cholesterol,
+            micronutrients = item.micronutrients,
+            serving_snapshot = item.servingSnapshot,
+            raw_input = item.rawInput,
+            input_source = item.inputSource,
+            image_url = item.imageUrl,
+            confidence_score = item.confidenceScore,
+            nutrition_snapshot = item.nutritionSnapshot,
         )
     }
 }
 
 private fun MealItem.hasValidNutrition(): Boolean {
     return calories >= 0 &&
-        protein >= 0.0 &&
-        carbs >= 0.0 &&
-        fats >= 0.0 &&
-        fiber >= 0.0 &&
-        sugar >= 0.0 &&
-        transFat >= 0.0 &&
-        saturatedFat >= 0.0
+        listOf(protein, carbs, fats, fiber, sugar, transFat, saturatedFat)
+            .all { it.isFiniteNonNegative() } &&
+        sodium?.isFiniteNonNegative() != false &&
+        cholesterol?.isFiniteNonNegative() != false &&
+        confidenceScore?.let { it.isFinite() && it in 0.0..1.0 } != false &&
+        micronutrients.values().all { it.isFiniteNonNegative() }
 }
+
+private fun Double.isFiniteNonNegative(): Boolean = isFinite() && this >= 0.0
 
 private data class SupportedMealPhoto(
     val extension: String,

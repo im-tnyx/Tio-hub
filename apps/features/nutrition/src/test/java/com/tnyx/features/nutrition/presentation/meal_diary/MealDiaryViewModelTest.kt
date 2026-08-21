@@ -2,10 +2,13 @@ package com.tnyx.features.nutrition.presentation.meal_diary
 
 import com.tnyx.features.nutrition.domain.models.MealDiarySnapshot
 import com.tnyx.features.nutrition.domain.models.MealItem
+import com.tnyx.features.nutrition.domain.models.MicronutrientSnapshot
 import com.tnyx.features.nutrition.domain.models.NutritionMeal
 import com.tnyx.features.nutrition.domain.models.NutritionTargetsSnapshot
 import com.tnyx.features.nutrition.domain.repository.NutritionRepository
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
@@ -47,6 +50,12 @@ class MealDiaryViewModelTest {
         assertEquals(12.0, state.fatsConsumed, 0.0)
         assertEquals(2.2, state.waterConsumed, 0.0)
         assertEquals(3.4, state.waterGoal, 0.0)
+        assertEquals("Vitamin D", state.vitaminHighlights.first().label)
+        assertEquals(0.2, state.vitaminHighlights.first().progress, 0.0)
+        assertEquals("Iron", state.mineralHighlights.first().label)
+        assertEquals("resolved", state.nutritionReferenceStatus)
+        assertEquals(500.0, state.sodiumConsumedMg ?: 0.0, 0.0)
+        assertEquals(2300.0, state.sodiumLimitMg ?: 0.0, 0.0)
         assertFalse(state.isLoading)
     }
 
@@ -84,6 +93,68 @@ class MealDiaryViewModelTest {
 
         assertFalse(viewModel.uiState.value.isLoading)
         assertNotNull(viewModel.uiState.value.errorMessage)
+    }
+
+    @Test
+    fun timestampDefinesGroupsAndBothLevelsAreNewestFirst() = runTest {
+        val selectedDate = LocalDate.of(2026, 8, 10)
+        val baseSnapshot = snapshot(selectedDate)
+        val repository = FakeNutritionRepository(
+            snapshots = mapOf(
+                selectedDate to baseSnapshot.copy(
+                    meals = listOf(
+                        baseSnapshot.meals.single().copy(
+                            id = "older-lunch",
+                            name = "Older Lunch",
+                            type = "BREAKFAST",
+                            loggedAtEpochMillis = selectedDate.atHour(12),
+                        ),
+                        baseSnapshot.meals.single().copy(
+                            id = "newest-breakfast",
+                            name = "Newest Breakfast",
+                            type = "DINNER",
+                            loggedAtEpochMillis = selectedDate.atHour(9),
+                        ),
+                        baseSnapshot.meals.single().copy(
+                            id = "newest-lunch",
+                            name = "Newest Lunch",
+                            type = "SNACKS",
+                            loggedAtEpochMillis = selectedDate.atHour(14),
+                        ),
+                        baseSnapshot.meals.single().copy(
+                            id = "older-breakfast",
+                            name = "Older Breakfast",
+                            type = "LUNCH",
+                            loggedAtEpochMillis = selectedDate.atHour(8),
+                        ),
+                        baseSnapshot.meals.single().copy(
+                            id = "newest-dinner",
+                            name = "Newest Dinner",
+                            type = "BREAKFAST",
+                            loggedAtEpochMillis = selectedDate.atHour(20),
+                        ),
+                    ),
+                ),
+            ),
+        )
+
+        val viewModel = MealDiaryViewModel(repository, selectedDate)
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(
+                "Newest Dinner",
+                "Newest Lunch",
+                "Older Lunch",
+                "Newest Breakfast",
+                "Older Breakfast",
+            ),
+            viewModel.uiState.value.meals.map(NutritionMeal::name),
+        )
+        assertEquals(
+            listOf("DINNER", "LUNCH", "LUNCH", "BREAKFAST", "BREAKFAST"),
+            viewModel.uiState.value.meals.map(NutritionMeal::type),
+        )
     }
 
     @Test
@@ -126,6 +197,21 @@ class MealDiaryViewModelTest {
             waterGoalLiters = 3.4,
             vitaminsProgress = 0.63,
             mineralsProgress = 0.51,
+            micronutrientsConsumed = MicronutrientSnapshot(
+                vitaminCMg = 45.0,
+                vitaminDMcg = 3.0,
+                calciumMg = 250.0,
+                ironMg = 4.0,
+            ),
+            micronutrientTargets = MicronutrientSnapshot(
+                vitaminCMg = 75.0,
+                vitaminDMcg = 15.0,
+                calciumMg = 1000.0,
+                ironMg = 18.0,
+            ),
+            sodiumConsumedMg = 500.0,
+            sodiumLimitMg = 2300.0,
+            nutritionReferenceStatus = "resolved",
             meals = listOf(
                 NutritionMeal(
                     id = "meal-${date}",
@@ -151,6 +237,13 @@ class MealDiaryViewModelTest {
     }
 }
 
+private fun LocalDate.atHour(hour: Int): Long {
+    return atTime(hour, 0)
+        .atZone(ZoneId.systemDefault())
+        .toInstant()
+        .toEpochMilli()
+}
+
 private class FakeNutritionRepository(
     private val snapshots: Map<LocalDate, MealDiarySnapshot>,
 ) : NutritionRepository {
@@ -173,7 +266,7 @@ private class FakeNutritionRepository(
         error("Not needed for MealDiaryViewModelTest")
     }
 
-    override suspend fun saveMealLog(date: LocalDate, meal: NutritionMeal): NutritionMeal = meal
+    override suspend fun saveMealLog(loggedAt: LocalDateTime, meal: NutritionMeal): NutritionMeal = meal
     override suspend fun deleteMealLog(mealId: String) {}
     override suspend fun saveMealLogItem(mealLogId: String, item: MealItem): MealItem = item
     override suspend fun updateMealLogItem(item: MealItem) {}

@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tnyx.features.nutrition.domain.models.MealItem
+import com.tnyx.features.nutrition.domain.models.MicronutrientSnapshot
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.UUID
 import javax.inject.Inject
@@ -75,6 +76,9 @@ class MealItemEditorViewModel @Inject constructor(
                 }
             }
             is MealItemEditorAction.NutrientChanged -> updateNutrient(action.field, action.value)
+            is MealItemEditorAction.MicronutrientChanged -> {
+                updateMicronutrient(action.field, action.value)
+            }
             MealItemEditorAction.MicronutrientsToggled -> {
                 _uiState.update {
                     it.copy(isMicronutrientsExpanded = !it.isMicronutrientsExpanded)
@@ -157,6 +161,17 @@ class MealItemEditorViewModel @Inject constructor(
         }
     }
 
+    private fun updateMicronutrient(field: String, value: Double?) {
+        _uiState.update { state ->
+            state.copy(
+                item = state.item.copy(
+                    micronutrients = state.item.micronutrients.withValue(field, value),
+                ),
+                errorMessage = null,
+            )
+        }
+    }
+
     private fun validateItem(item: MealItem): String? {
         if (item.name.isBlank()) return "Enter a food item name."
         if (item.quantity <= 0.0) return "Quantity must be greater than zero."
@@ -174,4 +189,32 @@ class MealItemEditorViewModel @Inject constructor(
         if (nutrients.any { it < 0.0 }) return "Nutrition values cannot be negative."
         return null
     }
+}
+
+private fun MicronutrientSnapshot.withValue(
+    field: String,
+    value: Double?,
+): MicronutrientSnapshot = when (field) {
+    "vitaminAMcgRae" -> copy(vitaminAMcgRae = value)
+    "vitaminCMg" -> copy(vitaminCMg = value)
+    "vitaminDMcg" -> copy(vitaminDMcg = value)
+    "vitaminEMg" -> copy(vitaminEMg = value)
+    "vitaminKMcg" -> copy(vitaminKMcg = value)
+    "thiaminMg" -> copy(thiaminMg = value)
+    "riboflavinMg" -> copy(riboflavinMg = value)
+    "niacinMg" -> copy(niacinMg = value)
+    "vitaminB6Mg" -> copy(vitaminB6Mg = value)
+    "vitaminB12Mcg" -> copy(vitaminB12Mcg = value)
+    "folateMcg" -> copy(folateMcg = value)
+    "calciumMg" -> copy(calciumMg = value)
+    "ironMg" -> copy(ironMg = value)
+    "magnesiumMg" -> copy(magnesiumMg = value)
+    "potassiumMg" -> copy(potassiumMg = value)
+    "zincMg" -> copy(zincMg = value)
+    "seleniumMcg" -> copy(seleniumMcg = value)
+    "phosphorusMg" -> copy(phosphorusMg = value)
+    "copperMg" -> copy(copperMg = value)
+    "manganeseMg" -> copy(manganeseMg = value)
+    "iodineMcg" -> copy(iodineMcg = value)
+    else -> this
 }

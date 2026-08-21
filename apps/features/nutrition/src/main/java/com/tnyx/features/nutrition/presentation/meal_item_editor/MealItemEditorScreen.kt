@@ -138,6 +138,9 @@ fun MealItemEditorScreen(
                 onNutrientChanged = { field, value ->
                     onAction(MealItemEditorAction.NutrientChanged(field, value))
                 },
+                onMicronutrientChanged = { field, value ->
+                    onAction(MealItemEditorAction.MicronutrientChanged(field, value))
+                },
             )
             Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceL))
         }

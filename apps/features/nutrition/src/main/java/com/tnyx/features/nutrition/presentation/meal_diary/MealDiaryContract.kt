@@ -29,6 +29,11 @@ data class MealDiaryUiState(
     // Micros (Vitamins & Minerals)
     val vitaminsProgress: Double = 0.0,
     val mineralsProgress: Double = 0.0,
+    val vitaminHighlights: List<NutrientProgressUi> = emptyList(),
+    val mineralHighlights: List<NutrientProgressUi> = emptyList(),
+    val nutritionReferenceStatus: String = "unavailable",
+    val sodiumConsumedMg: Double? = null,
+    val sodiumLimitMg: Double? = null,
 
     // Logged Meals
     val meals: List<NutritionMeal> = emptyList(),
@@ -43,6 +48,12 @@ data class MealDiaryUiState(
 ) {
     val isHistoryEmpty: Boolean get() = meals.isEmpty()
 }
+
+@Immutable
+data class NutrientProgressUi(
+    val label: String,
+    val progress: Double,
+)
 
 sealed class MealDiaryAction {
     data class DateSelected(val date: LocalDate) : MealDiaryAction()

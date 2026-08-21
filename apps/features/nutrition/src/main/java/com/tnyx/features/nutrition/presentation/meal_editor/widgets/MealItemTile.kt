@@ -31,17 +31,20 @@ fun MealItemTile(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onTap)
-            .padding(TnyxTheme.dimens.SpaceM),
+            .padding(
+                horizontal = TnyxTheme.dimens.SpaceM,
+                vertical = TnyxTheme.dimens.SpaceSM,
+            ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = item.name,
-                style = TnyxTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                style = TnyxTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                 color = TnyxTheme.colors.textPrimary,
             )
             Text(
-                text = "${item.totalCalories} kcal | ${item.quantity} ${item.unit}",
+                text = "${item.totalCalories} kcal  |  ${item.quantity} ${item.unit}",
                 style = TnyxTheme.typography.bodySmall,
                 color = TnyxTheme.colors.textSecondary,
             )

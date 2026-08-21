@@ -2,6 +2,9 @@ package com.tnyx.data.nutrition
 
 import com.tnyx.features.nutrition.domain.models.MealItem
 import com.tnyx.features.nutrition.domain.models.MealPhotoAnalysis
+import com.tnyx.features.nutrition.domain.models.MicronutrientSnapshot
+import com.tnyx.features.nutrition.domain.models.NutritionSnapshot
+import com.tnyx.features.nutrition.domain.models.ServingSnapshot
 import com.tnyx.features.nutrition.domain.repository.MealPhotoAnalysisException
 import com.tnyx.features.nutrition.domain.repository.MealPhotoRecognitionRepository
 import io.github.jan.supabase.SupabaseClient
@@ -51,7 +54,9 @@ class SupabaseMealPhotoRecognitionRepository @Inject constructor(
         val payload = response.body<MealPhotoAnalysisResponseDto>()
         return MealPhotoAnalysis(
             suggestedName = payload.suggestedName,
-            items = payload.items.map(MealPhotoItemDto::toMealItem),
+            items = payload.items.map { item ->
+                item.toMealItem(provider = payload.source, region = payload.region)
+            },
         )
     }
 
@@ -80,6 +85,8 @@ private data class MealPhotoAnalysisErrorDto(
 private data class MealPhotoAnalysisResponseDto(
     val suggestedName: String = "Photo meal",
     val items: List<MealPhotoItemDto> = emptyList(),
+    val source: String? = null,
+    val region: String? = null,
 )
 
 @Serializable
@@ -94,9 +101,15 @@ private data class MealPhotoItemDto(
     val fats: Double = 0.0,
     val fiber: Double = 0.0,
     val sugar: Double = 0.0,
+    val transFat: Double = 0.0,
     val saturatedFat: Double = 0.0,
+    val sodium: Double? = null,
+    val cholesterol: Double? = null,
+    val micronutrients: MicronutrientSnapshot = MicronutrientSnapshot(),
+    val confidenceScore: Double? = null,
+    val providerFoodId: String? = null,
 ) {
-    fun toMealItem() = MealItem(
+    fun toMealItem(provider: String?, region: String?) = MealItem(
         id = id,
         name = name,
         calories = calories,
@@ -107,6 +120,22 @@ private data class MealPhotoItemDto(
         fats = fats,
         fiber = fiber,
         sugar = sugar,
+        transFat = transFat,
         saturatedFat = saturatedFat,
+        sodium = sodium,
+        cholesterol = cholesterol,
+        micronutrients = micronutrients,
+        servingSnapshot = ServingSnapshot(
+            label = unit,
+            amount = quantity,
+            unit = unit,
+        ),
+        inputSource = "photo",
+        confidenceScore = confidenceScore,
+        nutritionSnapshot = NutritionSnapshot(
+            provider = provider,
+            providerFoodId = providerFoodId,
+            region = region,
+        ),
     )
 }

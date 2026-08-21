@@ -4,12 +4,17 @@ import androidx.lifecycle.SavedStateHandle
 import com.tnyx.features.nutrition.domain.models.MealDiarySnapshot
 import com.tnyx.features.nutrition.domain.models.MealItem
 import com.tnyx.features.nutrition.domain.models.MealPhotoUpdate
+import com.tnyx.features.nutrition.domain.models.MicronutrientSnapshot
 import com.tnyx.features.nutrition.domain.models.NutritionMeal
+import com.tnyx.features.nutrition.domain.models.NutritionSnapshot
 import com.tnyx.features.nutrition.domain.models.NutritionTargetsSnapshot
+import com.tnyx.features.nutrition.domain.models.ServingSnapshot
 import com.tnyx.features.nutrition.domain.repository.NutritionRepository
 import com.tnyx.features.nutrition.presentation.meal_diary.MainDispatcherRule
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
@@ -52,7 +57,11 @@ class MealEditorViewModelTest {
         assertEquals(1.2, repository.savedMeal?.items?.single()?.sugar ?: 0.0, 0.0)
         assertEquals(0.1, repository.savedMeal?.items?.single()?.transFat ?: 0.0, 0.0)
         assertEquals(1.4, repository.savedMeal?.items?.single()?.saturatedFat ?: 0.0, 0.0)
-        assertEquals(LocalDate.of(2026, 8, 9), repository.savedDate)
+        assertEquals(320.0, repository.savedMeal?.items?.single()?.sodium ?: 0.0, 0.0)
+        assertEquals(2.4, repository.savedMeal?.items?.single()?.micronutrients?.ironMg ?: 0.0, 0.0)
+        assertEquals("edamam", repository.savedMeal?.items?.single()?.nutritionSnapshot?.provider)
+        assertEquals("search", repository.savedMeal?.items?.single()?.inputSource)
+        assertEquals(LocalDate.of(2026, 8, 9), repository.savedDateTime?.toLocalDate())
         assertFalse(viewModel.uiState.value.isSaving)
     }
 
@@ -181,6 +190,42 @@ class MealEditorViewModelTest {
     }
 
     @Test
+    fun selectedDateTimeIsPassedToMealPersistence() = runTest {
+        val repository = FakeMealEditorRepository()
+        val viewModel = createViewModel(repository)
+        val selectedDateTime = LocalDateTime.of(2026, 8, 8, 18, 30)
+
+        viewModel.handleAction(MealEditorAction.NameChanged("Dinner"))
+        viewModel.acceptItemResult(Json.encodeToString(sampleItem()))
+        viewModel.handleAction(MealEditorAction.LogDateTimeChanged(selectedDateTime))
+        viewModel.handleAction(MealEditorAction.SaveClicked)
+        advanceUntilIdle()
+
+        assertEquals(selectedDateTime, repository.savedDateTime)
+    }
+
+    @Test
+    fun existingMealRestoresPersistedTimeInDeviceZone() = runTest {
+        val loggedAt = Instant.parse("2026-08-08T13:00:00Z")
+        val repository = FakeMealEditorRepository(
+            loadedMeal = NutritionMeal(
+                id = "meal-1",
+                name = "Dinner",
+                type = "DINNER",
+                loggedAtEpochMillis = loggedAt.toEpochMilli(),
+            ),
+        )
+        val viewModel = createViewModel(repository, mealId = "meal-1")
+
+        advanceUntilIdle()
+
+        assertEquals(
+            loggedAt.atZone(ZoneId.systemDefault()).toLocalDateTime(),
+            viewModel.uiState.value.logDateTime,
+        )
+    }
+
+    @Test
     fun selectedPhotoIsUploadedOnlyWithMealSave() = runTest {
         val repository = FakeMealEditorRepository()
         val viewModel = createViewModel(repository)
@@ -226,11 +271,14 @@ class MealEditorViewModelTest {
         assertEquals(null, repository.savedPhotoUpdate)
     }
 
-    private fun createViewModel(repository: NutritionRepository): MealEditorViewModel {
+    private fun createViewModel(
+        repository: NutritionRepository,
+        mealId: String? = null,
+    ): MealEditorViewModel {
         return MealEditorViewModel(
             savedStateHandle = SavedStateHandle(
                 mapOf(
-                    "mealId" to null,
+                    "mealId" to mealId,
                     "date" to "2026-08-09",
                 ),
             ),
@@ -252,14 +300,35 @@ class MealEditorViewModelTest {
             sugar = 1.2,
             transFat = 0.1,
             saturatedFat = 1.4,
+            sodium = 320.0,
+            cholesterol = 12.0,
+            micronutrients = MicronutrientSnapshot(
+                vitaminCMg = 4.5,
+                ironMg = 2.4,
+                potassiumMg = 410.0,
+            ),
+            servingSnapshot = ServingSnapshot(
+                label = "1 bowl",
+                amount = 1.0,
+                unit = "bowl",
+                grams = 180.0,
+            ),
+            rawInput = "dal",
+            inputSource = "search",
+            confidenceScore = 0.94,
+            nutritionSnapshot = NutritionSnapshot(
+                provider = "edamam",
+                providerFoodId = "food-dal",
+            ),
         )
     }
 }
 
 private class FakeMealEditorRepository(
     private val saveError: Throwable? = null,
+    private val loadedMeal: NutritionMeal? = null,
 ) : NutritionRepository {
-    var savedDate: LocalDate? = null
+    var savedDateTime: LocalDateTime? = null
     var savedMeal: NutritionMeal? = null
     var savedPhotoUpdate: MealPhotoUpdate? = null
 
@@ -267,7 +336,7 @@ private class FakeMealEditorRepository(
         error("Not needed for MealEditorViewModelTest")
     }
 
-    override suspend fun getMealLog(mealId: String): NutritionMeal? = null
+    override suspend fun getMealLog(mealId: String): NutritionMeal? = loadedMeal
 
     override suspend fun getNutritionTargets(): NutritionTargetsSnapshot {
         error("Not needed for MealEditorViewModelTest")
@@ -275,20 +344,20 @@ private class FakeMealEditorRepository(
 
     override suspend fun updateNutritionTargets(targets: NutritionTargetsSnapshot) = Unit
 
-    override suspend fun saveMealLog(date: LocalDate, meal: NutritionMeal): NutritionMeal {
-        savedDate = date
+    override suspend fun saveMealLog(loggedAt: LocalDateTime, meal: NutritionMeal): NutritionMeal {
+        savedDateTime = loggedAt
         savedMeal = meal
         saveError?.let { throw it }
         return meal.copy(id = meal.id.ifBlank { "meal-1" })
     }
 
     override suspend fun saveMealLogWithPhoto(
-        date: LocalDate,
+        loggedAt: LocalDateTime,
         meal: NutritionMeal,
         photoUpdate: MealPhotoUpdate,
     ): NutritionMeal {
         savedPhotoUpdate = photoUpdate
-        return saveMealLog(date, meal)
+        return saveMealLog(loggedAt, meal)
     }
 
     override suspend fun deleteMealLog(mealId: String) = Unit

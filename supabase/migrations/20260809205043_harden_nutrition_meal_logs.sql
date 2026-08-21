@@ -1,5 +1,21 @@
 -- Harden authenticated nutrition logging without changing the Android data shape.
 
+-- Legacy projects may predate the canonical profile bootstrap that owns this
+-- shared trigger helper, so keep this migration independently deployable.
+create schema if not exists private;
+revoke all on schema private from public, anon, authenticated;
+
+create or replace function private.set_updated_at()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+    new.updated_at = now();
+    return new;
+end;
+$$;
+
 alter table public.meal_logs enable row level security;
 alter table public.meal_log_items enable row level security;
 

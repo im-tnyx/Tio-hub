@@ -90,6 +90,7 @@ Deno.serve(async (request: Request) => {
       suggestedName: items.map((item) => item.name).slice(0, 2).join(" and "),
       items,
       source: "fatsecret_image_recognition",
+      region: "IN",
     });
   } catch (error) {
     const timedOut = error instanceof DOMException && error.name === "AbortError";
@@ -241,6 +242,7 @@ function normalizeFoodResponse(value: JsonRecord) {
   if (!name) return null;
   return {
     id: crypto.randomUUID(),
+    providerFoodId: stringValue(eaten.food_id) || stringValue(value.food_id) || null,
     name,
     calories: Math.round(nonNegative(nutrients.calories)),
     protein: nonNegative(nutrients.protein),
@@ -251,7 +253,14 @@ function normalizeFoodResponse(value: JsonRecord) {
     fats: nonNegative(nutrients.fat),
     fiber: nonNegative(nutrients.fiber),
     sugar: nonNegative(nutrients.sugar),
+    transFat: nonNegative(nutrients.trans_fat),
     saturatedFat: nonNegative(nutrients.saturated_fat),
+    sodium: optionalNonNegative(nutrients.sodium),
+    cholesterol: optionalNonNegative(nutrients.cholesterol),
+    micronutrients: {},
+    confidenceScore: optionalConfidence(
+      value.confidence_score ?? value.confidence ?? eaten.confidence_score,
+    ),
   };
 }
 
@@ -279,6 +288,19 @@ function stringValue(value: unknown): string {
 function nonNegative(value: unknown): number {
   const parsed = typeof value === "number" ? value : Number(value);
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+}
+
+function optionalNonNegative(value: unknown): number | undefined {
+  if (value === null || value === undefined || value === "") return undefined;
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
+}
+
+function optionalConfidence(value: unknown): number | undefined {
+  const parsed = optionalNonNegative(value);
+  if (parsed === undefined) return undefined;
+  const normalized = parsed > 1 && parsed <= 100 ? parsed / 100 : parsed;
+  return normalized <= 1 ? normalized : undefined;
 }
 
 function authenticatedSubject(request: Request): string | null {

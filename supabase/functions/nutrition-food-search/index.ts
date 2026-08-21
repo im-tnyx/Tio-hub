@@ -47,6 +47,8 @@ type FatSecretServing = {
   trans_fat?: string | number;
   fiber?: string | number;
   sugar?: string | number;
+  sodium?: string | number;
+  cholesterol?: string | number;
 };
 
 type FatSecretFood = {
@@ -435,7 +437,9 @@ function normalizeProduct(product: OpenFoodFactsProduct) {
   const nutrients = product.nutriments ?? {};
   return {
     id: crypto.randomUUID(),
+    providerFoodId: code,
     name: brand ? `${productName} - ${brand}` : productName,
+    brand: brand || null,
     calories: Math.round(nonNegative(nutrients["energy-kcal_100g"])),
     protein: nonNegative(nutrients.proteins_100g),
     quantity: 1,
@@ -446,6 +450,9 @@ function normalizeProduct(product: OpenFoodFactsProduct) {
     sugar: nonNegative(nutrients.sugars_100g),
     transFat: nonNegative(nutrients["trans-fat_100g"]),
     saturatedFat: nonNegative(nutrients["saturated-fat_100g"]),
+    sodium: scaleOptional(nutrients.sodium_100g, 1_000),
+    cholesterol: scaleOptional(nutrients.cholesterol_100g, 1_000),
+    micronutrients: normalizeOpenFoodFactsMicronutrients(nutrients),
   };
 }
 
@@ -458,9 +465,11 @@ function normalizeEdamamFood(food: EdamamFood) {
   const nutrients = food.nutrients ?? {};
   return {
     id: crypto.randomUUID(),
+    providerFoodId: foodId,
     name: brand && !label.toLowerCase().includes(brand.toLowerCase())
       ? `${label} - ${brand}`
       : label,
+    brand: brand || null,
     calories: Math.round(nonNegative(nutrients.ENERC_KCAL)),
     protein: nonNegative(nutrients.PROCNT),
     quantity: 1,
@@ -471,6 +480,9 @@ function normalizeEdamamFood(food: EdamamFood) {
     sugar: nonNegative(nutrients.SUGAR),
     transFat: nonNegative(nutrients.FATRN),
     saturatedFat: nonNegative(nutrients.FASAT),
+    sodium: optionalNonNegative(nutrients.NA),
+    cholesterol: optionalNonNegative(nutrients.CHOLE),
+    micronutrients: normalizeEdamamMicronutrients(nutrients),
   };
 }
 
@@ -492,9 +504,11 @@ function normalizeFatSecretFood(food: FatSecretFood) {
   const brand = food.brand_name?.trim();
   return {
     id: crypto.randomUUID(),
+    providerFoodId: foodId,
     name: brand && !foodName.toLowerCase().includes(brand.toLowerCase())
       ? `${foodName} - ${brand}`
       : foodName,
+    brand: brand || null,
     calories: Math.round(nonNegative(serving.calories)),
     protein: nonNegative(serving.protein),
     quantity: 1,
@@ -505,7 +519,79 @@ function normalizeFatSecretFood(food: FatSecretFood) {
     sugar: nonNegative(serving.sugar),
     transFat: nonNegative(serving.trans_fat),
     saturatedFat: nonNegative(serving.saturated_fat),
+    sodium: optionalNonNegative(serving.sodium),
+    cholesterol: optionalNonNegative(serving.cholesterol),
+    micronutrients: {},
   };
+}
+
+function normalizeOpenFoodFactsMicronutrients(nutrients: Nutriments) {
+  return {
+    vitaminAMcgRae: scaleOptional(nutrients["vitamin-a_100g"], 1_000_000),
+    vitaminCMg: scaleOptional(nutrients["vitamin-c_100g"], 1_000),
+    vitaminDMcg: scaleOptional(nutrients["vitamin-d_100g"], 1_000_000),
+    vitaminEMg: scaleOptional(nutrients["vitamin-e_100g"], 1_000),
+    vitaminKMcg: scaleOptional(nutrients["vitamin-k_100g"], 1_000_000),
+    thiaminMg: scaleOptional(nutrients["vitamin-b1_100g"], 1_000),
+    riboflavinMg: scaleOptional(nutrients["vitamin-b2_100g"], 1_000),
+    niacinMg: scaleOptional(nutrients["vitamin-pp_100g"], 1_000),
+    vitaminB6Mg: scaleOptional(nutrients["vitamin-b6_100g"], 1_000),
+    vitaminB12Mcg: scaleOptional(nutrients["vitamin-b12_100g"], 1_000_000),
+    folateMcg: scaleOptional(nutrients["folates_100g"], 1_000_000),
+    calciumMg: scaleOptional(nutrients.calcium_100g, 1_000),
+    ironMg: scaleOptional(nutrients.iron_100g, 1_000),
+    magnesiumMg: scaleOptional(nutrients.magnesium_100g, 1_000),
+    potassiumMg: scaleOptional(nutrients.potassium_100g, 1_000),
+    zincMg: scaleOptional(nutrients.zinc_100g, 1_000),
+    seleniumMcg: scaleOptional(nutrients.selenium_100g, 1_000_000),
+    phosphorusMg: scaleOptional(nutrients.phosphorus_100g, 1_000),
+    copperMg: scaleOptional(nutrients.copper_100g, 1_000),
+    manganeseMg: scaleOptional(nutrients.manganese_100g, 1_000),
+    iodineMcg: scaleOptional(nutrients.iodine_100g, 1_000_000),
+  };
+}
+
+function normalizeEdamamMicronutrients(
+  nutrients: Record<string, number | null | undefined>,
+) {
+  return {
+    vitaminAMcgRae: optionalNonNegative(nutrients.VITA_RAE),
+    vitaminCMg: optionalNonNegative(nutrients.VITC),
+    vitaminDMcg: optionalNonNegative(nutrients.VITD),
+    vitaminEMg: optionalNonNegative(nutrients.TOCPHA),
+    vitaminKMcg: optionalNonNegative(nutrients.VITK1),
+    thiaminMg: optionalNonNegative(nutrients.THIA),
+    riboflavinMg: optionalNonNegative(nutrients.RIBF),
+    niacinMg: optionalNonNegative(nutrients.NIA),
+    vitaminB6Mg: optionalNonNegative(nutrients.VITB6A),
+    vitaminB12Mcg: optionalNonNegative(nutrients.VITB12),
+    folateMcg: optionalNonNegative(nutrients.FOLDFE),
+    calciumMg: optionalNonNegative(nutrients.CA),
+    ironMg: optionalNonNegative(nutrients.FE),
+    magnesiumMg: optionalNonNegative(nutrients.MG),
+    potassiumMg: optionalNonNegative(nutrients.K),
+    zincMg: optionalNonNegative(nutrients.ZN),
+    seleniumMcg: optionalNonNegative(nutrients.SE),
+    phosphorusMg: optionalNonNegative(nutrients.P),
+    copperMg: optionalNonNegative(nutrients.CU),
+    manganeseMg: optionalNonNegative(nutrients.MN),
+  };
+}
+
+function optionalNonNegative(
+  value: number | string | null | undefined,
+): number | undefined {
+  if (value === null || value === undefined || value === "") return undefined;
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
+}
+
+function scaleOptional(
+  value: number | string | null | undefined,
+  multiplier: number,
+): number | undefined {
+  const parsed = optionalNonNegative(value);
+  return parsed === undefined ? undefined : parsed * multiplier;
 }
 
 function nonNegative(value: number | string | null | undefined): number {

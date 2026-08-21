@@ -90,11 +90,11 @@ aggregate to Supabase, and reload it in Meal Diary.
 - Meal Editor now offers direct Camera and Gallery selection with an in-place
   preview and no crop flow. JPEG, PNG, and WebP inputs are capped at 10 MB;
   selected bytes remain draft-only until `Save Meal`.
-- The app-owned repository now uploads owner-scoped meal photos, stores durable
+- The app-owned repository uploads owner-scoped meal photos, stores durable
   private Storage references, resolves short-lived signed URLs for rendering,
   and cleans replaced, removed, or deleted objects. The checked-in
-  `tio-nutrition-media` migration remains unapplied to live Supabase, so live
-  photo upload is not yet testable.
+  `tio-nutrition-media` migration is not yet applied to the verified Tio-hub
+  Supabase project; device upload smoke remains pending.
 - Meal-level `servingSize` and `servingsDescription` are draft state only until
   an explicitly approved schema migration adds their persistence contract.
 - Meal Editor's `Today` control keeps the date-time picker visible while wheel
@@ -112,8 +112,8 @@ aggregate to Supabase, and reload it in Meal Diary.
   `meal_logs` and `meal_log_items`; the item table includes `calories`,
   `protein`, `carbs`, `fats`, `fiber`, `sugar`, `trans_fat`, and
   `saturated_fat`.
-- Vitamin fields remain intentionally absent because the domain model and live
-  schema do not yet define a persistence contract for them.
+- Vitamin/mineral snapshots now have a validated hybrid persistence contract,
+  and Meal Diary aggregates reported values against live profile targets.
 - Combined `:features:nutrition:testDebugUnitTest` and
   `:app:compileDebugKotlin` passed after adding full nutrition-grid aggregation
   assertions and meal aggregate nutrient preservation coverage.
@@ -124,24 +124,22 @@ aggregate to Supabase, and reload it in Meal Diary.
   Search Meals. The screen supports permission, live preview, flash, gallery,
   shutter, captured preview, Retry/Done, crop-free temp-photo handling, and
   parsed draft handoff into Meal Editor.
-- `nutrition-meal-photo-analyze` active version 10 is deployed with
-  `verify_jwt=true`. Provider credentials are configured as remote-only secrets
-  and remain outside the Android client and repository. The function now tries
-  OAuth2 first and falls back to signed OAuth1 requests for consumer credentials.
+- `nutrition-meal-photo-analyze` is active with `verify_jwt=true` after explicit
+  approval to send meal JPEG payloads to FatSecret. Provider credentials remain
+  outside Android; the function tries OAuth2 before signed OAuth1 fallback.
 - Connected-device `Done` requests now pass provider authentication. The latest
   live invocation returned `422` with FatSecret's `No food was detected` result
   for a laptop-screen photo, replacing the previous configuration failure.
 - Analysis preprocessing now follows FatSecret's recommended square input by
   producing an orientation-corrected, centered 512x512 JPEG while leaving the
   original Meal Editor photo unchanged.
-- Checked-in FatSecret recognition source now uses v2 first and retries the
+- Checked-in FatSecret recognition source uses v2 first and retries the
   supported v1 model only when v2 returns provider code `211`; other provider
-  failures are not masked. Supabase connector usage limits blocked deployment,
-  so remote photo function version 10 does not include this fallback yet.
+  failures are not masked. This source is deployed as active version 1.
 - Live text search now prioritizes India-tagged Open Food Facts results and
   fills sparse regional matches from a deduplicated global fallback. User input
   is escaped before it enters the provider's Lucene query.
-- `nutrition-food-search` version 13 is live with `verify_jwt=true`; connected-device
+- `nutrition-food-search` is live with `verify_jwt=true`; connected-device
   `paneer` search returned `200`, 15 results, and an India-relevant Amul item first.
 - The Android adapter now maps only typed provider errors into UI messages and
   replaces unexpected transport exceptions with a generic message. Regression
@@ -173,3 +171,54 @@ aggregate to Supabase, and reload it in Meal Diary.
 - GitHub publication is split into reviewable commits: database migrations
   `284490c`, Edge Function source `4f7d27c`, and Android runtime/tests
   `c6bdd76`; all three are pushed to `codex/nutrition-text-log`.
+- Meal Editor now uses a card-free Tio layout with a full-width photo stage,
+  flat name and serving rows, macro ring summary, divided item list, and a
+  token-driven sticky action footer. Existing editor actions and persistence
+  behavior remain unchanged.
+- `:features:nutrition:compileDebugKotlin`,
+  `:features:nutrition:testDebugUnitTest`, and
+  `:features:nutrition:lintDebug` pass after the Meal Editor redesign.
+- Meal items now use a Tnyx-style hybrid nutrition contract without replacing
+  Tio's multi-item meal aggregate: frequently queried nutrients remain typed,
+  while 11 vitamins and 10 minerals use a canonical JSON snapshot.
+- Android Supabase DTOs round-trip sodium, cholesterol, micronutrients, serving
+  metadata, input provenance, optional item media, confidence, and a versioned
+  provider snapshot. Missing micronutrients remain absent instead of becoming
+  synthetic zero values.
+- Food search maps provider IDs, brands, barcode/search provenance, sodium,
+  cholesterol, and supported Open Food Facts/Edamam micronutrients. Photo
+  recognition preserves its provider provenance and supported limit nutrients.
+- Migration `20260810063113_extend_meal_item_nutrition_snapshot.sql` adds the
+  additive item columns and validation constraints and is applied to the
+  verified Tio-hub Supabase project `ublwxylwdqjdykqcncuv`. Both nutrition Edge
+  Functions are active with JWT verification.
+- Migration `20260810065712_add_profile_nutrition_reference_targets.sql` is
+  applied to verified Tio-hub project `ublwxylwdqjdykqcncuv` as live migration
+  `20260810085016`. Verification found 12 target rows, authenticated-only RPC
+  execution, and an empty function search path.
+- Live verification confirms the existing three owner policies on each profile
+  table and four owner policies on each meal table. No additional profile-policy
+  migration is required for the verified Tio-hub project.
+- `deno check` passed for both nutrition Edge Functions. Combined
+  `:features:nutrition:testDebugUnitTest`, `:app:testDebugUnitTest`,
+  `:features:nutrition:lintDebug`, and `:app:compileDebugKotlin` validation
+  passed for the hybrid persistence slice.
+- The shared Cupertino date-time wheel now opens on the actual selected item
+  instead of three rows earlier. Meal Editor displays the selected time, passes
+  the full `LocalDateTime` through its repository contract, and restores an
+  existing meal timestamp in the device time zone.
+- Migration `20260810084500_add_meal_log_logged_at.sql` is applied to verified
+  Tio-hub project `ublwxylwdqjdykqcncuv`. All 11 existing meal rows were
+  backfilled without losing their diary date; `logged_at` is non-null with a
+  default and an owner/time query index.
+- Meal Diary derives presentation groups from each meal's device-local
+  `logged_at` hour (`05-10 BREAKFAST`, `11-15 LUNCH`, `16-18 SNACKS`, otherwise
+  `DINNER`). Groups and meals within each group are both newest-first; legacy
+  rows without a timestamp retain their stored type and sort last.
+- Meal Editor now applies the status-bar inset to its detail header and renders
+  the meal-category dropdown as one elevated `TnyxCard` with token-driven rows
+  and dividers. `:features:nutrition:compileDebugKotlin` passes.
+- Meal Item Editor now exposes all 11 vitamin and 10 mineral values and routes
+  nullable edits through `MealItem.micronutrients`; the existing Supabase DTO
+  persists that snapshot to `meal_log_items.micronutrients`. Combined nutrition
+  and app unit tests plus `:app:compileDebugKotlin` pass.

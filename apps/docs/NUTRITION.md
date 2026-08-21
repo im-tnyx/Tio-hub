@@ -28,6 +28,14 @@ Implemented in current source:
 - Text-only meal and food-item entry without external provider dependencies.
 - Existing meal and item loading for edit flows.
 - Aggregate meal-with-items persistence through `NutritionRepository`.
+- Checked-in hybrid item persistence keeps frequently queried nutrients in
+  typed columns and stores optional vitamin/mineral, serving, and provider
+  provenance snapshots as JSONB without storing provider credentials or raw
+  provider payloads.
+- Meal Diary aggregates reported micronutrients from persisted meal items and
+  compares them with versioned age/sex reference targets resolved by a secure
+  Supabase RPC. Missing provider values remain unknown instead of becoming
+  synthetic zero intake.
 - Visible validation and repository failure states.
 - Immediate diary refresh after a successful save or delete.
 - Authenticated food search through the live `nutrition-food-search` Supabase
@@ -65,33 +73,30 @@ Not implemented by this change:
 
 - Device-validated Meal Diary / Meal Editor route behavior for the completed text-only flow.
 - Production-qualified meal-photo recognition. Android is wired to the
-  authenticated `nutrition-meal-photo-analyze` Edge Function, and active function
-  version 10 has `verify_jwt=true` with provider credentials stored only as remote
-  secrets. The checked-in source uses FatSecret v2 first and retries the supported
-  v1 model only when v2 returns `No food item detected`, but that compatibility
-  fallback is not yet deployed. Connected-device requests against remote version 10
-  completed provider authentication and returned the no-food response for both a
-  laptop-screen photo and a real mixed-food photo.
+  authenticated live `nutrition-meal-photo-analyze` function. Its active
+  deployment requires JWT verification, sends approved JPEG payloads to
+  FatSecret v2, and conditionally retries v1.
   A real-meal success response, nutrition accuracy, licensing, and the storable-data
   contract still require verification before provider-derived nutrition can be
   treated as a durable production source.
-- Live exact barcode lookup deployment and positive indexed-product verification.
-  The checked-in Edge Function now uses Open Food Facts product-by-code first,
+- Positive indexed-product barcode verification. The live JWT-protected Edge
+  Function uses Open Food Facts product-by-code first,
   FatSecret Barcode v2 with `region=IN` second, and an optional server-side
-  Edamam UPC fallback last. Active remote version 13 remains
-  text-search-only, so scanned codes still cannot use any exact branch on the
-  installed app. FatSecret barcode access plus storable-data terms and Edamam
+  Edamam UPC fallback last. FatSecret barcode access plus storable-data terms and Edamam
   attribution plus plan-specific caching rights remain release gates; voice,
   USDA fallback, caching infrastructure, and complete multi-provider
   orchestration also remain pending.
 - Offline nutrition write queue and conflict resolution.
-- Live meal-photo upload until the checked-in `tio-nutrition-media` migration
-  is explicitly applied and its owner-scoped Storage policies are verified.
+- Production-qualified meal-photo recognition and provider data-processing
+  verification remain pending. The private nutrition media bucket migration is
+  checked in, but its live apply is outside the current meal-item schema repair.
 
 Important boundary: `MealDiaryViewModel` now reads through a repository
 boundary instead of owning sample meals directly. The current app bootstrap
-repository reads live Supabase nutrition targets and targets live
-`meal_logs` / `meal_log_items` tables when a real Supabase session exists.
+repository reads live `meal_logs` / `meal_log_items` tables when a real
+Supabase session exists. The live nutrition-target RPC resolves age/sex targets
+for complete profiles and reports `profile_required` when DOB or reference sex
+is unavailable.
 One manual verification log plus item were inserted on 2026-08-01 to confirm
 the live write path, but device-side route validation is still a separate
 runtime concern. The live tables now also enforce least-privilege grants,
@@ -650,6 +655,41 @@ Nutrition persistence follows that plan. The current live meal slice includes
 command-specific owner RLS, composite parent ownership enforcement, data
 constraints, timestamp triggers, and a covering parent-owner index.
 
+The checked-in `20260810063113_extend_meal_item_nutrition_snapshot.sql`
+migration extends each `meal_log_item` with nullable sodium and cholesterol,
+21 canonical vitamin/mineral values, serving metadata, input provenance,
+optional item media/confidence, and versioned provider metadata. The typed
+columns remain the query path for calories, macros, sodium, and cholesterol;
+variable nutrition details use validated JSONB objects. Missing provider
+nutrients stay absent or null rather than becoming synthetic zero values.
+
+Migration `20260810084500_add_meal_log_logged_at.sql` preserves the exact
+user-selected meal instant in `meal_logs.logged_at` while retaining `log_date`
+for diary-day queries. Android converts the device-local picker value to an
+absolute instant before persistence and restores it in the device time zone
+when an existing meal is reopened.
+
+The item extension and owner-scoped meal tables are applied to the Tio-hub
+Supabase project. The profile target catalog/RPC is also live with 12 versioned
+male/female age bands. The nutrition media bucket remains a separate checked-in
+migration and is not live yet.
+`nutrition-food-search` and `nutrition-meal-photo-analyze` are both active with
+`verify_jwt=true`.
+External meal-photo transmission to FatSecret was explicitly approved; provider
+accuracy, licensing, retention, and storable-data rules remain release gates.
+
+The live `users` and `user_nutrition_profiles` tables expose only owner-scoped
+authenticated `SELECT`, `INSERT`, and `UPDATE` through three command-specific
+policies each. Meal tables expose owner-scoped authenticated CRUD through four
+policies each; `anon` receives no table access.
+
+The reference catalog contains 12 male/female age bands for users aged 9 and
+above. The RPC calculates age at request time from `users.dob`, uses supported
+`users.gender` values unless an explicit nutrition reference sex override is
+stored, and merges owner-scoped positive target overrides. Pregnancy and
+lactation targets are intentionally not inferred because the profile contract
+does not collect those states.
+
 Remaining likely future tables from the Supabase plan:
 
 - `nutrition_targets`
@@ -676,8 +716,12 @@ Source-observed notes:
 - `AddMealClicked` opens the text-only Meal Editor; authenticated device
   persistence smoke remains pending.
 - `NutritionNutrientCard` accepts `icon: Any`, which is flexible but weakly typed.
-- Water, vitamin, and mineral progress are bootstrap repository values backed
-  by the current bootstrap boundary, not fully persisted diary truth.
+- Water consumption is still bootstrap-only. Vitamin and mineral progress now
+  comes from persisted item snapshots plus live profile reference targets;
+  provider-omitted nutrients remain unknown and are excluded from progress.
+- Meal Item Editor exposes all 11 vitamin and 10 mineral fields as nullable
+  values. Entered or provider-reported amounts persist in the canonical JSONB
+  snapshot; blank values remain unknown rather than becoming synthetic zeroes.
 - `MealGroupHeader` is private in `MealDiaryScreen.kt`; if multiple screens need the same grouping UI, move it to `meal_diary/widgets` or nutrition shared widgets.
 - Current nutrition domain models are in `features/nutrition/domain/models`; cross-phone/watch reuse should move stable domain contracts into `apps/shared` later.
 - Current UI polish does not mean nutrition feature is production data-complete.

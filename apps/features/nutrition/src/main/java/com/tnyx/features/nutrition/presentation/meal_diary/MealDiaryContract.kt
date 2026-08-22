@@ -29,10 +29,16 @@ data class MealDiaryUiState(
     // Micros (Vitamins & Minerals)
     val vitaminsProgress: Double = 0.0,
     val mineralsProgress: Double = 0.0,
+    val vitaminHighlights: List<NutrientProgressUi> = emptyList(),
+    val mineralHighlights: List<NutrientProgressUi> = emptyList(),
+    val nutritionReferenceStatus: String = "unavailable",
+    val sodiumConsumedMg: Double? = null,
+    val sodiumLimitMg: Double? = null,
 
     // Logged Meals
     val meals: List<NutritionMeal> = emptyList(),
     val isLoading: Boolean = false,
+    val errorMessage: String? = null,
 
     // Expandable FAB state
     val isFabExpanded: Boolean = false,
@@ -43,17 +49,24 @@ data class MealDiaryUiState(
     val isHistoryEmpty: Boolean get() = meals.isEmpty()
 }
 
+@Immutable
+data class NutrientProgressUi(
+    val label: String,
+    val progress: Double,
+)
+
 sealed class MealDiaryAction {
     data class DateSelected(val date: LocalDate) : MealDiaryAction()
     data class MealClicked(val meal: NutritionMeal) : MealDiaryAction()
     data class OverviewRequested(val target: String) : MealDiaryAction()
+    data object RefreshRequested : MealDiaryAction()
 
     // FAB actions
     data object FabToggled : MealDiaryAction()
     data object FabCollapsed : MealDiaryAction()
     data object AddMealClicked : MealDiaryAction()        // Search / keyboard
     data object AddMealVoiceClicked : MealDiaryAction()   // Mic (future)
-    data object AddMealCameraClicked : MealDiaryAction()  // Camera (future)
+    data object AddMealCameraClicked : MealDiaryAction()
 
     // Overflow Menu actions
     data object OptionsMenuToggled : MealDiaryAction()
@@ -65,7 +78,7 @@ sealed class MealDiaryAction {
 sealed class MealDiaryEffect {
     data class NavigateToMealDetail(val mealId: String) : MealDiaryEffect()
     data class NavigateToSearch(val date: LocalDate) : MealDiaryEffect()
-    data class NavigateToAddMeal(val date: LocalDate) : MealDiaryEffect()
+    data class NavigateToMealCamera(val date: LocalDate) : MealDiaryEffect()
     data class ShowOverview(val target: String) : MealDiaryEffect()
     data object NavigateToNutritionSettings : MealDiaryEffect()
     data object NavigateToAppSettings : MealDiaryEffect()

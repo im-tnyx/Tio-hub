@@ -78,6 +78,21 @@ fun MealDiaryScreen(
                 Spacer(modifier = Modifier.height(headerHeight + calendarHeight))
             }
 
+            state.errorMessage?.let { message ->
+                item {
+                    com.tnyx.core.ui.components.cards.TnyxCard(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                        variant = com.tnyx.core.ui.components.cards.TnyxCardVariant.Surface,
+                    ) {
+                        Text(
+                            text = message,
+                            style = TnyxTheme.typography.bodyMedium,
+                            color = TnyxTheme.colors.error,
+                        )
+                    }
+                }
+            }
+
             // ... rest of the content (Nutrients, Vitamins, Meals)
             item {
                 Spacer(modifier = Modifier.height(16.dp))
@@ -93,6 +108,7 @@ fun MealDiaryScreen(
             item {
                 Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                     NutritionVitaminSection(
+                        state = state,
                         onOverviewRequested = { onAction(MealDiaryAction.OverviewRequested(it)) }
                     )
                 }

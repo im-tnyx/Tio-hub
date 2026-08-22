@@ -1,204 +1,218 @@
 package com.tnyx.features.nutrition.presentation.meal_item_editor
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.tnyx.core.theme.TnyxTheme
 import com.tnyx.core.ui.components.buttons.TnyxPrimaryButton
+import com.tnyx.features.nutrition.presentation.meal_item_editor.widgets.IngredientQuantityEditor
+import com.tnyx.features.nutrition.presentation.meal_item_editor.widgets.MacroNutrientEditorCard
+import com.tnyx.features.nutrition.presentation.meal_item_editor.widgets.MealItemNameBottomSheet
+import com.tnyx.features.nutrition.presentation.meal_item_editor.widgets.MicronutrientEditorCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MealItemEditorScreen(
     state: MealItemEditorUiState,
-    onAction: (MealItemEditorAction) -> Unit
+    onAction: (MealItemEditorAction) -> Unit,
 ) {
+    val isExistingItem = state.item.id.isNotBlank()
+
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Edit Item", fontWeight = FontWeight.Bold) },
+            TopAppBar(
+                title = {
+                    Text(
+                        text = if (isExistingItem) "Edit Ingredient" else "Add Ingredient",
+                        style = TnyxTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+                        color = TnyxTheme.colors.textPrimary,
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { onAction(MealItemEditorAction.BackClicked) }) {
-                        Icon(Icons.Default.Close, contentDescription = "Close")
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = TnyxTheme.colors.textPrimary,
+                        )
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = TnyxTheme.colors.background
-                )
+                actions = {
+                    if (isExistingItem) {
+                        IconButton(onClick = { onAction(MealItemEditorAction.ResetClicked) }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Refresh,
+                                contentDescription = "Reset ingredient changes",
+                                tint = TnyxTheme.colors.textPrimary,
+                            )
+                        }
+                        IconButton(onClick = { onAction(MealItemEditorAction.RemoveClicked) }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Delete,
+                                contentDescription = "Remove ingredient",
+                                tint = TnyxTheme.colors.error,
+                            )
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = TnyxTheme.colors.background,
+                ),
             )
         },
         bottomBar = {
-            MealItemEditorBottomBar(
-                onRemove = { onAction(MealItemEditorAction.RemoveClicked) },
-                onSave = { onAction(MealItemEditorAction.SaveClicked) }
+            IngredientSaveBar(
+                enabled = !state.isSaving,
+                onSave = { onAction(MealItemEditorAction.SaveClicked) },
             )
         },
-        containerColor = TnyxTheme.colors.background
+        containerColor = TnyxTheme.colors.background,
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .padding(horizontal = TnyxTheme.dimens.SpaceM),
         ) {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                color = TnyxTheme.colors.surfaceRaised,
-                border = BorderStroke(0.5.dp, TnyxTheme.colors.textPrimary.copy(alpha = 0.1f))
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    // Item Name
-                    OutlinedTextField(
-                        value = state.item.name,
-                        onValueChange = { onAction(MealItemEditorAction.NameChanged(it)) },
-                        label = { Text("Item Name") },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = TnyxTheme.colors.textPrimary.copy(alpha = 0.1f)
-                        )
-                    )
-                    
-                    Spacer(modifier = Modifier.height(24.dp))
-                    HorizontalDivider(thickness = 0.5.dp, color = TnyxTheme.colors.textPrimary.copy(alpha = 0.1f))
-                    Spacer(modifier = Modifier.height(24.dp))
-                    
-                    // Inputs
-                    NutrientInputRow(
-                        label = "Quantity",
-                        value = state.item.quantity.toString(),
-                        unit = state.item.unit,
-                        onValueChanged = { onAction(MealItemEditorAction.QuantityChanged(it.toDoubleOrNull() ?: 1.0)) }
-                    )
-                    NutrientInputRow(
-                        label = "Calories",
-                        value = state.item.calories.toString(),
-                        unit = "kcal",
-                        onValueChanged = { onAction(MealItemEditorAction.NutrientChanged("calories", it.toDoubleOrNull() ?: 0.0)) }
-                    )
-                    NutrientInputRow(
-                        label = "Protein",
-                        value = state.item.protein.toString(),
-                        unit = "g",
-                        onValueChanged = { onAction(MealItemEditorAction.NutrientChanged("protein", it.toDoubleOrNull() ?: 0.0)) }
-                    )
-                    NutrientInputRow(
-                        label = "Carbs",
-                        value = state.item.carbs.toString(),
-                        unit = "g",
-                        onValueChanged = { onAction(MealItemEditorAction.NutrientChanged("carbs", it.toDoubleOrNull() ?: 0.0)) }
-                    )
-                    NutrientInputRow(
-                        label = "Fats",
-                        value = state.item.fats.toString(),
-                        unit = "g",
-                        onValueChanged = { onAction(MealItemEditorAction.NutrientChanged("fats", it.toDoubleOrNull() ?: 0.0)) }
-                    )
-                }
+            IngredientNameHeader(
+                name = state.item.name,
+                onEdit = { onAction(MealItemEditorAction.NameEditorRequested) },
+            )
+
+            state.errorMessage?.let { message ->
+                Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceXS))
+                Text(
+                    text = message,
+                    style = TnyxTheme.typography.bodySmall,
+                    color = TnyxTheme.colors.error,
+                )
             }
+
+            Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceM))
+            IngredientQuantityEditor(
+                item = state.item,
+                onQuantityChanged = { onAction(MealItemEditorAction.QuantityChanged(it)) },
+                onUnitChanged = { onAction(MealItemEditorAction.UnitChanged(it)) },
+            )
+
+            Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceL))
+            MacroNutrientEditorCard(
+                item = state.item,
+                onNutrientChanged = { field, value ->
+                    onAction(MealItemEditorAction.NutrientChanged(field, value))
+                },
+            )
+
+            Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceM))
+            MicronutrientEditorCard(
+                item = state.item,
+                expanded = state.isMicronutrientsExpanded,
+                onToggle = { onAction(MealItemEditorAction.MicronutrientsToggled) },
+                onNutrientChanged = { field, value ->
+                    onAction(MealItemEditorAction.NutrientChanged(field, value))
+                },
+                onMicronutrientChanged = { field, value ->
+                    onAction(MealItemEditorAction.MicronutrientChanged(field, value))
+                },
+            )
+            Spacer(modifier = Modifier.height(TnyxTheme.dimens.SpaceL))
         }
     }
+
+    MealItemNameBottomSheet(
+        visible = state.isNameEditorVisible,
+        name = state.nameInput,
+        errorMessage = state.nameEditorError,
+        onNameChanged = { onAction(MealItemEditorAction.NameEditorInputChanged(it)) },
+        onDismissRequest = { onAction(MealItemEditorAction.NameEditorDismissed) },
+        onConfirm = { onAction(MealItemEditorAction.NameEditorConfirmed) },
+    )
 }
 
 @Composable
-private fun NutrientInputRow(
-    label: String,
-    value: String,
-    unit: String,
-    onValueChanged: (String) -> Unit
+private fun IngredientNameHeader(
+    name: String,
+    onEdit: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
-            text = label,
-            modifier = Modifier.width(100.dp),
-            style = TnyxTheme.typography.bodyMedium,
-            color = TnyxTheme.colors.textSecondary
+            text = name.ifBlank { "Ingredient name" },
+            modifier = Modifier.weight(1f),
+            style = TnyxTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+            color = if (name.isBlank()) {
+                TnyxTheme.colors.textSecondary
+            } else {
+                TnyxTheme.colors.textPrimary
+            },
         )
-        
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChanged,
-            modifier = Modifier.weight(1f).height(52.dp),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            singleLine = true,
-            textStyle = TnyxTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-            shape = RoundedCornerShape(8.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                unfocusedContainerColor = TnyxTheme.colors.background.copy(alpha = 0.5f),
-                focusedContainerColor = TnyxTheme.colors.background.copy(alpha = 0.5f),
-                unfocusedBorderColor = Color.Transparent,
-                focusedBorderColor = TnyxTheme.colors.primary.copy(alpha = 0.5f)
-            )
-        )
-        
-        Spacer(modifier = Modifier.width(12.dp))
-        
-        Box(
-            modifier = Modifier
-                .width(100.dp)
-                .height(52.dp)
-                .background(TnyxTheme.colors.background.copy(alpha = 0.5f), RoundedCornerShape(8.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = unit,
-                style = TnyxTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold
+        IconButton(onClick = onEdit) {
+            Icon(
+                imageVector = Icons.Outlined.Edit,
+                contentDescription = "Edit ingredient name",
+                tint = TnyxTheme.colors.textPrimary,
             )
         }
     }
 }
 
 @Composable
-private fun MealItemEditorBottomBar(
-    onRemove: () -> Unit,
-    onSave: () -> Unit
+private fun IngredientSaveBar(
+    enabled: Boolean,
+    onSave: () -> Unit,
 ) {
     Surface(
         color = TnyxTheme.colors.background,
-        border = BorderStroke(0.5.dp, TnyxTheme.colors.textPrimary.copy(alpha = 0.1f))
+        border = BorderStroke(
+            width = TnyxTheme.dimens.BorderThin,
+            color = TnyxTheme.colors.textPrimary.copy(alpha = 0.1f),
+        ),
     ) {
-        Row(
+        Column(
             modifier = Modifier
+                .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .padding(
+                    horizontal = TnyxTheme.dimens.SpaceM,
+                    vertical = TnyxTheme.dimens.SpaceSM,
+                ),
         ) {
-            OutlinedButton(
-                onClick = onRemove,
-                modifier = Modifier.weight(1f).height(56.dp),
-                shape = RoundedCornerShape(28.dp),
-                border = BorderStroke(1.dp, TnyxTheme.colors.textPrimary)
-            ) {
-                Text("Remove Item", color = TnyxTheme.colors.textPrimary, fontWeight = FontWeight.Bold)
-            }
-            
-            Spacer(modifier = Modifier.width(12.dp))
-            
             TnyxPrimaryButton(
-                text = "Save",
+                text = if (enabled) "Save" else "Saving...",
                 onPressed = onSave,
-                modifier = Modifier.weight(1f)
+                enabled = enabled,
+                modifier = Modifier.fillMaxWidth(),
+                height = TnyxTheme.dimens.ButtonHeightLarge,
             )
         }
     }

@@ -331,7 +331,8 @@ private fun CupertinoWheelColumn(
     } else {
         selectedIndex
     }
-    val initialFirstVisibleIndex = (initialSelectedIndex - 3).coerceAtLeast(0)
+    // Vertical content padding already centers the first visible item.
+    val initialFirstVisibleIndex = initialSelectedIndex.coerceAtLeast(0)
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialFirstVisibleIndex)
     val snapBehavior = rememberSnapFlingBehavior(lazyListState = listState)
     val totalItemsCount = if (wrapAround) items.size * WRAP_REPEAT_COUNT else items.size
@@ -366,7 +367,7 @@ private fun CupertinoWheelColumn(
         val upperBound = totalItemsCount - lowerBound
         if (centreVirtualIndex in lowerBound..upperBound) return@LaunchedEffect
         val rebasedIndex = wrappedMiddleIndex(items.size, centreActualIndex)
-        listState.scrollToItem((rebasedIndex - 3).coerceAtLeast(0))
+        listState.scrollToItem(rebasedIndex)
     }
 
     Box(

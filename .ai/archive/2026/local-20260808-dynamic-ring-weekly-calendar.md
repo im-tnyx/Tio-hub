@@ -1,9 +1,11 @@
 # Task: Dynamic Ring-Based Weekly Calendar System & First Day of Week Settings
 
 ## Status
-- State: In Progress
+- State: Completed
 - Primary Owner: Android (Clean Architecture + Tnyx UI)
 - Created: 2026-08-08
+- Merged: 2026-08-09 via PR #35
+- Merge Commit: `dc09c48b04553e97ee736b8fa6cb22ceaa578025`
 
 ## Objective
 Enhance `TnyxWeeklyCalendar` with configurable starting day of week (Default: Sunday) driven by App Settings BottomSheet, day/date layout swap (Day name on top, Date number below inside ring badge), 3-tier dynamic rings (Planned Outline, Calorie Progress Arc, Workout Solid Achievement Fill), multi-schedule dots below the date badge, and Samsung Health-inspired `Pumpkin` `#EB7B36` color token for planned targets.
@@ -21,10 +23,6 @@ Enhance `TnyxWeeklyCalendar` with configurable starting day of week (Default: Su
 - Integrate with `WorkoutScreen.kt` and `MealDiaryScreen.kt`.
 
 ## Verification
-- Unit compile check for `:core`, `:features:settings`, `:features:workout`, and `:features:nutrition`.
-- Verify App Settings First Day of Week BottomSheet, multi-schedule dots, calorie arcs, and completed solid badge rendering.
-
-## Latest Checkpoint (2026-08-09)
 - Aggregate Android validation passed with `:shared:test`, core/workout/onboarding/settings unit tests, `:app:testDebugUnitTest`, and `:app:assembleDebug`.
-- Repository diff checks are clean and the implementation is split into atomic commits on `feature/dynamic-ring-weekly-calendar`.
-- Calendar-specific device visual smoke for first-day ordering, ring states, and multi-schedule dots remains before task closure.
+- Repository diff checks passed before merge.
+- User accepted the integrated runtime state before PR merge.

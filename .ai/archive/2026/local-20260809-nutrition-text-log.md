@@ -1,7 +1,7 @@
 # Task: Nutrition Text Log And Live Search
 
 ## Status
-- State: In Progress
+- State: Completed
 - Primary Owner: Android Nutrition
 - Created: 2026-08-09
 
@@ -40,11 +40,7 @@ aggregate to Supabase, and reload it in Meal Diary.
 - `git diff --check`
 
 ## Next Checkpoint
-- Connect an Android device and smoke-test camera permission, live preview,
-  flash, gallery, capture, Retry/Done, Meal Editor photo handoff, and a known
-  packaged-food barcode that exists in the current search provider.
-- Verify FatSecret Image Recognition server secrets, provider access/licensing,
-  and provider-reference persistence before treating photo analysis as live.
+- None. Scope merged into `main` on 2026-08-22 via PR `#37`.
 
 ## Latest Checkpoint (2026-08-09)
 - Text-only meal and item editors now use validated draft state.
@@ -222,3 +218,25 @@ aggregate to Supabase, and reload it in Meal Diary.
   nullable edits through `MealItem.micronutrients`; the existing Supabase DTO
   persists that snapshot to `meal_log_items.micronutrients`. Combined nutrition
   and app unit tests plus `:app:compileDebugKotlin` pass.
+
+## Final Outcome (2026-08-22)
+- Published on branch `codex/nutrition-text-log`.
+- Pull request `#37` (`feat(android): add nutrition text-log capture flow`)
+  passed `Android compile and unit checks`, was marked ready for review, and
+  merged into `main` on 2026-08-22.
+- Merge commit: `393daeb9415e8899e9fcd4b601c6d6abc2d4c736`.
+- Final scoped continuity commits:
+  - `87d425b` `build(database): extend nutrition persistence contracts`
+  - `c2bb0b3` `fix(android): refine nutrition meal logging flow`
+  - `4d2d98c` `docs(android): update nutrition task checkpoint`
+- Final validation run before publish:
+  - `cd apps && .\gradlew.bat :features:nutrition:testDebugUnitTest` -> PASS
+  - `cd apps && .\gradlew.bat :features:nutrition:compileDebugKotlin` -> PASS
+  - `cd apps && .\gradlew.bat :app:compileDebugKotlin` -> PASS
+  - `git diff --check` -> PASS
+
+## Remaining Risk
+- Positive real-meal photo-recognition smoke and a positive indexed barcode
+  match were still noted as follow-up verification gaps at merge time. They are
+  not blockers for the merged slice but remain useful device-level follow-up
+  work.
